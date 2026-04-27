@@ -1,0 +1,31 @@
+# Visual Studio files and folder
+.vs/
+bin/
+obj/
+*.user
+*.suo
+*.sln.docstates
+*.config
+Debug/
+Release/
+
+# Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+
+# NuGet
+*.nupkg
+*.snupkg
+
+# User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Rider
+.idea/
+*.sln.iml

@@ -1,0 +1,72 @@
+@{
+    ViewData["Title"] = "Admin Dashboard";
+}
+
+<div class="container mt-5">
+    <h2>Admin Dashboard</h2>
+
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-white bg-primary">
+                <div class="card-body">
+                    <h5 class="card-title">Total Workers</h5>
+                    <h2>@ViewBag.TotalWorkers</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-success">
+                <div class="card-body">
+                    <h5 class="card-title">Total Clients</h5>
+                    <h2>@ViewBag.TotalClients</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-warning">
+                <div class="card-body">
+                    <h5 class="card-title">Total Bookings</h5>
+                    <h2>@ViewBag.TotalBookings</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-danger">
+                <div class="card-body">
+                    <h5 class="card-title">Total Earnings</h5>
+                    <h2>$@ViewBag.TotalEarnings</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Manage Hourly Rates</h5>
+                    <p class="card-text">Set and update hourly rates for workers by skill.</p>
+                    <a href="@Url.Action("ManageRates")" class="btn btn-primary">Manage Rates</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Manage Bookings</h5>
+                    <p class="card-text">Approve, confirm, or cancel bookings.</p>
+                    <a href="@Url.Action("ManageBookings")" class="btn btn-primary">Manage Bookings</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Generate Report</h5>
+                    <p class="card-text">View earnings and booking reports.</p>
+                    <a href="@Url.Action("GenerateReport")" class="btn btn-primary">Generate Report</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

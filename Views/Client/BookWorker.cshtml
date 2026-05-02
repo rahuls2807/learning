@@ -1,0 +1,39 @@
+@model IEnumerable<WorkerBookingSystem.Models.Worker>
+
+@{
+    ViewData["Title"] = "Book a Worker";
+}
+
+<div class="container mt-5">
+    <h2>Available Workers</h2>
+
+    @if (Model.Any())
+    {
+        <div class="row">
+            @foreach (var worker in Model)
+            {
+                <div class="col-md-4 mb-3">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">@worker.FirstName @worker.LastName</h5>
+                            <p class="card-text">
+                                <strong>Skill:</strong> @worker.Skill<br>
+                                <strong>Email:</strong> @worker.Email<br>
+                                <strong>Phone:</strong> @worker.PhoneNumber
+                            </p>
+                            <a asp-action="CreateBooking" asp-route-workerId="@worker.WorkerId" class="btn btn-primary">Book Now</a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info">No workers available at the moment.</div>
+    }
+
+    <div class="mt-3">
+        <a href="@Url.Action("Index", "Home")" class="btn btn-secondary">Back to Home</a>
+    </div>
+</div>

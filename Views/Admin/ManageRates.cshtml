@@ -1,0 +1,57 @@
+@model IEnumerable<WorkerBookingSystem.Models.HourlyRate>
+
+@{
+    ViewData["Title"] = "Manage Hourly Rates";
+}
+
+<div class="container mt-5">
+    <h2>Manage Hourly Rates</h2>
+
+    <a asp-action="SetRate" class="btn btn-primary mb-3">+ Set New Rate</a>
+
+    @if (Model.Any())
+    {
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Worker Name</th>
+                        <th>Skill</th>
+                        <th>Rate Per Hour</th>
+                        <th>Effective Date</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var rate in Model)
+                    {
+                        <tr>
+                            <td>@rate.Worker?.FirstName @rate.Worker?.LastName</td>
+                            <td>@rate.Skill</td>
+                            <td>${@rate.RatePerHour.ToString("F2")}</td>
+                            <td>@rate.EffectiveDate.ToShortDateString()</td>
+                            <td>
+                                @if (rate.IsActive)
+                                {
+                                    <span class="badge bg-success">Active</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">Inactive</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info">No hourly rates set yet.</div>
+    }
+
+    <div class="mt-3">
+        <a href="@Url.Action("Dashboard")" class="btn btn-secondary">Back to Dashboard</a>
+    </div>
+</div>

@@ -1,0 +1,45 @@
+﻿@{
+    ViewData["Title"] = "Worker Booking System";
+}
+
+<div class="jumbotron">
+    <h1 class="display-4">Welcome to Worker Booking System</h1>
+    <p class="lead">Connect workers with clients for efficient task management and wage calculation</p>
+    <hr class="my-4">
+    <p>Please select your role to get started:</p>
+    <div class="btn-group" role="group">
+        <a class="btn btn-primary btn-lg" href="@Url.Action("Create", "Worker")" role="button">Register as Worker</a>
+        <a class="btn btn-success btn-lg" href="@Url.Action("Register", "Client")" role="button">Register as Client</a>
+        <a class="btn btn-warning btn-lg" href="@Url.Action("Dashboard", "Admin")" role="button">Admin Panel</a>
+    </div>
+</div>
+
+<div class="row mt-5">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">For Workers</h5>
+                <p class="card-text">Create your profile, set your availability, and get booked for jobs. Earn based on hourly rates set by admin.</p>
+                <a href="@Url.Action("Index", "Worker")" class="btn btn-primary">View Workers</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">For Clients</h5>
+                <p class="card-text">Find and book skilled workers for your tasks. System automatically calculates and displays total wage.</p>
+                <a href="@Url.Action("BookWorker", "Client")" class="btn btn-success">Book a Worker</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">For Admin</h5>
+                <p class="card-text">Manage hourly rates, approve bookings, track earnings, and generate reports.</p>
+                <a href="@Url.Action("Dashboard", "Admin")" class="btn btn-warning">Admin Dashboard</a>
+            </div>
+        </div>
+    </div>
+</div>

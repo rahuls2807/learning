@@ -16,9 +16,11 @@ namespace WorkerBookingSystem.Data
         public DbSet<HourlyRate> HourlyRates { get; set; }
         public DbSet<Admin> Admins { get; set; }
 
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
+protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+// Seed data with HasData
 
             // Configure Worker entity
             modelBuilder.Entity<Worker>()
@@ -65,7 +67,7 @@ namespace WorkerBookingSystem.Data
             modelBuilder.Entity<Admin>()
                 .HasKey(a => a.AdminId);
 
-            // Configure decimal precision for wages
+// Configure decimal precision for wages
             modelBuilder.Entity<HourlyRate>()
                 .Property(hr => hr.RatePerHour)
                 .HasPrecision(10, 2);
@@ -73,6 +75,29 @@ namespace WorkerBookingSystem.Data
             modelBuilder.Entity<Booking>()
                 .Property(b => b.TotalWage)
                 .HasPrecision(10, 2);
+
+            // Seed sample data
+            modelBuilder.Entity<Worker>().HasData(
+                new Worker { WorkerId = 1, FirstName = "John", LastName = "Doe", Email = "john@worker.com", PhoneNumber = "123-456", Skill = "Plumbing", IsActive = true, CreatedDate = DateTime.Parse("2024-1-1") },
+                new Worker { WorkerId = 2, FirstName = "Jane", LastName = "Smith", Email = "jane@worker.com", PhoneNumber = "789-012", Skill = "Electrical", IsActive = true, CreatedDate = DateTime.Parse("2024-1-1") }
+            );
+
+            modelBuilder.Entity<Client>().HasData(
+                new Client { ClientId = 1, FirstName = "Alice", LastName = "Brown", Email = "alice@client.com", PhoneNumber = "111-222", Address = "123 Main St", IsActive = true, CreatedDate = DateTime.Parse("2024-1-1") }
+            );
+
+            modelBuilder.Entity<HourlyRate>().HasData(
+                new HourlyRate { RateId = 1, WorkerId = 1, Skill = "Plumbing", RatePerHour = 25.00m, EffectiveDate = DateTime.Parse("2024-1-1"), IsActive = true },
+                new HourlyRate { RateId = 2, WorkerId = 2, Skill = "Electrical", RatePerHour = 35.00m, EffectiveDate = DateTime.Parse("2024-1-1"), IsActive = true }
+            );
+
+            modelBuilder.Entity<WorkerAvailability>().HasData(
+                new WorkerAvailability { AvailabilityId = 1, WorkerId = 1, DayOfWeek = DayOfWeek.Monday, StartTime = new TimeSpan(9,0,0), EndTime = new TimeSpan(17,0,0), IsAvailable = true }
+            );
+
+            modelBuilder.Entity<Booking>().HasData(
+                new Booking { BookingId = 1, WorkerId = 1, ClientId = 1, BookingDate = DateTime.Parse("2024-10-1"), StartTime = new TimeSpan(10,0,0), EndTime = new TimeSpan(12,0,0), TaskDescription = "Fix leak", TotalWage = 50.00m, Status = BookingStatus.Pending, CreatedDate = DateTime.Parse("2024-1-1") }
+            );
         }
     }
 }

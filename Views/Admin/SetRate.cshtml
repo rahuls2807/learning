@@ -1,0 +1,49 @@
+@model WorkerBookingSystem.Models.HourlyRate
+
+@{
+    ViewData["Title"] = "Set Hourly Rate";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <h2>Set Hourly Rate</h2>
+            <form asp-action="SetRate">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                <div class="form-group">
+                    <label asp-for="WorkerId" class="control-label">Select Worker</label>
+                    <select asp-for="WorkerId" class="form-control">
+                        <option value="">-- Select a Worker --</option>
+                        @foreach (var worker in (List<WorkerBookingSystem.Models.Worker>)ViewBag.Workers)
+                        {
+                            <option value="@worker.WorkerId">@worker.FirstName @worker.LastName - @worker.Skill</option>
+                        }
+                    </select>
+                    <span asp-validation-for="WorkerId" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Skill" class="control-label"></label>
+                    <input asp-for="Skill" class="form-control" placeholder="e.g., Plumbing, Electrical" />
+                    <span asp-validation-for="Skill" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="RatePerHour" class="control-label">Rate Per Hour ($)</label>
+                    <input asp-for="RatePerHour" class="form-control" type="number" step="0.01" min="0" />
+                    <span asp-validation-for="RatePerHour" class="text-danger"></span>
+                </div>
+
+                <div class="form-group mt-3">
+                    <button type="submit" class="btn btn-primary">Set Rate</button>
+                    <a asp-action="ManageRates" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

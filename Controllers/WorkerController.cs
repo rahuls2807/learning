@@ -35,11 +35,11 @@ namespace WorkerBookingSystem.Controllers
             if (ModelState.IsValid)
             {
                 var existingWorker = await _context.Workers
-                    .FirstOrDefaultAsync(w => w.Email == worker.Email);
+                    .FirstOrDefaultAsync(w => w.PhoneNumber == worker.PhoneNumber);
 
                 if (existingWorker != null)
                 {
-                    ModelState.AddModelError("Email", "A worker with this email already exists.");
+                    ModelState.AddModelError("PhoneNumber", "A worker with this phone number already exists.");
                 }
                 else
                 {

@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace WorkerBookingSystem.Models
 {
     public class Worker
@@ -6,6 +8,7 @@ namespace WorkerBookingSystem.Models
         public string? FirstName { get; set; }
         public string? LastName { get; set; }
         public string? Email { get; set; }
+        [Required]
         public string? PhoneNumber { get; set; }
         public string? Skill { get; set; } // e.g., Plumbing, Electrical, etc.
         public bool IsActive { get; set; } = true;

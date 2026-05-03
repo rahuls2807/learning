@@ -1,12 +1,20 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace WorkerBookingSystem.Models
 {
     public class Booking
     {
+        [Required]
         public int BookingId { get; set; }
+        [Required]
         public int WorkerId { get; set; }
+        [Required]
         public int ClientId { get; set; }
+        [Required]
         public DateTime BookingDate { get; set; }
+        [Required]
         public DateTime StartTime { get; set; }
+        [Required]
         public DateTime EndTime { get; set; }
         public string? TaskDescription { get; set; }
         public BookingStatus Status { get; set; } = BookingStatus.Pending;

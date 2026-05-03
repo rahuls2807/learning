@@ -1,0 +1,97 @@
+@model WorkerBookingSystem.Models.Worker
+
+@{
+    ViewData["Title"] = "Manage Availability";
+}
+
+<div class="container mt-5">
+    <h2>Manage Availability - @Model.FirstName @Model.LastName</h2>
+
+    <div class="row">
+        <div class="col-md-6">
+            <h4>Current Availability</h4>
+
+            @if (Model.Availabilities.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-sm table-striped">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Day</th>
+                                <th>Start Time</th>
+                                <th>End Time</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var avail in Model.Availabilities.OrderBy(a => a.DayOfWeek))
+                            {
+                                <tr>
+                                    <td>@avail.DayOfWeek</td>
+                                    <td>@avail.StartTime.ToString(@"hh\:mm")</td>
+                                    <td>@avail.EndTime.ToString(@"hh\:mm")</td>
+                                    <td>
+                                        @if (avail.IsAvailable)
+                                        {
+                                            <span class="badge bg-success">Available</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-danger">Unavailable</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-info">No availability set yet. Add availability below.</div>
+            }
+        </div>
+
+        <div class="col-md-6">
+            <h4>Add Availability</h4>
+            <form method="post" asp-action="AddAvailability">
+                <input type="hidden" name="workerId" value="@Model.WorkerId" />
+
+                <div class="form-group">
+                    <label class="control-label">Day of Week</label>
+                    <select name="dayOfWeek" class="form-control" required>
+                        <option value="">-- Select Day --</option>
+                        <option value="0">Sunday</option>
+                        <option value="1">Monday</option>
+                        <option value="2">Tuesday</option>
+                        <option value="3">Wednesday</option>
+                        <option value="4">Thursday</option>
+                        <option value="5">Friday</option>
+                        <option value="6">Saturday</option>
+                    </select>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="control-label">Start Time</label>
+                            <input type="time" name="startTime" class="form-control" required />
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="control-label">End Time</label>
+                            <input type="time" name="endTime" class="form-control" required />
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100">Add Availability</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <a asp-action="Index" class="btn btn-secondary">Back to Workers</a>
+    </div>
+</div>

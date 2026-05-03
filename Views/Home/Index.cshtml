@@ -2,44 +2,106 @@
     ViewData["Title"] = "Worker Booking System";
 }
 
-<div class="jumbotron">
-    <h1 class="display-4">Welcome to Worker Booking System</h1>
-    <p class="lead">Connect workers with clients for efficient task management and wage calculation</p>
-    <hr class="my-4">
-    <p>Please select your role to get started:</p>
-    <div class="btn-group" role="group">
-        <a class="btn btn-primary btn-lg" href="@Url.Action("Create", "Worker")" role="button">Register as Worker</a>
-        <a class="btn btn-success btn-lg" href="@Url.Action("Register", "Client")" role="button">Register as Client</a>
-        <a class="btn btn-warning btn-lg" href="@Url.Action("Dashboard", "Admin")" role="button">Admin Panel</a>
+<style>
+    .hero-section {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 60px 20px;
+        border-radius: 10px;
+        margin-bottom: 40px;
+    }
+    .hero-section h1 {
+        font-size: 3rem;
+        font-weight: bold;
+        margin-bottom: 20px;
+    }
+    .hero-section p {
+        font-size: 1.3rem;
+        margin-bottom: 30px;
+    }
+    .feature-card {
+        transition: transform 0.3s, box-shadow 0.3s;
+    }
+    .feature-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+</style>
+
+<div class="hero-section">
+    <h1>Worker Booking System</h1>
+    <p>Connect skilled workers with clients - Efficient task management with automatic wage calculation</p>
+    <div class="btn-group d-flex gap-2" role="group">
+        <a class="btn btn-light btn-lg" href="@Url.Action("Create", "Worker")" role="button">📝 Register as Worker</a>
+        <a class="btn btn-light btn-lg" href="@Url.Action("Register", "Client")" role="button">👤 Register as Client</a>
+        <a class="btn btn-warning btn-lg" href="@Url.Action("Dashboard", "Admin")" role="button">⚙️ Admin Panel</a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-4 mb-4">
+        <div class="card feature-card h-100">
+            <div class="card-body text-center">
+                <div style="font-size: 3rem; margin-bottom: 15px;">👷</div>
+                <h5 class="card-title">For Workers</h5>
+                <p class="card-text">Create your professional profile, set your availability, and get booked for jobs. Earn based on hourly rates.</p>
+                <ul class="list-unstyled text-start">
+                    <li>✓ Register and manage profile</li>
+                    <li>✓ Set availability by day/time</li>
+                    <li>✓ View bookings & earnings</li>
+                    <li>✓ Track income</li>
+                </ul>
+                <a href="@Url.Action("Index", "Worker")" class="btn btn-primary mt-3">View All Workers</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4 mb-4">
+        <div class="card feature-card h-100">
+            <div class="card-body text-center">
+                <div style="font-size: 3rem; margin-bottom: 15px;">💼</div>
+                <h5 class="card-title">For Clients</h5>
+                <p class="card-text">Find and book skilled workers for your tasks. System automatically calculates total cost.</p>
+                <ul class="list-unstyled text-start">
+                    <li>✓ Browse available workers</li>
+                    <li>✓ Book workers by skill</li>
+                    <li>✓ Auto wage calculation</li>
+                    <li>✓ Track bookings</li>
+                </ul>
+                <a href="@Url.Action("BookWorker", "Client")" class="btn btn-success mt-3">Book a Worker</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4 mb-4">
+        <div class="card feature-card h-100">
+            <div class="card-body text-center">
+                <div style="font-size: 3rem; margin-bottom: 15px;">📊</div>
+                <h5 class="card-title">For Admin</h5>
+                <p class="card-text">Manage rates, approve bookings, track earnings, and generate detailed reports.</p>
+                <ul class="list-unstyled text-start">
+                    <li>✓ Set hourly rates</li>
+                    <li>✓ Manage bookings</li>
+                    <li>✓ View dashboard stats</li>
+                    <li>✓ Generate reports</li>
+                </ul>
+                <a href="@Url.Action("Dashboard", "Admin")" class="btn btn-warning mt-3">Admin Dashboard</a>
+            </div>
+        </div>
     </div>
 </div>
 
 <div class="row mt-5">
-    <div class="col-md-4">
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title">For Workers</h5>
-                <p class="card-text">Create your profile, set your availability, and get booked for jobs. Earn based on hourly rates set by admin.</p>
-                <a href="@Url.Action("Index", "Worker")" class="btn btn-primary">View Workers</a>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title">For Clients</h5>
-                <p class="card-text">Find and book skilled workers for your tasks. System automatically calculates and displays total wage.</p>
-                <a href="@Url.Action("BookWorker", "Client")" class="btn btn-success">Book a Worker</a>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title">For Admin</h5>
-                <p class="card-text">Manage hourly rates, approve bookings, track earnings, and generate reports.</p>
-                <a href="@Url.Action("Dashboard", "Admin")" class="btn btn-warning">Admin Dashboard</a>
-            </div>
+    <div class="col-12">
+        <div class="alert alert-info border-0 rounded" role="alert">
+            <h4 class="alert-heading">How It Works</h4>
+            <hr>
+            <p>
+                <strong>1. Workers</strong> register with their skills and set availability.<br>
+                <strong>2. Admin</strong> sets hourly rates for different skills.<br>
+                <strong>3. Clients</strong> browse available workers and book for tasks.<br>
+                <strong>4. System</strong> automatically calculates wages based on time and rates.
+            </p>
         </div>
     </div>
 </div>

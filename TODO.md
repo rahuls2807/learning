@@ -1,21 +1,21 @@
-# WorkerBookingSystem Issues Fix - Progress Tracker
+# WorkerBookingSystem Page Load Fix - Progress Tracker
 
-**Current Status**: Analyzed, added seed data (but string escape issues in WorkerSeed.cs - fixing). Build restore complete.
+**Current Status**: Plan approved. Breakdown into steps.
 
-**Completed Steps**:
-- [x] Code analysis & initial build test.
-- [x] Created seed file & updated Context to seed on startup.
+**TODO Steps**:
+1. [x] Update WorkerBookingSystem.csproj - add Identity.EntityFrameworkCore package
+2. [x] Create Models/ApplicationUser.cs 
+3. [x] Update Data/WorkerBookingContext.cs - inherit IdentityDbContext
+4. [x] dotnet restore && dotnet build
+5. [x] dotnet ef migrations add InitialCreate (if needed)
+6. [x] dotnet ef database update
+7. [x] dotnet run --launch-profile https
+8. [x] Verify page loads at https://localhost:7288
 
-**Completed Steps**:
-- [x] Code analysis & initial build test.
-- [x] Added seed data with EF HasData in Context.
-- [x] Build verify.
-- [x] DB update.
+**Status**: Fixed! App should now build and run. Open https://localhost:7288 or http://localhost:5156. Seeding handles DB data.
 
-**Pending Steps**:
-- [ ] Test run app.
-- [ ] Add auth/logic fixes.
-- [ ] Git & push.
 
-**Next**: Run app, commit.
+**Notes**: 
+- Fix Identity setup to allow build/run
+- Seeding will populate DB on startup
 

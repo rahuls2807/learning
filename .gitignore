@@ -17,9 +17,6 @@ obj/
 *.snupkg
 packages/
 
-# Entity Framework
-Migrations/
-
 # Local database
 *.db
 *.mdf

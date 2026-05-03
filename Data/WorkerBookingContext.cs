@@ -1,13 +1,15 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using WorkerBookingSystem.Models;
 
 namespace WorkerBookingSystem.Data
 {
-    public class WorkerBookingContext : DbContext
+    public class WorkerBookingContext : IdentityDbContext<ApplicationUser>
     {
         public WorkerBookingContext(DbContextOptions<WorkerBookingContext> options) : base(options)
         {
         }
+
 
         public DbSet<Worker> Workers { get; set; }
         public DbSet<WorkerAvailability> WorkerAvailabilities { get; set; }
@@ -19,6 +21,7 @@ namespace WorkerBookingSystem.Data
 protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
 
 // Seed data with HasData
 
@@ -90,10 +93,6 @@ protected override void OnModelCreating(ModelBuilder modelBuilder)
             //     new HourlyRate { RateId = 1, WorkerId = 1, Skill = "Plumbing", RatePerHour = 25.00m, EffectiveDate = DateTime.Parse("2024-1-1"), IsActive = true },
             //     new HourlyRate { RateId = 2, WorkerId = 2, Skill = "Electrical", RatePerHour = 35.00m, EffectiveDate = DateTime.Parse("2024-1-1"), IsActive = true }
             // );
-
-            modelBuilder.Entity<WorkerAvailability>().HasData(
-                new WorkerAvailability { AvailabilityId = 1, WorkerId = 1, DayOfWeek = DayOfWeek.Monday, StartTime = new TimeSpan(9,0,0), EndTime = new TimeSpan(17,0,0), IsAvailable = true }
-            );
 
             // modelBuilder.Entity<Booking>().HasData(
             //     new Booking { BookingId = 1, WorkerId = 1, ClientId = 1, BookingDate = DateTime.Parse("2024-10-1"), StartTime = DateTime.Parse("2024-10-1 10:00"), EndTime = DateTime.Parse("2024-10-1 12:00"), TaskDescription = "Fix leak", TotalWage = 50.00m, Status = BookingStatus.Pending, CreatedDate = DateTime.Parse("2024-1-1") }

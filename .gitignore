@@ -22,6 +22,9 @@ packages/
 *.mdf
 *.ldf
 
+# Local restart logs
+restart-app.*.log
+
 # Rider
 .idea/
 *.sln.iml

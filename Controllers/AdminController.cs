@@ -56,6 +56,11 @@ namespace WorkerBookingSystem.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> SetRate([Bind("WorkerId,Skill,RatePerHour")] HourlyRate hourlyRate)
         {
+            if (hourlyRate.RatePerHour <= 0)
+            {
+                hourlyRate.RatePerHour = 10.00m;
+            }
+
             if (ModelState.IsValid)
             {
                 // Deactivate previous rate for this worker

@@ -5,7 +5,7 @@ namespace WorkerBookingSystem.Models
         public int RateId { get; set; }
         public int WorkerId { get; set; }
         public string? Skill { get; set; } // e.g., Plumbing, Electrical
-        public decimal RatePerHour { get; set; }
+        public decimal RatePerHour { get; set; } = 10.00m;
         public DateTime EffectiveDate { get; set; } = DateTime.Now;
         public bool IsActive { get; set; } = true;
 

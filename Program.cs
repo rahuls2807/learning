@@ -45,33 +45,37 @@ using (var scope = app.Services.CreateScope())
             await roleManager.CreateAsync(new IdentityRole(role));
     }
 
-    // Create default admin user. Override with AdminSeed__Email and AdminSeed__Password.
-    var adminEmail = builder.Configuration["AdminSeed:Email"] ?? "admin@workerbooking.com";
-    var adminPassword = builder.Configuration["AdminSeed:Password"] ?? "Admin@123456";
+    // Seed the first admin only when AdminSeed:Email and AdminSeed:Password are provided
+    // through user-secrets, environment variables, or deployment secret configuration.
+    var adminEmail = builder.Configuration["AdminSeed:Email"];
+    var adminPassword = builder.Configuration["AdminSeed:Password"];
 
-    var adminUser = await userManager.FindByEmailAsync(adminEmail);
-    if (adminUser == null)
+    if (!string.IsNullOrWhiteSpace(adminEmail) && !string.IsNullOrWhiteSpace(adminPassword))
     {
-        var admin = new ApplicationUser
+        var adminUser = await userManager.FindByEmailAsync(adminEmail);
+        if (adminUser == null)
         {
-            UserName = adminEmail,
-            Email = adminEmail,
-            EmailConfirmed = true
-        };
-        var createResult = await userManager.CreateAsync(admin, adminPassword);
-        if (createResult.Succeeded)
-        {
-            await userManager.AddToRoleAsync(admin, "Admin");
+            var admin = new ApplicationUser
+            {
+                UserName = adminEmail,
+                Email = adminEmail,
+                EmailConfirmed = true
+            };
+            var createResult = await userManager.CreateAsync(admin, adminPassword);
+            if (createResult.Succeeded)
+            {
+                await userManager.AddToRoleAsync(admin, "Admin");
+            }
+            else
+            {
+                var errors = string.Join("; ", createResult.Errors.Select(e => e.Description));
+                app.Logger.LogWarning("Admin seed user {AdminEmail} was not created: {Errors}", adminEmail, errors);
+            }
         }
-        else
+        else if (!await userManager.IsInRoleAsync(adminUser, "Admin"))
         {
-            var errors = string.Join("; ", createResult.Errors.Select(e => e.Description));
-            app.Logger.LogWarning("Admin seed user {AdminEmail} was not created: {Errors}", adminEmail, errors);
+            await userManager.AddToRoleAsync(adminUser, "Admin");
         }
-    }
-    else if (!await userManager.IsInRoleAsync(adminUser, "Admin"))
-    {
-        await userManager.AddToRoleAsync(adminUser, "Admin");
     }
 
     // Seed the database

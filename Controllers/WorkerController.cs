@@ -34,9 +34,20 @@ namespace WorkerBookingSystem.Controllers
         {
             if (ModelState.IsValid)
             {
-                _context.Add(worker);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                var existingWorker = await _context.Workers
+                    .FirstOrDefaultAsync(w => w.Email == worker.Email);
+
+                if (existingWorker != null)
+                {
+                    ModelState.AddModelError("Email", "A worker with this email already exists.");
+                }
+                else
+                {
+                    worker.IsActive = true; // Ensure new workers are active
+                    _context.Add(worker);
+                    await _context.SaveChangesAsync();
+                    return RedirectToAction(nameof(Index));
+                }
             }
             return View(worker);
         }

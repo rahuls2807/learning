@@ -45,18 +45,25 @@ using (var scope = app.Services.CreateScope())
             await roleManager.CreateAsync(new IdentityRole(role));
     }
 
-    // Create default admin user
-    var adminUser = await userManager.FindByEmailAsync("admin@workerbooking.com");
+    // Create default admin user. Override with AdminSeed__Email and AdminSeed__Password.
+    var adminEmail = builder.Configuration["AdminSeed:Email"] ?? "admin@workerbooking.com";
+    var adminPassword = builder.Configuration["AdminSeed:Password"] ?? "Admin@123456";
+
+    var adminUser = await userManager.FindByEmailAsync(adminEmail);
     if (adminUser == null)
     {
         var admin = new ApplicationUser
         {
-            UserName = "admin",
-            Email = "admin@workerbooking.com",
+            UserName = adminEmail,
+            Email = adminEmail,
             EmailConfirmed = true
         };
-        await userManager.CreateAsync(admin, "Admin@123456");
+        await userManager.CreateAsync(admin, adminPassword);
         await userManager.AddToRoleAsync(admin, "Admin");
+    }
+    else if (!await userManager.IsInRoleAsync(adminUser, "Admin"))
+    {
+        await userManager.AddToRoleAsync(adminUser, "Admin");
     }
 
     // Seed the database

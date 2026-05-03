@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WorkerBookingSystem.Data;
@@ -5,6 +6,7 @@ using WorkerBookingSystem.Models;
 
 namespace WorkerBookingSystem.Controllers
 {
+    [Authorize(Roles = "Admin")]
     public class AdminController : Controller
     {
         private readonly WorkerBookingContext _context;
@@ -99,6 +101,7 @@ namespace WorkerBookingSystem.Controllers
 
         // POST: Admin/UpdateBookingStatus
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> UpdateBookingStatus(int bookingId, BookingStatus status)
         {
             var booking = await _context.Bookings.FindAsync(bookingId);

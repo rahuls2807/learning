@@ -18,7 +18,10 @@
                         <th>Date</th>
                         <th>Time</th>
                         <th>Task</th>
-                        <th>Total Wage</th>
+                        <th>Client Pays</th>
+                        <th>Worker Pay</th>
+                        <th>Profit</th>
+                        <th>Payment</th>
                         <th>Status</th>
                         <th>Action</th>
                     </tr>
@@ -26,13 +29,18 @@
                 <tbody>
                     @foreach (var booking in Model)
                     {
+                        var workerPay = booking.TotalWage * 0.90m;
+                        var profit = booking.TotalWage - workerPay;
                         <tr>
                             <td>@booking.Client?.FirstName @booking.Client?.LastName</td>
                             <td>@booking.Worker?.FirstName @booking.Worker?.LastName</td>
                             <td>@booking.BookingDate.ToShortDateString()</td>
                             <td>@booking.StartTime.ToShortTimeString() - @booking.EndTime.ToShortTimeString()</td>
                             <td>@booking.TaskDescription</td>
-                            <td>${@booking.TotalWage.ToString("F2")}</td>
+                            <td>$@booking.TotalWage.ToString("F2")</td>
+                            <td>$@workerPay.ToString("F2")</td>
+                            <td>$@profit.ToString("F2")</td>
+                            <td>@booking.PaymentStatus</td>
                             <td>
                                 @switch (booking.Status)
                                 {
@@ -55,6 +63,7 @@
                             </td>
                             <td>
                                 <form method="post" action="@Url.Action("UpdateBookingStatus")" style="display:inline;">
+                                    @Html.AntiForgeryToken()
                                     <input type="hidden" name="bookingId" value="@booking.BookingId" />
                                     <select name="status" class="form-select form-select-sm" onchange="this.form.submit();">
                                         <option value="">-- Update Status --</option>

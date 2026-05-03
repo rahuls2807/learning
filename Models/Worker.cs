@@ -11,6 +11,7 @@ namespace WorkerBookingSystem.Models
         [Required]
         public string? PhoneNumber { get; set; }
         public string? Skill { get; set; } // e.g., Plumbing, Electrical, etc.
+        public string? UserId { get; set; }
         public bool IsActive { get; set; } = true;
         public DateTime CreatedDate { get; set; } = DateTime.Now;
 

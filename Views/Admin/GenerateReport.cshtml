@@ -73,20 +73,26 @@
                         <th>Date</th>
                         <th>Duration</th>
                         <th>Task</th>
-                        <th>Total Wage</th>
+                        <th>Client Pays</th>
+                        <th>Worker Pay</th>
+                        <th>Profit</th>
                         <th>Status</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach (var booking in Model)
                     {
+                        var workerPay = booking.TotalWage * 0.90m;
+                        var profit = booking.TotalWage - workerPay;
                         <tr>
                             <td>@booking.Client?.FirstName @booking.Client?.LastName</td>
                             <td>@booking.Worker?.FirstName @booking.Worker?.LastName</td>
                             <td>@booking.BookingDate.ToShortDateString()</td>
                             <td>@Math.Round((booking.EndTime - booking.StartTime).TotalHours, 2) hours</td>
                             <td>@booking.TaskDescription</td>
-                            <td><strong>${@booking.TotalWage.ToString("F2")}</strong></td>
+                            <td><strong>$@booking.TotalWage.ToString("F2")</strong></td>
+                            <td>$@workerPay.ToString("F2")</td>
+                            <td>$@profit.ToString("F2")</td>
                             <td>
                                 @switch (booking.Status)
                                 {

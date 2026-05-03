@@ -1,0 +1,45 @@
+@model IEnumerable<WorkerBookingSystem.Models.Booking>
+
+@{
+    ViewData["Title"] = "My Jobs";
+}
+
+<div class="container mt-5">
+    <h2>My Jobs</h2>
+
+    @if (Model.Any())
+    {
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>Task</th>
+                        <th>Your Pay</th>
+                        <th>Status</th>
+                        <th>Payment</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var booking in Model)
+                    {
+                        var workerPay = booking.TotalWage * 0.90m;
+                        <tr>
+                            <td>@booking.BookingDate.ToShortDateString()</td>
+                            <td>@booking.StartTime.ToShortTimeString() - @booking.EndTime.ToShortTimeString()</td>
+                            <td>@booking.TaskDescription</td>
+                            <td>$@workerPay.ToString("F2")</td>
+                            <td>@booking.Status</td>
+                            <td>@booking.PaymentStatus</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info">No jobs assigned yet.</div>
+    }
+</div>

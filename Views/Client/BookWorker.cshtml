@@ -17,9 +17,7 @@
                         <div class="card-body">
                             <h5 class="card-title">@worker.FirstName @worker.LastName</h5>
                             <p class="card-text">
-                                <strong>Skill:</strong> @worker.Skill<br>
-                                <strong>Email:</strong> @worker.Email<br>
-                                <strong>Phone:</strong> @worker.PhoneNumber
+                                <strong>Skill:</strong> @worker.Skill
                             </p>
                             <a asp-action="CreateBooking" asp-route-workerId="@worker.WorkerId" class="btn btn-primary">Book Now</a>
                         </div>

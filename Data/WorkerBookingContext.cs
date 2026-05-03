@@ -29,6 +29,9 @@ protected override void OnModelCreating(ModelBuilder modelBuilder)
             modelBuilder.Entity<Worker>()
                 .HasKey(w => w.WorkerId);
 
+            modelBuilder.Entity<Worker>()
+                .HasIndex(w => w.UserId);
+
             // Configure WorkerAvailability entity
             modelBuilder.Entity<WorkerAvailability>()
                 .HasKey(wa => wa.AvailabilityId);
@@ -41,6 +44,9 @@ protected override void OnModelCreating(ModelBuilder modelBuilder)
             // Configure Client entity
             modelBuilder.Entity<Client>()
                 .HasKey(c => c.ClientId);
+
+            modelBuilder.Entity<Client>()
+                .HasIndex(c => c.UserId);
 
             // Configure Booking entity
             modelBuilder.Entity<Booking>()

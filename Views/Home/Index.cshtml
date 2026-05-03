@@ -34,7 +34,7 @@
     <div class="btn-group d-flex gap-2" role="group">
         <a class="btn btn-light btn-lg" href="@Url.Action("Create", "Worker")" role="button">📝 Register as Worker</a>
         <a class="btn btn-light btn-lg" href="@Url.Action("Register", "Client")" role="button">👤 Register as Client</a>
-        <a class="btn btn-warning btn-lg" href="@Url.Action("Dashboard", "Admin")" role="button">⚙️ Admin Panel</a>
+        <a class="btn btn-success btn-lg" href="@Url.Action("BookWorker", "Client")" role="button">Book a Worker</a>
     </div>
 </div>
 
@@ -73,7 +73,9 @@
         </div>
     </div>
 
-    <div class="col-md-4 mb-4">
+    @if (User.IsInRole("Admin"))
+    {
+        <div class="col-md-4 mb-4">
         <div class="card feature-card h-100">
             <div class="card-body text-center">
                 <div style="font-size: 3rem; margin-bottom: 15px;">📊</div>
@@ -89,6 +91,7 @@
             </div>
         </div>
     </div>
+    }
 </div>
 
 <div class="row mt-5">
@@ -98,7 +101,7 @@
             <hr>
             <p>
                 <strong>1. Workers</strong> register with their skills and set availability.<br>
-                <strong>2. Admin</strong> sets hourly rates for different skills.<br>
+                <strong>2. Rates</strong> are set securely by the business team.<br>
                 <strong>3. Clients</strong> browse available workers and book for tasks.<br>
                 <strong>4. System</strong> automatically calculates wages based on time and rates.
             </p>

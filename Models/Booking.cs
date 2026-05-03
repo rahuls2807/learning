@@ -18,6 +18,9 @@ namespace WorkerBookingSystem.Models
         public DateTime EndTime { get; set; }
         public string? TaskDescription { get; set; }
         public BookingStatus Status { get; set; } = BookingStatus.Pending;
+        public PaymentStatus PaymentStatus { get; set; } = PaymentStatus.Unpaid;
+        public string? PaymentReference { get; set; }
+        public DateTime? PaidDate { get; set; }
         public decimal TotalWage { get; set; } // Calculated based on hourly rate
         public DateTime CreatedDate { get; set; } = DateTime.Now;
 
@@ -33,5 +36,13 @@ namespace WorkerBookingSystem.Models
         InProgress,
         Completed,
         Cancelled
+    }
+
+    public enum PaymentStatus
+    {
+        Unpaid,
+        Paid,
+        Failed,
+        Refunded
     }
 }

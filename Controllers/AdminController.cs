@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WorkerBookingSystem.Data;
 using WorkerBookingSystem.Models;
+using WorkerBookingSystem.Models.ViewModels;
 
 namespace WorkerBookingSystem.Controllers
 {
@@ -10,10 +12,12 @@ namespace WorkerBookingSystem.Controllers
     public class AdminController : Controller
     {
         private readonly WorkerBookingContext _context;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public AdminController(WorkerBookingContext context)
+        public AdminController(WorkerBookingContext context, UserManager<ApplicationUser> userManager)
         {
             _context = context;
+            _userManager = userManager;
         }
 
         // GET: Admin/Dashboard
@@ -32,6 +36,64 @@ namespace WorkerBookingSystem.Controllers
             ViewBag.TotalEarnings = totalEarnings;
 
             return View();
+        }
+
+        public async Task<IActionResult> ManageAdmins()
+        {
+            var admins = await _userManager.GetUsersInRoleAsync("Admin");
+            return View(admins.OrderBy(a => a.Email));
+        }
+
+        public IActionResult CreateAdmin()
+        {
+            return View(new AdminRegisterViewModel());
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CreateAdmin(AdminRegisterViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            var existingUser = await _userManager.FindByEmailAsync(model.Email);
+            if (existingUser != null)
+            {
+                if (!await _userManager.IsInRoleAsync(existingUser, "Admin"))
+                {
+                    await _userManager.AddToRoleAsync(existingUser, "Admin");
+                    TempData["AdminMessage"] = $"{model.Email} was granted admin access.";
+                    return RedirectToAction(nameof(ManageAdmins));
+                }
+
+                ModelState.AddModelError(nameof(model.Email), "This user is already an admin.");
+                return View(model);
+            }
+
+            var admin = new ApplicationUser
+            {
+                UserName = model.Email,
+                Email = model.Email,
+                EmailConfirmed = true
+            };
+
+            var result = await _userManager.CreateAsync(admin, model.Password);
+            if (!result.Succeeded)
+            {
+                foreach (var error in result.Errors)
+                {
+                    ModelState.AddModelError(string.Empty, error.Description);
+                }
+
+                return View(model);
+            }
+
+            await _userManager.AddToRoleAsync(admin, "Admin");
+            TempData["AdminMessage"] = $"{model.Email} was created as an admin.";
+
+            return RedirectToAction(nameof(ManageAdmins));
         }
 
         // GET: Admin/ManageRates

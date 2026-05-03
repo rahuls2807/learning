@@ -58,8 +58,16 @@ using (var scope = app.Services.CreateScope())
             Email = adminEmail,
             EmailConfirmed = true
         };
-        await userManager.CreateAsync(admin, adminPassword);
-        await userManager.AddToRoleAsync(admin, "Admin");
+        var createResult = await userManager.CreateAsync(admin, adminPassword);
+        if (createResult.Succeeded)
+        {
+            await userManager.AddToRoleAsync(admin, "Admin");
+        }
+        else
+        {
+            var errors = string.Join("; ", createResult.Errors.Select(e => e.Description));
+            app.Logger.LogWarning("Admin seed user {AdminEmail} was not created: {Errors}", adminEmail, errors);
+        }
     }
     else if (!await userManager.IsInRoleAsync(adminUser, "Admin"))
     {

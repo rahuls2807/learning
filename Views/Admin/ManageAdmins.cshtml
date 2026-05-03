@@ -1,0 +1,47 @@
+@model IEnumerable<WorkerBookingSystem.Models.ApplicationUser>
+
+@{
+    ViewData["Title"] = "Manage Admins";
+}
+
+<div class="container mt-5">
+    <h2>Manage Admins</h2>
+
+    @if (TempData["AdminMessage"] != null)
+    {
+        <div class="alert alert-success">@TempData["AdminMessage"]</div>
+    }
+
+    <a asp-action="CreateAdmin" class="btn btn-primary mb-3">+ Create Admin</a>
+
+    @if (Model.Any())
+    {
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Email</th>
+                        <th>Confirmed</th>
+                        <th>Lockout</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var admin in Model)
+                    {
+                        <tr>
+                            <td>@admin.Email</td>
+                            <td>@(admin.EmailConfirmed ? "Yes" : "No")</td>
+                            <td>@(admin.LockoutEnd?.ToString("g") ?? "None")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info">No admins found.</div>
+    }
+
+    <a asp-action="Dashboard" class="btn btn-secondary">Back to Dashboard</a>
+</div>

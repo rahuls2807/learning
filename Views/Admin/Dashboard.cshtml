@@ -114,6 +114,11 @@
         </div>
     </div>
 
+    <h2>Analytics</h2>
+    <p>Total Bookings: @Model.TotalBookings</p>
+    <p>Total Revenue: @Model.TotalRevenue</p>
+    <p>Active Workers: @Model.ActiveWorkers</p>
+
     @if (ViewBag.TopSkills is List<string> topSkills && topSkills.Any())
     {
         <div class="alert alert-light border">

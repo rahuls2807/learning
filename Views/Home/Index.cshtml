@@ -1,5 +1,5 @@
 ﻿@{
-    ViewData["Title"] = "Worker Booking System";
+    ViewData["Title"] = "Worker Mandi";
 }
 
 <style>
@@ -29,7 +29,7 @@
 </style>
 
 <div class="hero-section">
-    <h1>Worker Booking System</h1>
+    <h1>Worker Mandi</h1>
     <p>Connect skilled workers with clients - Efficient task management with automatic wage calculation</p>
     <div class="btn-group d-flex gap-2" role="group">
         @if (!User.IsInRole("Client") && User.Identity?.IsAuthenticated != true)

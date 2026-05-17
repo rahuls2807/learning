@@ -67,7 +67,7 @@ namespace WorkerBookingSystem.Controllers
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
 
             var instructions = """
-                You are the in-app help assistant for Worker Booking System.
+                You are the in-app help assistant for Worker Mandi.
                 Be concise, friendly, and practical. Help users understand how to register,
                 book workers, update booking status, record cash paid to workers, pay online,
                 view worker jobs, and use admin dashboards. Do not ask for card numbers,

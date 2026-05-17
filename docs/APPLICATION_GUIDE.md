@@ -1,8 +1,8 @@
-# Worker Booking System - Application Guide
+# Worker Mandi - Application Guide
 
 ## Purpose
 
-Worker Booking System connects clients with skilled workers, tracks bookings, splits payments between online and cash-to-worker payments, and gives admins visibility into operational earnings, worker payouts, and outstanding balances.
+Worker Mandi connects clients with skilled workers, tracks bookings, splits payments between online and cash-to-worker payments, and gives admins visibility into operational earnings, worker payouts, and outstanding balances.
 
 ## Main Roles
 

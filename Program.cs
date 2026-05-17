@@ -1,7 +1,7 @@
-using WorkerBookingSystem.Data;
+using WorkerMandi.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
-using WorkerBookingSystem.Models;
+using WorkerMandi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,7 +11,7 @@ builder.Services.AddHttpClient();
 
 // Add Entity Framework Core with SQL Server
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
-    ?? "Server=(localdb)\\mssqllocaldb;Database=WorkerBookingSystemDb;Trusted_Connection=true;";
+    ?? "Server=(localdb)\\mssqllocaldb;Database=WorkerMandiDb;Trusted_Connection=true;";
 builder.Services.AddDbContext<WorkerBookingContext>(options =>
     options.UseSqlServer(connectionString));
 

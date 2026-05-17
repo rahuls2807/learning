@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace WorkerBookingSystem.Models.ViewModels
 {
     public class PagedResult<T>
@@ -24,6 +26,32 @@ namespace WorkerBookingSystem.Models.ViewModels
         public bool IsActive { get; set; }
         public decimal? DisplayRate { get; set; }
         public int CompletedJobs { get; set; }
+        public double? AverageRating { get; set; }
+        public int ReviewCount { get; set; }
+        public string? ProfileImagePath { get; set; }
         public DateTime CreatedDate { get; set; }
+    }
+
+    public class WorkerProfileViewModel
+    {
+        public Worker Worker { get; set; } = new();
+        public bool CanSeeContact { get; set; }
+        public bool CanReview { get; set; }
+        public double? AverageRating { get; set; }
+        public int ReviewCount { get; set; }
+        public IReadOnlyList<WorkerReview> Reviews { get; set; } = Array.Empty<WorkerReview>();
+        public int? BookingIdForReview { get; set; }
+    }
+
+    public class WorkerReviewInputViewModel
+    {
+        public int WorkerId { get; set; }
+        public int? BookingId { get; set; }
+
+        [Range(1, 5)]
+        public int Rating { get; set; } = 5;
+
+        [StringLength(1000)]
+        public string? Comment { get; set; }
     }
 }

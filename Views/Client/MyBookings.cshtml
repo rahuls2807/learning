@@ -106,6 +106,10 @@
                                     {
                                         <small class="text-muted">@booking.ClientStatusNote</small>
                                     }
+                                    @if (booking.Worker != null)
+                                    {
+                                        <a asp-controller="Worker" asp-action="Details" asp-route-id="@booking.WorkerId" class="btn btn-sm btn-outline-primary">Profile & Review</a>
+                                    }
                                 </div>
                             </td>
                         </tr>

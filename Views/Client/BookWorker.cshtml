@@ -36,14 +36,20 @@
             {
                 <div class="col-md-4 mb-3">
                     <div class="card h-100">
+                        @if (!string.IsNullOrWhiteSpace(worker.ProfileImagePath))
+                        {
+                            <img src="@worker.ProfileImagePath" class="card-img-top worker-card-image" alt="@worker.Name" />
+                        }
                         <div class="card-body">
                             <h5 class="card-title">@worker.Name</h5>
                             <p class="card-text">
                                 <strong>Skill:</strong> @worker.Skill<br />
                                 <strong>Rate:</strong> @(worker.DisplayRate.HasValue && worker.DisplayRate.Value > 0 ? $"${worker.DisplayRate.Value:F2}/hr" : "Rate pending")<br />
-                                <strong>Completed jobs:</strong> @worker.CompletedJobs
+                                <strong>Completed jobs:</strong> @worker.CompletedJobs<br />
+                                <strong>Rating:</strong> @(worker.AverageRating.HasValue ? $"{worker.AverageRating.Value:F1}/5 ({worker.ReviewCount})" : "No ratings yet")
                             </p>
                             <a asp-action="CreateBooking" asp-route-workerId="@worker.WorkerId" class="btn btn-primary">Book Now</a>
+                            <a asp-controller="Worker" asp-action="Details" asp-route-id="@worker.WorkerId" class="btn btn-outline-primary">Profile</a>
                         </div>
                     </div>
                 </div>

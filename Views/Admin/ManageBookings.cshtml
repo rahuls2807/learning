@@ -43,7 +43,13 @@
                             <td>@booking.Client?.FirstName @booking.Client?.LastName</td>
                             <td>@booking.Client?.Email</td>
                             <td>@booking.Client?.PhoneNumber</td>
-                            <td>@booking.Worker?.FirstName @booking.Worker?.LastName</td>
+                            <td>
+                                @booking.Worker?.FirstName @booking.Worker?.LastName
+                                @if (booking.Worker != null)
+                                {
+                                    <div><a asp-controller="Worker" asp-action="Details" asp-route-id="@booking.WorkerId">Profile</a></div>
+                                }
+                            </td>
                             <td>@booking.Worker?.Email</td>
                             <td>@booking.Worker?.PhoneNumber</td>
                             <td>@booking.BookingDate.ToShortDateString()</td>

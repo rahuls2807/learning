@@ -11,7 +11,7 @@ builder.Services.AddHttpClient();
 
 // Add Entity Framework Core with SQL Server
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
-    ?? "Server=(localdb)\\mssqllocaldb;Database=WorkerMandiDb;Trusted_Connection=true;";
+    ?? "Server=(localdb)\\mssqllocaldb;Database=WorkerBookingSystemDb;Trusted_Connection=true;";
 builder.Services.AddDbContext<WorkerBookingContext>(options =>
     options.UseSqlServer(connectionString));
 
@@ -79,8 +79,10 @@ using (var scope = app.Services.CreateScope())
         }
     }
 
-    // Seed the database
-    WorkerSeed.SeedData(context);
+    if (builder.Configuration.GetValue<bool>("SeedData:Enabled"))
+    {
+        WorkerSeed.SeedData(context);
+    }
 }
 
 // Configure the HTTP request pipeline.

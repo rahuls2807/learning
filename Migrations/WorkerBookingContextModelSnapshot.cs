@@ -421,6 +421,12 @@ namespace WorkerBookingSystem.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
+                    b.Property<string>("ProfileImagePath")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ResumePath")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Skill")
                         .HasColumnType("nvarchar(450)");
 
@@ -438,6 +444,52 @@ namespace WorkerBookingSystem.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("Workers");
+                });
+
+            modelBuilder.Entity("WorkerBookingSystem.Models.WorkerReview", b =>
+                {
+                    b.Property<int>("WorkerReviewId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("WorkerReviewId"));
+
+                    b.Property<int?>("BookingId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("ClientId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Comment")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsAdminReview")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("Rating")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ReviewerName")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("nvarchar(120)");
+
+                    b.Property<int>("WorkerId")
+                        .HasColumnType("int");
+
+                    b.HasKey("WorkerReviewId");
+
+                    b.HasIndex("BookingId");
+
+                    b.HasIndex("ClientId");
+
+                    b.HasIndex("WorkerId", "CreatedDate");
+
+                    b.ToTable("WorkerReviews");
                 });
 
             modelBuilder.Entity("WorkerBookingSystem.Models.WorkerAvailability", b =>
@@ -562,6 +614,31 @@ namespace WorkerBookingSystem.Migrations
                     b.Navigation("Worker");
                 });
 
+            modelBuilder.Entity("WorkerBookingSystem.Models.WorkerReview", b =>
+                {
+                    b.HasOne("WorkerBookingSystem.Models.Booking", "Booking")
+                        .WithMany()
+                        .HasForeignKey("BookingId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("WorkerBookingSystem.Models.Client", "Client")
+                        .WithMany()
+                        .HasForeignKey("ClientId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("WorkerBookingSystem.Models.Worker", "Worker")
+                        .WithMany("Reviews")
+                        .HasForeignKey("WorkerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Booking");
+
+                    b.Navigation("Client");
+
+                    b.Navigation("Worker");
+                });
+
             modelBuilder.Entity("WorkerBookingSystem.Models.Client", b =>
                 {
                     b.Navigation("Bookings");
@@ -572,6 +649,8 @@ namespace WorkerBookingSystem.Migrations
                     b.Navigation("Availabilities");
 
                     b.Navigation("Bookings");
+
+                    b.Navigation("Reviews");
                 });
 #pragma warning restore 612, 618
         }

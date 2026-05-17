@@ -11,6 +11,8 @@ namespace WorkerBookingSystem.Models
         [Required]
         public string? PhoneNumber { get; set; }
         public string? Skill { get; set; } // e.g., Plumbing, Electrical, etc.
+        public string? ProfileImagePath { get; set; }
+        public string? ResumePath { get; set; }
         public string? UserId { get; set; }
         public bool IsActive { get; set; } = true;
         public DateTime CreatedDate { get; set; } = DateTime.Now;
@@ -18,5 +20,6 @@ namespace WorkerBookingSystem.Models
         // Navigation properties
         public ICollection<WorkerAvailability> Availabilities { get; set; } = new List<WorkerAvailability>();
         public ICollection<Booking> Bookings { get; set; } = new List<Booking>();
+        public ICollection<WorkerReview> Reviews { get; set; } = new List<WorkerReview>();
     }
 }

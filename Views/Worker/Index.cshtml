@@ -49,8 +49,8 @@
                     {
                         <tr>
                             <td>@worker.Name</td>
-                            <td class="text-muted">Protected</td>
-                            <td class="text-muted">Protected</td>
+                            <td>@worker.Email</td>
+                            <td>@worker.PhoneNumber</td>
                             <td>@worker.Skill</td>
                             <td>
                                 @if (worker.DisplayRate.HasValue && worker.DisplayRate.Value > 0)
@@ -75,6 +75,7 @@
                             <td>
                                 <a asp-action="Edit" asp-route-id="@worker.WorkerId" class="btn btn-sm btn-warning">Edit</a>
                                 <a asp-action="ManageAvailability" asp-route-id="@worker.WorkerId" class="btn btn-sm btn-info">Availability</a>
+                                <a asp-action="Details" asp-route-id="@worker.WorkerId" class="btn btn-sm btn-outline-primary">Profile</a>
                             </td>
                         </tr>
                     }

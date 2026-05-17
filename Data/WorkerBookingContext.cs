@@ -17,6 +17,7 @@ namespace WorkerBookingSystem.Data
         public DbSet<Booking> Bookings { get; set; }
         public DbSet<HourlyRate> HourlyRates { get; set; }
         public DbSet<Admin> Admins { get; set; }
+        public DbSet<WorkerReview> WorkerReviews { get; set; }
 
 protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -40,6 +41,29 @@ protected override void OnModelCreating(ModelBuilder modelBuilder)
 
             modelBuilder.Entity<Worker>()
                 .HasIndex(w => w.PhoneNumber);
+
+            modelBuilder.Entity<WorkerReview>()
+                .HasKey(r => r.WorkerReviewId);
+
+            modelBuilder.Entity<WorkerReview>()
+                .HasIndex(r => new { r.WorkerId, r.CreatedDate });
+
+            modelBuilder.Entity<WorkerReview>()
+                .HasOne(r => r.Worker)
+                .WithMany(w => w.Reviews)
+                .HasForeignKey(r => r.WorkerId);
+
+            modelBuilder.Entity<WorkerReview>()
+                .HasOne(r => r.Client)
+                .WithMany()
+                .HasForeignKey(r => r.ClientId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<WorkerReview>()
+                .HasOne(r => r.Booking)
+                .WithMany()
+                .HasForeignKey(r => r.BookingId)
+                .OnDelete(DeleteBehavior.NoAction);
 
             // Configure WorkerAvailability entity
             modelBuilder.Entity<WorkerAvailability>()

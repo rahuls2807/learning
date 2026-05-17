@@ -8,26 +8,34 @@ using WorkerBookingSystem.Models.ViewModels;
 
 namespace WorkerBookingSystem.Controllers
 {
-    [Authorize(Roles = "Worker,Admin")]
+    [Authorize(Roles = "Worker,Admin,Client")]
     public class WorkerController : Controller
     {
         private readonly WorkerBookingContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
+        private readonly IWebHostEnvironment _environment;
 
         public WorkerController(
             WorkerBookingContext context,
             UserManager<ApplicationUser> userManager,
-            SignInManager<ApplicationUser> signInManager)
+            SignInManager<ApplicationUser> signInManager,
+            IWebHostEnvironment environment)
         {
             _context = context;
             _userManager = userManager;
             _signInManager = signInManager;
+            _environment = environment;
         }
 
         // GET: Worker
         public async Task<IActionResult> Index(string? search, string? skill, int page = 1, int pageSize = 25)
         {
+            if (User.IsInRole("Client"))
+            {
+                return RedirectToAction("BookWorker", "Client", new { search, skill, page, pageSize });
+            }
+
             page = Math.Max(1, page);
             pageSize = Math.Clamp(pageSize, 10, 100);
             var userId = _userManager.GetUserId(User);
@@ -35,7 +43,9 @@ namespace WorkerBookingSystem.Controllers
             var query = _context.Workers.AsNoTracking();
             query = User.IsInRole("Admin")
                 ? query
-                : query.Where(w => w.UserId == userId);
+                : User.IsInRole("Worker")
+                    ? query.Where(w => w.UserId == userId)
+                    : query.Where(w => w.IsActive);
 
             if (!string.IsNullOrWhiteSpace(skill))
             {
@@ -63,8 +73,13 @@ namespace WorkerBookingSystem.Controllers
                 {
                     WorkerId = w.WorkerId,
                     Name = ((w.FirstName ?? "") + " " + (w.LastName ?? "")).Trim(),
+                    Email = w.Email,
+                    PhoneNumber = w.PhoneNumber,
                     Skill = w.Skill,
                     IsActive = w.IsActive,
+                    ProfileImagePath = w.ProfileImagePath,
+                    AverageRating = w.Reviews.Any() ? w.Reviews.Average(r => r.Rating) : null,
+                    ReviewCount = w.Reviews.Count,
                     CreatedDate = w.CreatedDate
                 })
                 .ToListAsync();
@@ -159,6 +174,8 @@ namespace WorkerBookingSystem.Controllers
                         Email = model.Email,
                         PhoneNumber = model.PhoneNumber,
                         Skill = model.Skill,
+                        ProfileImagePath = await SaveWorkerFile(model.ProfileImage, "images", [".jpg", ".jpeg", ".png", ".webp"]),
+                        ResumePath = await SaveWorkerFile(model.Resume, "resumes", [".pdf", ".doc", ".docx"]),
                         UserId = user.Id,
                         IsActive = true
                     };
@@ -184,18 +201,29 @@ namespace WorkerBookingSystem.Controllers
                 return NotFound();
             if (!CanAccessWorker(worker)) return Forbid();
 
-            return View(worker);
+            return View(new WorkerEditViewModel
+            {
+                WorkerId = worker.WorkerId,
+                FirstName = worker.FirstName ?? string.Empty,
+                LastName = worker.LastName ?? string.Empty,
+                Email = worker.Email ?? string.Empty,
+                PhoneNumber = worker.PhoneNumber ?? string.Empty,
+                Skill = worker.Skill ?? string.Empty,
+                IsActive = worker.IsActive,
+                CurrentProfileImagePath = worker.ProfileImagePath,
+                CurrentResumePath = worker.ResumePath
+            });
         }
 
         // POST: Worker/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("WorkerId,FirstName,LastName,Email,PhoneNumber,Skill,IsActive")] Worker worker)
+        public async Task<IActionResult> Edit(int id, WorkerEditViewModel model)
         {
-            if (id != worker.WorkerId)
+            if (id != model.WorkerId)
                 return NotFound();
 
-            var existing = await _context.Workers.AsNoTracking().FirstOrDefaultAsync(w => w.WorkerId == id);
+            var existing = await _context.Workers.FirstOrDefaultAsync(w => w.WorkerId == id);
             if (existing == null) return NotFound();
             if (!CanAccessWorker(existing)) return Forbid();
 
@@ -203,20 +231,101 @@ namespace WorkerBookingSystem.Controllers
             {
                 try
                 {
-                    worker.UserId = existing.UserId;
-                    _context.Update(worker);
+                    existing.FirstName = model.FirstName;
+                    existing.LastName = model.LastName;
+                    existing.Email = model.Email;
+                    existing.PhoneNumber = model.PhoneNumber;
+                    existing.Skill = model.Skill;
+                    existing.IsActive = model.IsActive;
+                    existing.ProfileImagePath = await SaveWorkerFile(model.ProfileImage, "images", [".jpg", ".jpeg", ".png", ".webp"])
+                        ?? existing.ProfileImagePath;
+                    existing.ResumePath = await SaveWorkerFile(model.Resume, "resumes", [".pdf", ".doc", ".docx"])
+                        ?? existing.ResumePath;
                     await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!WorkerExists(worker.WorkerId))
+                    if (!WorkerExists(model.WorkerId))
                         return NotFound();
                     else
                         throw;
                 }
                 return RedirectToAction(nameof(Index));
             }
-            return View(worker);
+            model.CurrentProfileImagePath = existing.ProfileImagePath;
+            model.CurrentResumePath = existing.ResumePath;
+            return View(model);
+        }
+
+        [AllowAnonymous]
+        public async Task<IActionResult> Details(int id)
+        {
+            var worker = await _context.Workers
+                .AsNoTracking()
+                .Include(w => w.Reviews)
+                .FirstOrDefaultAsync(w => w.WorkerId == id);
+
+            if (worker == null) return NotFound();
+
+            var canSeeContact = User.IsInRole("Admin")
+                || (User.IsInRole("Worker") && worker.UserId == _userManager.GetUserId(User))
+                || await HasClientBookedWorker(id);
+
+            var canReview = User.IsInRole("Admin") || await HasClientBookedWorker(id);
+            var bookingIdForReview = await GetClientBookingIdForWorker(id);
+
+            var reviews = worker.Reviews
+                .OrderByDescending(r => r.CreatedDate)
+                .ToList();
+
+            return View(new WorkerProfileViewModel
+            {
+                Worker = worker,
+                CanSeeContact = canSeeContact,
+                CanReview = canReview,
+                BookingIdForReview = bookingIdForReview,
+                AverageRating = reviews.Any() ? reviews.Average(r => r.Rating) : null,
+                ReviewCount = reviews.Count,
+                Reviews = reviews
+            });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddReview(WorkerReviewInputViewModel model)
+        {
+            var worker = await _context.Workers.FindAsync(model.WorkerId);
+            if (worker == null) return NotFound();
+
+            if (!User.IsInRole("Admin") && !await HasClientBookedWorker(model.WorkerId))
+            {
+                return Forbid();
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return RedirectToAction(nameof(Details), new { id = model.WorkerId });
+            }
+
+            var client = await GetCurrentClient();
+            var reviewerName = User.IsInRole("Admin")
+                ? "Admin"
+                : $"{client?.FirstName} {client?.LastName}".Trim();
+
+            _context.WorkerReviews.Add(new WorkerReview
+            {
+                WorkerId = model.WorkerId,
+                ClientId = client?.ClientId,
+                BookingId = User.IsInRole("Admin") ? null : model.BookingId,
+                Rating = model.Rating,
+                Comment = model.Comment,
+                ReviewerName = string.IsNullOrWhiteSpace(reviewerName) ? "Client" : reviewerName,
+                IsAdminReview = User.IsInRole("Admin")
+            });
+
+            await _context.SaveChangesAsync();
+            TempData["ReviewMessage"] = "Review saved.";
+            return RedirectToAction(nameof(Details), new { id = model.WorkerId });
         }
 
         // GET: Worker/ManageAvailability/5
@@ -283,6 +392,54 @@ namespace WorkerBookingSystem.Controllers
         private bool CanAccessWorker(Worker worker)
         {
             return User.IsInRole("Admin") || worker.UserId == _userManager.GetUserId(User);
+        }
+
+        private async Task<string?> SaveWorkerFile(IFormFile? file, string folder, string[] allowedExtensions)
+        {
+            if (file == null || file.Length == 0) return null;
+
+            var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+            if (!allowedExtensions.Contains(extension)) return null;
+
+            var relativeFolder = Path.Combine("uploads", "workers", folder);
+            var absoluteFolder = Path.Combine(_environment.WebRootPath, relativeFolder);
+            Directory.CreateDirectory(absoluteFolder);
+
+            var fileName = $"{Guid.NewGuid():N}{extension}";
+            var absolutePath = Path.Combine(absoluteFolder, fileName);
+
+            await using var stream = System.IO.File.Create(absolutePath);
+            await file.CopyToAsync(stream);
+
+            return "/" + Path.Combine(relativeFolder, fileName).Replace("\\", "/");
+        }
+
+        private async Task<Client?> GetCurrentClient()
+        {
+            var userId = _userManager.GetUserId(User);
+            if (string.IsNullOrWhiteSpace(userId)) return null;
+
+            return await _context.Clients.FirstOrDefaultAsync(c => c.UserId == userId || c.Email == User.Identity!.Name);
+        }
+
+        private async Task<bool> HasClientBookedWorker(int workerId)
+        {
+            var client = await GetCurrentClient();
+            if (client == null) return false;
+
+            return await _context.Bookings.AnyAsync(b => b.ClientId == client.ClientId && b.WorkerId == workerId);
+        }
+
+        private async Task<int?> GetClientBookingIdForWorker(int workerId)
+        {
+            var client = await GetCurrentClient();
+            if (client == null) return null;
+
+            return await _context.Bookings
+                .Where(b => b.ClientId == client.ClientId && b.WorkerId == workerId)
+                .OrderByDescending(b => b.BookingDate)
+                .Select(b => (int?)b.BookingId)
+                .FirstOrDefaultAsync();
         }
     }
 }

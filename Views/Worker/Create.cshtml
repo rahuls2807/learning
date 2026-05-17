@@ -8,7 +8,7 @@
     <div class="row justify-content-center">
         <div class="col-md-6">
             <h2>Worker Registration</h2>
-            <form asp-action="Create" method="post">
+            <form asp-action="Create" method="post" enctype="multipart/form-data">
                 <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
                 <div class="form-group">
@@ -39,6 +39,18 @@
                     <label asp-for="Skill" class="control-label"></label>
                     <input asp-for="Skill" class="form-control" placeholder="e.g., Plumbing, Electrical, Carpentry" />
                     <span asp-validation-for="Skill" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="ProfileImage" class="control-label"></label>
+                    <input asp-for="ProfileImage" class="form-control" type="file" accept=".jpg,.jpeg,.png,.webp" />
+                    <span asp-validation-for="ProfileImage" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Resume" class="control-label"></label>
+                    <input asp-for="Resume" class="form-control" type="file" accept=".pdf,.doc,.docx" />
+                    <span asp-validation-for="Resume" class="text-danger"></span>
                 </div>
 
                 <div class="form-group">

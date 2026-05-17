@@ -1,0 +1,115 @@
+@model WorkerBookingSystem.Models.ViewModels.WorkerProfileViewModel
+
+@{
+    ViewData["Title"] = "Worker Profile";
+    var worker = Model.Worker;
+    var workerName = $"{worker.FirstName} {worker.LastName}".Trim();
+}
+
+<div class="container mt-5">
+    @if (TempData["ReviewMessage"] != null)
+    {
+        <div class="alert alert-success">@TempData["ReviewMessage"]</div>
+    }
+
+    <div class="page-header worker-profile-header">
+        <div>
+            @if (!string.IsNullOrWhiteSpace(worker.ProfileImagePath))
+            {
+                <img src="@worker.ProfileImagePath" alt="@workerName" class="worker-avatar-large" />
+            }
+            else
+            {
+                <div class="worker-avatar-placeholder">@workerName.FirstOrDefault()</div>
+            }
+        </div>
+        <div class="flex-grow-1">
+            <h2>@workerName</h2>
+            <p class="mb-1"><strong>Skill:</strong> @worker.Skill</p>
+            <p class="mb-1">
+                <strong>Rating:</strong>
+                @if (Model.AverageRating.HasValue)
+                {
+                    <span>@Model.AverageRating.Value.ToString("F1") / 5 (@Model.ReviewCount reviews)</span>
+                }
+                else
+                {
+                    <span class="text-muted">No ratings yet</span>
+                }
+            </p>
+            @if (Model.CanSeeContact)
+            {
+                <p class="mb-1"><strong>Email:</strong> @worker.Email</p>
+                <p class="mb-1"><strong>Phone:</strong> @worker.PhoneNumber</p>
+                @if (!string.IsNullOrWhiteSpace(worker.ResumePath))
+                {
+                    <p class="mb-0"><a href="@worker.ResumePath" target="_blank" rel="noopener">View Resume</a></p>
+                }
+            }
+            else
+            {
+                <p class="text-muted mb-0">Email, phone, and resume are available after booking this worker.</p>
+            }
+        </div>
+    </div>
+
+    @if (Model.CanReview)
+    {
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title">Add Review</h5>
+                <form asp-action="AddReview" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="WorkerId" value="@worker.WorkerId" />
+                    <input type="hidden" name="BookingId" value="@Model.BookingIdForReview" />
+                    <div class="row g-2">
+                        <div class="col-md-2">
+                            <label class="form-label" for="rating">Rating</label>
+                            <select id="rating" name="Rating" class="form-select">
+                                <option value="5">5</option>
+                                <option value="4">4</option>
+                                <option value="3">3</option>
+                                <option value="2">2</option>
+                                <option value="1">1</option>
+                            </select>
+                        </div>
+                        <div class="col-md-8">
+                            <label class="form-label" for="comment">Review</label>
+                            <input id="comment" name="Comment" class="form-control" maxlength="1000" />
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary w-100">Submit</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    }
+
+    <h3>Reviews</h3>
+    @if (Model.Reviews.Any())
+    {
+        <div class="list-group mb-3">
+            @foreach (var review in Model.Reviews)
+            {
+                <div class="list-group-item">
+                    <div class="d-flex justify-content-between">
+                        <strong>@review.ReviewerName</strong>
+                        <span>@review.Rating / 5</span>
+                    </div>
+                    @if (!string.IsNullOrWhiteSpace(review.Comment))
+                    {
+                        <p class="mb-1">@review.Comment</p>
+                    }
+                    <small class="text-muted">@review.CreatedDate.ToShortDateString()</small>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info">No reviews yet.</div>
+    }
+
+    <a href="javascript:history.back()" class="btn btn-secondary">Back</a>
+</div>

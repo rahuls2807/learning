@@ -78,6 +78,30 @@
             &copy; 2026 - WorkerBookingSystem - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
         </div>
     </footer>
+
+    <div class="app-assistant" id="appAssistant">
+        @Html.AntiForgeryToken()
+        <button class="assistant-toggle" id="assistantToggle" type="button" aria-label="Open app assistant">Help</button>
+        <section class="assistant-panel" id="assistantPanel" aria-live="polite" aria-label="Worker Booking assistant">
+            <div class="assistant-header">
+                <div>
+                    <strong>Booking Assistant</strong>
+                    <span>Ask about bookings, payments, jobs, or admin tasks.</span>
+                </div>
+                <button type="button" id="assistantClose" aria-label="Close assistant">×</button>
+            </div>
+            <div class="assistant-messages" id="assistantMessages">
+                <div class="assistant-message assistant-message-bot">
+                    Hi, I can guide you through this app. Try asking "How do I book a worker?" or "How do I record cash paid?"
+                </div>
+            </div>
+            <form class="assistant-form" id="assistantForm">
+                <input id="assistantInput" maxlength="1000" autocomplete="off" placeholder="Ask for help..." />
+                <button type="submit">Send</button>
+            </form>
+        </section>
+    </div>
+
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>

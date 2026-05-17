@@ -165,6 +165,39 @@ High-value next features:
 - Keep payment card handling delegated to a real payment provider before production.
 - Always verify user ownership on the server, not only in views.
 
+## In-App AI Assistant
+
+Files:
+- `Controllers/ChatbotController.cs`
+- `Models/ViewModels/ChatbotViewModels.cs`
+- `Views/Shared/_Layout.cshtml`
+- `wwwroot/js/site.js`
+- `wwwroot/css/site.css`
+
+The floating assistant helps users understand how to use the application. It can answer questions about:
+- booking workers
+- paying online
+- recording cash paid directly to workers
+- client booking status updates
+- worker jobs and payout
+- admin dashboards and reports
+
+The browser never receives the OpenAI API key. The JavaScript widget posts the question to `/Chatbot/Ask`, and the server calls OpenAI only when an API key is configured.
+
+Local setup:
+
+```powershell
+dotnet user-secrets set "OpenAI:ApiKey" "your-openai-api-key"
+```
+
+Production setup:
+
+```powershell
+setx OPENAI_API_KEY "your-openai-api-key"
+```
+
+If no API key is configured, the assistant still works with built-in application help responses.
+
 ## Local Run
 
 ```powershell

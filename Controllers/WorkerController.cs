@@ -26,15 +26,52 @@ namespace WorkerBookingSystem.Controllers
         }
 
         // GET: Worker
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string? search, string? skill, int page = 1, int pageSize = 25)
         {
+            page = Math.Max(1, page);
+            pageSize = Math.Clamp(pageSize, 10, 100);
             var userId = _userManager.GetUserId(User);
-            var workers = User.IsInRole("Admin")
-                ? await _context.Workers.ToListAsync()
-                : await _context.Workers.Where(w => w.UserId == userId).ToListAsync();
+
+            var query = _context.Workers.AsNoTracking();
+            query = User.IsInRole("Admin")
+                ? query
+                : query.Where(w => w.UserId == userId);
+
+            if (!string.IsNullOrWhiteSpace(skill))
+            {
+                query = query.Where(w => w.Skill != null && w.Skill == skill);
+            }
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var term = $"{search.Trim()}%";
+                query = query.Where(w =>
+                    (w.FirstName != null && EF.Functions.Like(w.FirstName, term)) ||
+                    (w.LastName != null && EF.Functions.Like(w.LastName, term)) ||
+                    (w.Email != null && EF.Functions.Like(w.Email, term)) ||
+                    (w.PhoneNumber != null && EF.Functions.Like(w.PhoneNumber, term)) ||
+                    (w.Skill != null && EF.Functions.Like(w.Skill, term)));
+            }
+
+            var totalItems = await query.CountAsync();
+            var workers = await query
+                .OrderBy(w => w.FirstName)
+                .ThenBy(w => w.LastName)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(w => new WorkerSearchItemViewModel
+                {
+                    WorkerId = w.WorkerId,
+                    Name = ((w.FirstName ?? "") + " " + (w.LastName ?? "")).Trim(),
+                    Skill = w.Skill,
+                    IsActive = w.IsActive,
+                    CreatedDate = w.CreatedDate
+                })
+                .ToListAsync();
 
             var workerIds = workers.Select(w => w.WorkerId).ToList();
             var activeRates = await _context.HourlyRates
+                .AsNoTracking()
                 .Where(r => workerIds.Contains(r.WorkerId) && r.IsActive)
                 .ToListAsync();
             var rates = activeRates
@@ -42,17 +79,35 @@ namespace WorkerBookingSystem.Controllers
                 .ToDictionary(
                     g => g.Key,
                     g => g.OrderByDescending(r => r.EffectiveDate).First().RatePerHour * 0.90m);
-            ViewBag.WorkerRates = rates;
 
-            return View(workers);
+            foreach (var worker in workers)
+            {
+                worker.DisplayRate = rates.GetValueOrDefault(worker.WorkerId);
+            }
+
+            return View(new PagedResult<WorkerSearchItemViewModel>
+            {
+                Items = workers,
+                Page = page,
+                PageSize = pageSize,
+                TotalItems = totalItems,
+                Search = search,
+                Skill = skill
+            });
         }
 
         // GET: Worker/Create
         [AllowAnonymous]
         public IActionResult Create()
         {
+            if (User.Identity?.IsAuthenticated == true && User.IsInRole("Client"))
+            {
+                return Forbid();
+            }
+
             return View(new WorkerRegisterViewModel());
         }
+
 
         // POST: Worker/Create
         [HttpPost]
@@ -60,8 +115,14 @@ namespace WorkerBookingSystem.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(WorkerRegisterViewModel model)
         {
+            if (User.Identity?.IsAuthenticated == true && User.IsInRole("Client"))
+            {
+                return Forbid();
+            }
+
             if (ModelState.IsValid)
             {
+
                 var existingWorker = await _context.Workers
                     .FirstOrDefaultAsync(w => w.PhoneNumber == model.PhoneNumber);
 

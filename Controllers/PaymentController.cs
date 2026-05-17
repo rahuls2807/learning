@@ -40,21 +40,26 @@ namespace WorkerBookingSystem.Controllers
             var booking = await GetClientBooking(model.BookingId);
             if (booking == null) return NotFound();
 
-            model.Amount = booking.TotalWage;
-            model.WorkerName = $"{booking.Worker?.FirstName} {booking.Worker?.LastName}".Trim();
+            ApplyPaymentSummary(model, booking);
 
             if (!ModelState.IsValid)
             {
                 return View(model);
             }
 
-            booking.PaymentStatus = PaymentStatus.Paid;
+            if (model.OnlineAmount > model.BalanceDue)
+            {
+                ModelState.AddModelError(nameof(model.OnlineAmount), "Online payment cannot be more than the remaining balance.");
+                return View(model);
+            }
+
+            booking.AmountPaidOnline += model.OnlineAmount;
             booking.PaymentReference = $"PAY-{Guid.NewGuid():N}"[..16].ToUpperInvariant();
-            booking.PaidDate = DateTime.Now;
             booking.Status = BookingStatus.Confirmed;
+            UpdatePaymentStatus(booking);
 
             await _context.SaveChangesAsync();
-            TempData["PaymentMessage"] = "Payment completed securely. Card details were not stored.";
+            TempData["PaymentMessage"] = "Payment recorded securely. Card details were not stored.";
 
             return RedirectToAction("MyBookings", "Client");
         }
@@ -76,8 +81,36 @@ namespace WorkerBookingSystem.Controllers
             {
                 BookingId = booking.BookingId,
                 Amount = booking.TotalWage,
-                WorkerName = $"{booking.Worker?.FirstName} {booking.Worker?.LastName}".Trim()
+                WorkerName = $"{booking.Worker?.FirstName} {booking.Worker?.LastName}".Trim(),
+                AlreadyPaidOnline = booking.AmountPaidOnline,
+                AlreadyPaidToWorker = booking.AmountPaidToWorker,
+                BalanceDue = booking.TotalWage - booking.AmountPaidOnline - booking.AmountPaidToWorker,
+                OnlineAmount = booking.TotalWage - booking.AmountPaidOnline - booking.AmountPaidToWorker
             };
+        }
+
+        private static void ApplyPaymentSummary(PaymentViewModel model, Booking booking)
+        {
+            model.Amount = booking.TotalWage;
+            model.WorkerName = $"{booking.Worker?.FirstName} {booking.Worker?.LastName}".Trim();
+            model.AlreadyPaidOnline = booking.AmountPaidOnline;
+            model.AlreadyPaidToWorker = booking.AmountPaidToWorker;
+            model.BalanceDue = booking.TotalWage - booking.AmountPaidOnline - booking.AmountPaidToWorker;
+        }
+
+        private static void UpdatePaymentStatus(Booking booking)
+        {
+            var paid = booking.AmountPaidOnline + booking.AmountPaidToWorker;
+            booking.PaymentStatus = paid <= 0
+                ? PaymentStatus.Unpaid
+                : paid >= booking.TotalWage
+                    ? PaymentStatus.Paid
+                    : PaymentStatus.PartiallyPaid;
+
+            if (booking.PaymentStatus == PaymentStatus.Paid && booking.PaidDate == null)
+            {
+                booking.PaidDate = DateTime.Now;
+            }
         }
     }
 }

@@ -9,12 +9,21 @@
         <div class="col-md-6">
             <h2>Secure Payment</h2>
             <div class="alert alert-info">
-                Pay <strong>$@Model.Amount.ToString("F2")</strong> for your booking with @Model.WorkerName.
+                Total: <strong>$@Model.Amount.ToString("F2")</strong><br />
+                Paid online: $@Model.AlreadyPaidOnline.ToString("F2") |
+                Paid to worker: $@Model.AlreadyPaidToWorker.ToString("F2") |
+                Balance: <strong>$@Model.BalanceDue.ToString("F2")</strong>
             </div>
 
             <form asp-action="Pay" method="post" autocomplete="off">
                 <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                 <input type="hidden" asp-for="BookingId" />
+
+                <div class="form-group mb-3">
+                    <label asp-for="OnlineAmount" class="control-label"></label>
+                    <input asp-for="OnlineAmount" class="form-control" type="number" min="0.01" max="@Model.BalanceDue" step="0.01" />
+                    <span asp-validation-for="OnlineAmount" class="text-danger"></span>
+                </div>
 
                 <div class="form-group mb-3">
                     <label asp-for="CardholderName" class="control-label"></label>

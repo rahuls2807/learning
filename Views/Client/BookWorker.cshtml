@@ -1,23 +1,47 @@
-@model IEnumerable<WorkerBookingSystem.Models.Worker>
+@model WorkerBookingSystem.Models.ViewModels.PagedResult<WorkerBookingSystem.Models.ViewModels.WorkerSearchItemViewModel>
 
 @{
     ViewData["Title"] = "Book a Worker";
 }
 
 <div class="container mt-5">
-    <h2>Available Workers</h2>
+    <div class="page-header">
+        <h2>Find a Worker</h2>
+        <form method="get" class="row g-2 align-items-end">
+            <div class="col-md-5">
+                <label class="form-label" for="search">Search</label>
+                <input id="search" name="search" value="@Model.Search" class="form-control" placeholder="Name or skill" />
+            </div>
+            <div class="col-md-4">
+                <label class="form-label" for="skill">Skill</label>
+                <select id="skill" name="skill" class="form-select">
+                    <option value="">All skills</option>
+                    @foreach (var skill in (IEnumerable<string>)ViewBag.Skills)
+                    {
+                        <option value="@skill" selected="@(skill == Model.Skill)">@skill</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-primary w-100">Search</button>
+            </div>
+        </form>
+        <p class="text-muted mt-3 mb-0">@Model.TotalItems workers found. Showing page @Model.Page of @Model.TotalPages.</p>
+    </div>
 
-    @if (Model.Any())
+    @if (Model.Items.Any())
     {
         <div class="row">
-            @foreach (var worker in Model)
+            @foreach (var worker in Model.Items)
             {
                 <div class="col-md-4 mb-3">
                     <div class="card h-100">
                         <div class="card-body">
-                            <h5 class="card-title">@worker.FirstName @worker.LastName</h5>
+                            <h5 class="card-title">@worker.Name</h5>
                             <p class="card-text">
-                                <strong>Skill:</strong> @worker.Skill
+                                <strong>Skill:</strong> @worker.Skill<br />
+                                <strong>Rate:</strong> @(worker.DisplayRate.HasValue && worker.DisplayRate.Value > 0 ? $"${worker.DisplayRate.Value:F2}/hr" : "Rate pending")<br />
+                                <strong>Completed jobs:</strong> @worker.CompletedJobs
                             </p>
                             <a asp-action="CreateBooking" asp-route-workerId="@worker.WorkerId" class="btn btn-primary">Book Now</a>
                         </div>
@@ -30,6 +54,18 @@
     {
         <div class="alert alert-info">No workers available at the moment.</div>
     }
+
+    <nav aria-label="Worker search pages">
+        <ul class="pagination">
+            <li class="page-item @(Model.HasPreviousPage ? "" : "disabled")">
+                <a class="page-link" asp-action="BookWorker" asp-route-page="@(Model.Page - 1)" asp-route-search="@Model.Search" asp-route-skill="@Model.Skill">Previous</a>
+            </li>
+            <li class="page-item disabled"><span class="page-link">@Model.Page / @Model.TotalPages</span></li>
+            <li class="page-item @(Model.HasNextPage ? "" : "disabled")">
+                <a class="page-link" asp-action="BookWorker" asp-route-page="@(Model.Page + 1)" asp-route-search="@Model.Search" asp-route-skill="@Model.Skill">Next</a>
+            </li>
+        </ul>
+    </nav>
 
     <div class="mt-3">
         <a href="@Url.Action("Index", "Home")" class="btn btn-secondary">Back to Home</a>

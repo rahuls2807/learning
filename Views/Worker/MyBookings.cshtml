@@ -17,6 +17,7 @@
                         <th>Time</th>
                         <th>Task</th>
                         <th>Your Pay</th>
+                        <th>Client Paid You</th>
                         <th>Status</th>
                         <th>Payment</th>
                     </tr>
@@ -30,6 +31,7 @@
                             <td>@booking.StartTime.ToShortTimeString() - @booking.EndTime.ToShortTimeString()</td>
                             <td>@booking.TaskDescription</td>
                             <td>$@workerPay.ToString("F2")</td>
+                            <td>$@booking.AmountPaidToWorker.ToString("F2")</td>
                             <td>@booking.Status</td>
                             <td>@booking.PaymentStatus</td>
                         </tr>

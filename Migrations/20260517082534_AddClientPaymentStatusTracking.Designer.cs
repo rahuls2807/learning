@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using WorkerBookingSystem.Data;
 
@@ -11,9 +12,11 @@ using WorkerBookingSystem.Data;
 namespace WorkerBookingSystem.Migrations
 {
     [DbContext(typeof(WorkerBookingContext))]
-    partial class WorkerBookingContextModelSnapshot : ModelSnapshot
+    [Migration("20260517082534_AddClientPaymentStatusTracking")]
+    partial class AddClientPaymentStatusTracking
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -313,13 +316,9 @@ namespace WorkerBookingSystem.Migrations
 
                     b.HasKey("BookingId");
 
-                    b.HasIndex("PaymentStatus");
+                    b.HasIndex("ClientId");
 
-                    b.HasIndex("Status");
-
-                    b.HasIndex("ClientId", "BookingDate");
-
-                    b.HasIndex("WorkerId", "BookingDate");
+                    b.HasIndex("WorkerId");
 
                     b.ToTable("Bookings");
                 });
@@ -389,7 +388,7 @@ namespace WorkerBookingSystem.Migrations
 
                     b.HasKey("RateId");
 
-                    b.HasIndex("WorkerId", "IsActive", "EffectiveDate");
+                    b.HasIndex("WorkerId");
 
                     b.ToTable("HourlyRates");
                 });
@@ -419,21 +418,15 @@ namespace WorkerBookingSystem.Migrations
 
                     b.Property<string>("PhoneNumber")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Skill")
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("UserId")
                         .HasColumnType("nvarchar(450)");
 
                     b.HasKey("WorkerId");
-
-                    b.HasIndex("IsActive");
-
-                    b.HasIndex("PhoneNumber");
-
-                    b.HasIndex("Skill");
 
                     b.HasIndex("UserId");
 

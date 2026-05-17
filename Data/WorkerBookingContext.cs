@@ -32,6 +32,15 @@ protected override void OnModelCreating(ModelBuilder modelBuilder)
             modelBuilder.Entity<Worker>()
                 .HasIndex(w => w.UserId);
 
+            modelBuilder.Entity<Worker>()
+                .HasIndex(w => w.Skill);
+
+            modelBuilder.Entity<Worker>()
+                .HasIndex(w => w.IsActive);
+
+            modelBuilder.Entity<Worker>()
+                .HasIndex(w => w.PhoneNumber);
+
             // Configure WorkerAvailability entity
             modelBuilder.Entity<WorkerAvailability>()
                 .HasKey(wa => wa.AvailabilityId);
@@ -53,6 +62,18 @@ protected override void OnModelCreating(ModelBuilder modelBuilder)
                 .HasKey(b => b.BookingId);
 
             modelBuilder.Entity<Booking>()
+                .HasIndex(b => new { b.ClientId, b.BookingDate });
+
+            modelBuilder.Entity<Booking>()
+                .HasIndex(b => new { b.WorkerId, b.BookingDate });
+
+            modelBuilder.Entity<Booking>()
+                .HasIndex(b => b.PaymentStatus);
+
+            modelBuilder.Entity<Booking>()
+                .HasIndex(b => b.Status);
+
+            modelBuilder.Entity<Booking>()
                 .HasOne(b => b.Worker)
                 .WithMany(w => w.Bookings)
                 .HasForeignKey(b => b.WorkerId);
@@ -65,6 +86,9 @@ protected override void OnModelCreating(ModelBuilder modelBuilder)
             // Configure HourlyRate entity
             modelBuilder.Entity<HourlyRate>()
                 .HasKey(hr => hr.RateId);
+
+            modelBuilder.Entity<HourlyRate>()
+                .HasIndex(hr => new { hr.WorkerId, hr.IsActive, hr.EffectiveDate });
 
             modelBuilder.Entity<HourlyRate>()
                 .HasOne(hr => hr.Worker)
@@ -83,6 +107,14 @@ protected override void OnModelCreating(ModelBuilder modelBuilder)
 
             modelBuilder.Entity<Booking>()
                 .Property(b => b.TotalWage)
+                .HasPrecision(10, 2);
+
+            modelBuilder.Entity<Booking>()
+                .Property(b => b.AmountPaidOnline)
+                .HasPrecision(10, 2);
+
+            modelBuilder.Entity<Booking>()
+                .Property(b => b.AmountPaidToWorker)
                 .HasPrecision(10, 2);
 
             // Seed sample data

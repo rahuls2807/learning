@@ -29,11 +29,31 @@ namespace WorkerBookingSystem.Controllers
             var totalEarnings = await _context.Bookings
                 .Where(b => b.Status == BookingStatus.Completed)
                 .SumAsync(b => b.TotalWage);
+            var activeBookings = await _context.Bookings
+                .CountAsync(b => b.Status == BookingStatus.Confirmed || b.Status == BookingStatus.InProgress);
+            var amountPaidOnline = await _context.Bookings.SumAsync(b => b.AmountPaidOnline);
+            var amountPaidToWorkers = await _context.Bookings.SumAsync(b => b.AmountPaidToWorker);
+            var totalBookingValue = await _context.Bookings.SumAsync(b => b.TotalWage);
+            var outstandingBalance = totalBookingValue - amountPaidOnline - amountPaidToWorkers;
+            var topSkills = await _context.Bookings
+                .AsNoTracking()
+                .Include(b => b.Worker)
+                .Where(b => b.Worker != null && b.Worker.Skill != null)
+                .GroupBy(b => b.Worker!.Skill!)
+                .Select(g => new { Skill = g.Key, Count = g.Count() })
+                .OrderByDescending(x => x.Count)
+                .Take(5)
+                .ToListAsync();
 
             ViewBag.TotalWorkers = totalWorkers;
             ViewBag.TotalClients = totalClients;
             ViewBag.TotalBookings = totalBookings;
             ViewBag.TotalEarnings = totalEarnings;
+            ViewBag.ActiveBookings = activeBookings;
+            ViewBag.AmountPaidOnline = amountPaidOnline;
+            ViewBag.AmountPaidToWorkers = amountPaidToWorkers;
+            ViewBag.OutstandingBalance = outstandingBalance;
+            ViewBag.TopSkills = topSkills.Select(x => $"{x.Skill} ({x.Count})").ToList();
 
             return View();
         }

@@ -19,6 +19,9 @@
                         <th>Time</th>
                         <th>Task</th>
                         <th>Client Pays</th>
+                        <th>Paid Online</th>
+                        <th>Paid to Worker</th>
+                        <th>Balance</th>
                         <th>Worker Pay</th>
                         <th>Profit</th>
                         <th>Payment</th>
@@ -31,6 +34,7 @@
                     {
                         var workerPay = booking.TotalWage * 0.90m;
                         var profit = booking.TotalWage - workerPay;
+                        var balance = booking.TotalWage - booking.AmountPaidOnline - booking.AmountPaidToWorker;
                         <tr>
                             <td>@booking.Client?.FirstName @booking.Client?.LastName</td>
                             <td>@booking.Worker?.FirstName @booking.Worker?.LastName</td>
@@ -38,6 +42,9 @@
                             <td>@booking.StartTime.ToShortTimeString() - @booking.EndTime.ToShortTimeString()</td>
                             <td>@booking.TaskDescription</td>
                             <td>$@booking.TotalWage.ToString("F2")</td>
+                            <td>$@booking.AmountPaidOnline.ToString("F2")</td>
+                            <td>$@booking.AmountPaidToWorker.ToString("F2")</td>
+                            <td>$@Math.Max(balance, 0).ToString("F2")</td>
                             <td>$@workerPay.ToString("F2")</td>
                             <td>$@profit.ToString("F2")</td>
                             <td>@booking.PaymentStatus</td>

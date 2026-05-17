@@ -21,6 +21,10 @@ namespace WorkerBookingSystem.Models
         public PaymentStatus PaymentStatus { get; set; } = PaymentStatus.Unpaid;
         public string? PaymentReference { get; set; }
         public DateTime? PaidDate { get; set; }
+        public decimal AmountPaidOnline { get; set; }
+        public decimal AmountPaidToWorker { get; set; }
+        public string? ClientStatusNote { get; set; }
+        public DateTime? LastClientStatusUpdate { get; set; }
         public decimal TotalWage { get; set; } // Calculated based on hourly rate
         public DateTime CreatedDate { get; set; } = DateTime.Now;
 
@@ -43,6 +47,7 @@ namespace WorkerBookingSystem.Models
         Unpaid,
         Paid,
         Failed,
-        Refunded
+        Refunded,
+        PartiallyPaid
     }
 }

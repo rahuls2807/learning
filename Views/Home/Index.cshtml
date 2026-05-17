@@ -4,7 +4,7 @@
 
 <style>
     .hero-section {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, #14324a 0%, #19567c 58%, #2f7d8c 100%);
         color: white;
         padding: 60px 20px;
         border-radius: 10px;
@@ -32,8 +32,11 @@
     <h1>Worker Booking System</h1>
     <p>Connect skilled workers with clients - Efficient task management with automatic wage calculation</p>
     <div class="btn-group d-flex gap-2" role="group">
-        <a class="btn btn-light btn-lg" href="@Url.Action("Create", "Worker")" role="button">📝 Register as Worker</a>
-        <a class="btn btn-light btn-lg" href="@Url.Action("Register", "Client")" role="button">👤 Register as Client</a>
+        @if (!User.IsInRole("Client") && User.Identity?.IsAuthenticated != true)
+        {
+            <a class="btn btn-light btn-lg" href="@Url.Action("Create", "Worker")" role="button">Register as Worker</a>
+        }
+        <a class="btn btn-light btn-lg" href="@Url.Action("Register", "Client")" role="button">Register as Client</a>
         <a class="btn btn-success btn-lg" href="@Url.Action("BookWorker", "Client")" role="button">Book a Worker</a>
     </div>
 </div>
@@ -42,7 +45,6 @@
     <div class="col-md-4 mb-4">
         <div class="card feature-card h-100">
             <div class="card-body text-center">
-                <div style="font-size: 3rem; margin-bottom: 15px;">👷</div>
                 <h5 class="card-title">For Workers</h5>
                 <p class="card-text">Create your professional profile, set your availability, and get booked for jobs. Earn based on hourly rates.</p>
                 <ul class="list-unstyled text-start">
@@ -59,7 +61,6 @@
     <div class="col-md-4 mb-4">
         <div class="card feature-card h-100">
             <div class="card-body text-center">
-                <div style="font-size: 3rem; margin-bottom: 15px;">💼</div>
                 <h5 class="card-title">For Clients</h5>
                 <p class="card-text">Find and book skilled workers for your tasks. System automatically calculates total cost.</p>
                 <ul class="list-unstyled text-start">
@@ -78,7 +79,6 @@
         <div class="col-md-4 mb-4">
         <div class="card feature-card h-100">
             <div class="card-body text-center">
-                <div style="font-size: 3rem; margin-bottom: 15px;">📊</div>
                 <h5 class="card-title">For Admin</h5>
                 <p class="card-text">Manage rates, approve bookings, track earnings, and generate detailed reports.</p>
                 <ul class="list-unstyled text-start">

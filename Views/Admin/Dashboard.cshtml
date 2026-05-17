@@ -7,7 +7,7 @@
 
     <div class="row mb-4">
         <div class="col-md-3">
-            <div class="card text-white bg-primary">
+            <div class="card metric-card">
                 <div class="card-body">
                     <h5 class="card-title">Total Workers</h5>
                     <h2>@ViewBag.TotalWorkers</h2>
@@ -15,7 +15,7 @@
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card text-white bg-success">
+            <div class="card metric-card">
                 <div class="card-body">
                     <h5 class="card-title">Total Clients</h5>
                     <h2>@ViewBag.TotalClients</h2>
@@ -23,7 +23,7 @@
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card text-white bg-warning">
+            <div class="card metric-card">
                 <div class="card-body">
                     <h5 class="card-title">Total Bookings</h5>
                     <h2>@ViewBag.TotalBookings</h2>
@@ -31,7 +31,7 @@
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card text-white bg-danger">
+            <div class="card metric-card">
                 <div class="card-body">
                     <h5 class="card-title">Total Earnings</h5>
                     <h2>$@ViewBag.TotalEarnings</h2>
@@ -78,4 +78,46 @@
             </div>
         </div>
     </div>
+
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card metric-card">
+                <div class="card-body">
+                    <h5 class="card-title">Active Jobs</h5>
+                    <h2>@ViewBag.ActiveBookings</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card metric-card">
+                <div class="card-body">
+                    <h5 class="card-title">Online Collected</h5>
+                    <h2>$@ViewBag.AmountPaidOnline?.ToString("F2")</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card metric-card">
+                <div class="card-body">
+                    <h5 class="card-title">Paid to Workers</h5>
+                    <h2>$@ViewBag.AmountPaidToWorkers?.ToString("F2")</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card metric-card">
+                <div class="card-body">
+                    <h5 class="card-title">Outstanding</h5>
+                    <h2>$@ViewBag.OutstandingBalance?.ToString("F2")</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (ViewBag.TopSkills is List<string> topSkills && topSkills.Any())
+    {
+        <div class="alert alert-light border">
+            <strong>Top demand:</strong> @string.Join(", ", topSkills)
+        </div>
+    }
 </div>

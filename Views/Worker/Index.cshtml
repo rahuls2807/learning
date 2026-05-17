@@ -1,16 +1,35 @@
-@model IEnumerable<WorkerBookingSystem.Models.Worker>
+@model WorkerBookingSystem.Models.ViewModels.PagedResult<WorkerBookingSystem.Models.ViewModels.WorkerSearchItemViewModel>
 
 @{
     ViewData["Title"] = "Workers";
-    var workerRates = ViewBag.WorkerRates as Dictionary<int, decimal> ?? new Dictionary<int, decimal>();
 }
 
 <div class="container mt-5">
-    <h2>Workers List</h2>
+    <div class="page-header">
+        <h2>Workers</h2>
+        <form method="get" class="row g-2 align-items-end">
+            <div class="col-md-7">
+                <label class="form-label" for="search">Search</label>
+                <input id="search" name="search" value="@Model.Search" class="form-control" placeholder="Name, email, phone, or skill" />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label" for="pageSize">Page size</label>
+                <select id="pageSize" name="pageSize" class="form-select">
+                    <option value="25" selected="@(Model.PageSize == 25)">25</option>
+                    <option value="50" selected="@(Model.PageSize == 50)">50</option>
+                    <option value="100" selected="@(Model.PageSize == 100)">100</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-primary w-100">Search</button>
+            </div>
+        </form>
+        <p class="text-muted mt-3 mb-0">@Model.TotalItems workers found. Page @Model.Page of @Model.TotalPages.</p>
+    </div>
     
     <a asp-action="Create" class="btn btn-primary mb-3">+ Register New Worker</a>
 
-    @if (Model.Any())
+    @if (Model.Items.Any())
     {
         <div class="table-responsive">
             <table class="table table-striped table-hover">
@@ -26,17 +45,17 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach (var worker in Model)
+                    @foreach (var worker in Model.Items)
                     {
                         <tr>
-                            <td>@worker.FirstName @worker.LastName</td>
-                            <td>@worker.Email</td>
-                            <td>@worker.PhoneNumber</td>
+                            <td>@worker.Name</td>
+                            <td class="text-muted">Protected</td>
+                            <td class="text-muted">Protected</td>
                             <td>@worker.Skill</td>
                             <td>
-                                @if (workerRates.TryGetValue(worker.WorkerId, out var rate))
+                                @if (worker.DisplayRate.HasValue && worker.DisplayRate.Value > 0)
                                 {
-                                    <span>$@rate.ToString("F2")/hr</span>
+                                    <span>$@worker.DisplayRate.Value.ToString("F2")/hr</span>
                                 }
                                 else
                                 {
@@ -67,4 +86,16 @@
     {
         <div class="alert alert-info">No workers registered yet.</div>
     }
+
+    <nav aria-label="Worker pages">
+        <ul class="pagination">
+            <li class="page-item @(Model.HasPreviousPage ? "" : "disabled")">
+                <a class="page-link" asp-action="Index" asp-route-page="@(Model.Page - 1)" asp-route-pageSize="@Model.PageSize" asp-route-search="@Model.Search">Previous</a>
+            </li>
+            <li class="page-item disabled"><span class="page-link">@Model.Page / @Model.TotalPages</span></li>
+            <li class="page-item @(Model.HasNextPage ? "" : "disabled")">
+                <a class="page-link" asp-action="Index" asp-route-page="@(Model.Page + 1)" asp-route-pageSize="@Model.PageSize" asp-route-search="@Model.Search">Next</a>
+            </li>
+        </ul>
+    </nav>
 </div>

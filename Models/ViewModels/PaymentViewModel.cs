@@ -7,6 +7,13 @@ namespace WorkerBookingSystem.Models.ViewModels
         public int BookingId { get; set; }
         public string WorkerName { get; set; } = string.Empty;
         public decimal Amount { get; set; }
+        public decimal AlreadyPaidOnline { get; set; }
+        public decimal AlreadyPaidToWorker { get; set; }
+        public decimal BalanceDue { get; set; }
+
+        [Range(0.01, 999999)]
+        [Display(Name = "Amount to Pay Online")]
+        public decimal OnlineAmount { get; set; }
 
         [Required]
         [CreditCard]

@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WorkerBookingSystem.Data;
 using WorkerBookingSystem.Models;
+using WorkerBookingSystem.Models.ViewModels;
 
 namespace WorkerBookingSystem.Controllers
 {
@@ -42,12 +43,77 @@ namespace WorkerBookingSystem.Controllers
         }
 
         // GET: Client/BookWorker
-        public async Task<IActionResult> BookWorker()
+        public async Task<IActionResult> BookWorker(string? search, string? skill, int page = 1, int pageSize = 25)
         {
-            var workers = await _context.Workers
-                .Where(w => w.IsActive)
+            page = Math.Max(1, page);
+            pageSize = Math.Clamp(pageSize, 10, 100);
+
+            var query = _context.Workers.AsNoTracking().Where(w => w.IsActive);
+
+            if (!string.IsNullOrWhiteSpace(skill))
+            {
+                query = query.Where(w => w.Skill != null && w.Skill == skill);
+            }
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var term = $"{search.Trim()}%";
+                query = query.Where(w =>
+                    (w.FirstName != null && EF.Functions.Like(w.FirstName, term)) ||
+                    (w.LastName != null && EF.Functions.Like(w.LastName, term)) ||
+                    (w.Skill != null && EF.Functions.Like(w.Skill, term)));
+            }
+
+            var totalItems = await query.CountAsync();
+            var workers = await query
+                .OrderBy(w => w.FirstName)
+                .ThenBy(w => w.LastName)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(w => new WorkerSearchItemViewModel
+                {
+                    WorkerId = w.WorkerId,
+                    Name = ((w.FirstName ?? "") + " " + (w.LastName ?? "")).Trim(),
+                    Email = w.Email,
+                    PhoneNumber = w.PhoneNumber,
+                    Skill = w.Skill,
+                    IsActive = w.IsActive,
+                    CreatedDate = w.CreatedDate
+                })
                 .ToListAsync();
-            return View(workers);
+
+            var workerIds = workers.Select(w => w.WorkerId).ToList();
+            var activeRates = await _context.HourlyRates
+                .AsNoTracking()
+                .Where(r => workerIds.Contains(r.WorkerId) && r.IsActive)
+                .ToListAsync();
+            var rates = activeRates
+                .GroupBy(r => r.WorkerId)
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.OrderByDescending(r => r.EffectiveDate).First().RatePerHour);
+
+            foreach (var worker in workers)
+            {
+                worker.DisplayRate = rates.GetValueOrDefault(worker.WorkerId);
+            }
+
+            ViewBag.Skills = await _context.Workers
+                .Where(w => w.IsActive && w.Skill != null)
+                .Select(w => w.Skill)
+                .Distinct()
+                .OrderBy(s => s)
+                .ToListAsync();
+
+            return View(new PagedResult<WorkerSearchItemViewModel>
+            {
+                Items = workers,
+                Page = page,
+                PageSize = pageSize,
+                TotalItems = totalItems,
+                Search = search,
+                Skill = skill
+            });
         }
 
         // GET: Client/CreateBooking/5

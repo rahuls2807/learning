@@ -1,7 +1,7 @@
-using WorkerMandi.Data;
+using WorkerBookingSystem.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
-using WorkerMandi.Models;
+using WorkerBookingSystem.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 

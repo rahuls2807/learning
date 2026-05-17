@@ -1,8 +1,8 @@
 using Microsoft.EntityFrameworkCore;
-using WorkerMandi.Models;
+using WorkerBookingSystem.Models;
 using System;
 
-namespace WorkerMandi.Data
+namespace WorkerBookingSystem.Data
 {
     public static class WorkerSeed
     {

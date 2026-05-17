@@ -25,6 +25,8 @@
                 <thead class="table-dark">
                     <tr>
                         <th>Worker</th>
+                        <th>Email</th>
+                        <th>Phone</th>
                         <th>Date</th>
                         <th>Time</th>
                         <th>Task</th>
@@ -43,6 +45,8 @@
                         var balance = booking.TotalWage - booking.AmountPaidOnline - booking.AmountPaidToWorker;
                         <tr>
                             <td>@booking.Worker?.FirstName @booking.Worker?.LastName</td>
+                            <td>@booking.Worker?.Email</td>
+                            <td>@booking.Worker?.PhoneNumber</td>
                             <td>@booking.BookingDate.ToShortDateString()</td>
                             <td>@booking.StartTime.ToShortTimeString() - @booking.EndTime.ToShortTimeString()</td>
                             <td>@booking.TaskDescription</td>

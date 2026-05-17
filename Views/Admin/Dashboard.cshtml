@@ -114,10 +114,12 @@
         </div>
     </div>
 
-    <h2>Analytics</h2>
-    <p>Total Bookings: @Model.TotalBookings</p>
-    <p>Total Revenue: @Model.TotalRevenue</p>
-    <p>Active Workers: @Model.ActiveWorkers</p>
+    <div class="page-header">
+        <h2>Analytics</h2>
+        <p class="mb-1">Total bookings: @ViewBag.TotalBookings</p>
+        <p class="mb-1">Completed revenue: $@ViewBag.TotalEarnings?.ToString("F2")</p>
+        <p class="mb-0">Active workers: @ViewBag.TotalWorkers</p>
+    </div>
 
     @if (ViewBag.TopSkills is List<string> topSkills && topSkills.Any())
     {

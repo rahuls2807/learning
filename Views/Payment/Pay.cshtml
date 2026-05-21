@@ -1,78 +1,486 @@
 @model WorkerBookingSystem.Models.ViewModels.PaymentViewModel
 
 @{
-    ViewData["Title"] = "RBI-Compliant Secure Payment";
+    ViewData["Title"] = "Futuristic Secure Payment Portal";
 }
 
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-7">
-            <div class="card shadow">
-                <div class="card-header bg-primary text-white">
-                    <h4 class="mb-0">🔒 Secure Payment (RBI Compliant)</h4>
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+    }
+
+    body {
+        background: linear-gradient(135deg, #0a0e27 0%, #16213e 50%, #1a1a2e 100%);
+        min-height: 100vh;
+        color: #e0e0e0;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        overflow-x: hidden;
+    }
+
+    .payment-wrapper {
+        background: linear-gradient(135deg, rgba(10, 14, 39, 0.98) 0%, rgba(22, 33, 62, 0.98) 50%, rgba(26, 26, 46, 0.98) 100%);
+        min-height: 100vh;
+        padding: 40px 20px;
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .payment-wrapper::before {
+        content: '';
+        position: fixed;
+        top: -50%;
+        right: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle at 20% 50%, rgba(255, 0, 0, 0.08) 0%, transparent 50%),
+                    radial-gradient(circle at 80% 80%, rgba(0, 255, 200, 0.08) 0%, transparent 50%);
+        pointer-events: none;
+        animation: moveGradient 20s ease infinite;
+        z-index: 0;
+    }
+
+    @keyframes moveGradient {
+        0% { transform: translate(0, 0); }
+        50% { transform: translate(40px, 40px); }
+        100% { transform: translate(0, 0); }
+    }
+
+    .payment-container {
+        position: relative;
+        z-index: 1;
+        max-width: 700px;
+        width: 100%;
+    }
+
+    .payment-card {
+        background: linear-gradient(135deg, rgba(255, 0, 0, 0.05) 0%, rgba(0, 255, 200, 0.05) 100%);
+        border: 2px solid;
+        border-image: linear-gradient(135deg, #ff0055 0%, #00ffcc 100%) 1;
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        padding: 50px;
+        box-shadow: 0 20px 60px rgba(255, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .payment-card::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255, 0, 0, 0.1) 0%, transparent 70%);
+        animation: pulseGlow 3s ease-in-out infinite;
+    }
+
+    @keyframes pulseGlow {
+        0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.5; }
+        50% { transform: translate(20px, 20px) scale(1.1); opacity: 0.8; }
+    }
+
+    .payment-header {
+        position: relative;
+        z-index: 2;
+        text-align: center;
+        margin-bottom: 40px;
+    }
+
+    .payment-header h1 {
+        font-size: 2.5rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, #ff0055 0%, #00ffcc 50%, #ff0055 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 10px;
+        text-shadow: 0 0 30px rgba(255, 0, 0, 0.3);
+        animation: titleGlow 3s ease-in-out infinite;
+    }
+
+    @keyframes titleGlow {
+        0%, 100% { filter: drop-shadow(0 0 20px rgba(255, 0, 85, 0.4)); }
+        50% { filter: drop-shadow(0 0 30px rgba(0, 255, 200, 0.4)); }
+    }
+
+    .payment-header p {
+        color: #00ffcc;
+        font-size: 1rem;
+        opacity: 0.9;
+    }
+
+    .summary-box {
+        background: linear-gradient(135deg, rgba(255, 0, 0, 0.1) 0%, rgba(0, 255, 200, 0.1) 100%);
+        border: 2px solid rgba(255, 0, 85, 0.3);
+        border-radius: 15px;
+        padding: 25px;
+        margin-bottom: 35px;
+        position: relative;
+        z-index: 2;
+        box-shadow: 0 10px 30px rgba(255, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    }
+
+    .summary-item {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 12px;
+        font-size: 1.1rem;
+        align-items: center;
+    }
+
+    .summary-item label {
+        color: #b0b0b0;
+        font-weight: 600;
+    }
+
+    .summary-item .value {
+        color: #00ffcc;
+        font-weight: 700;
+        text-shadow: 0 0 10px rgba(0, 255, 200, 0.4);
+    }
+
+    .summary-item .value.danger {
+        color: #ff0055;
+        text-shadow: 0 0 10px rgba(255, 0, 85, 0.4);
+    }
+
+    .step-container {
+        position: relative;
+        z-index: 2;
+        margin-bottom: 35px;
+    }
+
+    .step-header {
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: #ffffff;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .step-number {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        background: linear-gradient(135deg, #ff0055, #00ffcc);
+        border-radius: 50%;
+        font-weight: 800;
+        color: #000;
+        box-shadow: 0 0 20px rgba(255, 0, 0, 0.4);
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-label {
+        display: block;
+        color: #b0b0b0;
+        font-weight: 600;
+        margin-bottom: 10px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-size: 0.9rem;
+    }
+
+    .form-control {
+        background: linear-gradient(135deg, rgba(255, 0, 0, 0.05) 0%, rgba(0, 255, 200, 0.05) 100%);
+        border: 2px solid rgba(0, 255, 200, 0.2);
+        color: #00ffcc;
+        padding: 15px;
+        border-radius: 10px;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        backdrop-filter: blur(5px);
+    }
+
+    .form-control::placeholder {
+        color: rgba(0, 255, 200, 0.4);
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: #ff0055;
+        box-shadow: 0 0 20px rgba(255, 0, 85, 0.3), inset 0 0 10px rgba(255, 0, 85, 0.1);
+        color: #00ffcc;
+    }
+
+    .form-text {
+        color: #888;
+        font-size: 0.9rem;
+        margin-top: 8px;
+        display: block;
+    }
+
+    .payment-methods {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+        margin-top: 20px;
+    }
+
+    .payment-method-btn {
+        background: linear-gradient(135deg, rgba(255, 0, 0, 0.1) 0%, rgba(0, 255, 200, 0.1) 100%);
+        border: 2px solid rgba(0, 255, 200, 0.3);
+        color: #e0e0e0;
+        padding: 20px;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.4s cubic-bezier(0.23, 1, 0.320, 1);
+        font-weight: 600;
+        font-size: 1rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 8px 20px rgba(0, 255, 200, 0.1);
+    }
+
+    .payment-method-btn::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.3) 50%, transparent 100%);
+        transition: left 0.5s;
+    }
+
+    .payment-method-btn:hover {
+        transform: translateY(-5px);
+        border-color: #ff0055;
+        box-shadow: 0 15px 40px rgba(255, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        color: #ff0055;
+    }
+
+    .payment-method-btn:hover::before {
+        left: 100%;
+    }
+
+    .payment-method-btn.active {
+        background: linear-gradient(135deg, #ff0055 0%, #00ffcc 100%);
+        border-color: #ff0055;
+        color: #000;
+        box-shadow: 0 0 30px rgba(255, 0, 85, 0.5);
+    }
+
+    .btn-pay {
+        background: linear-gradient(135deg, #ff0055 0%, #00ffcc 100%);
+        border: none;
+        color: #000;
+        font-weight: 700;
+        padding: 18px 40px;
+        border-radius: 12px;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        font-size: 1.1rem;
+        transition: all 0.4s ease;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 0 30px rgba(255, 0, 85, 0.4);
+        width: 100%;
+        margin-top: 20px;
+    }
+
+    .btn-pay::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.3);
+        transition: left 0.3s;
+    }
+
+    .btn-pay:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 40px rgba(255, 0, 85, 0.6);
+    }
+
+    .btn-pay:hover::before {
+        left: 100%;
+    }
+
+    .compliance-notice {
+        background: linear-gradient(135deg, rgba(255, 0, 0, 0.08) 0%, rgba(0, 255, 200, 0.08) 100%);
+        border: 2px solid rgba(0, 255, 200, 0.3);
+        border-radius: 12px;
+        padding: 20px;
+        margin-top: 30px;
+        position: relative;
+        z-index: 2;
+        font-size: 0.95rem;
+        color: #b0b0b0;
+        backdrop-filter: blur(5px);
+    }
+
+    .compliance-notice strong {
+        color: #00ffcc;
+        display: block;
+        margin-bottom: 10px;
+    }
+
+    .alert-success, .alert-danger {
+        border-radius: 12px;
+        border: 2px solid;
+        padding: 20px;
+        margin-bottom: 20px;
+        position: relative;
+        z-index: 2;
+    }
+
+    .alert-success {
+        background: rgba(0, 200, 100, 0.15);
+        border-color: #00ff88;
+        color: #00ff88;
+    }
+
+    .alert-danger {
+        background: rgba(255, 0, 0, 0.15);
+        border-color: #ff0055;
+        color: #ff6b6b;
+    }
+
+    .btn-cancel {
+        background: linear-gradient(135deg, rgba(100, 100, 150, 0.3) 0%, rgba(80, 80, 120, 0.3) 100%);
+        border: 2px solid rgba(100, 100, 150, 0.4);
+        color: #b0b0b0;
+        font-weight: 600;
+        padding: 12px 30px;
+        border-radius: 10px;
+        text-decoration: none;
+        display: inline-block;
+        margin-top: 20px;
+        transition: all 0.3s ease;
+    }
+
+    .btn-cancel:hover {
+        background: linear-gradient(135deg, rgba(100, 100, 150, 0.5) 0%, rgba(80, 80, 120, 0.5) 100%);
+        border-color: #00ffcc;
+        color: #00ffcc;
+    }
+
+    .security-badge {
+        display: inline-block;
+        background: rgba(0, 255, 200, 0.1);
+        border: 1px solid rgba(0, 255, 200, 0.3);
+        color: #00ffcc;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        margin-right: 8px;
+        margin-bottom: 8px;
+        font-weight: 600;
+    }
+</style>
+
+<div class="payment-wrapper">
+    <div class="payment-container">
+        <div class="payment-card">
+            <div class="payment-header">
+                <h1>⚡ SECURE PAYMENT PORTAL</h1>
+                <p>RBI-Compliant Tokenized Payment Gateway</p>
+            </div>
+
+            <!-- Payment Summary -->
+            <div class="summary-box">
+                <div class="summary-item">
+                    <label>💰 Total Amount:</label>
+                    <span class="value">₹@Model.Amount.ToString("F2")</span>
                 </div>
-                <div class="card-body">
-                    <!-- Payment Summary -->
-                    <div class="alert alert-info">
-                        <strong>Total Amount:</strong> ₹@Model.Amount.ToString("F2")<br />
-                        <strong>Already Paid Online:</strong> ₹@Model.AlreadyPaidOnline.ToString("F2") |
-                        <strong>Paid to Worker:</strong> ₹@Model.AlreadyPaidToWorker.ToString("F2")<br />
-                        <strong class="text-danger">Balance Due:</strong> ₹@Model.BalanceDue.ToString("F2")
-                    </div>
-
-                    <!-- Step 1: Phone Number for OTP -->
-                    <div id="step1-phone" class="mb-4">
-                        <h5>Step 1: Enter Phone Number for OTP</h5>
-                        <div class="form-group">
-                            <label for="phoneNumber" class="form-label">Phone Number (with country code)</label>
-                            <input type="tel" id="phoneNumber" class="form-control" placeholder="+91..." value="+91" />
-                            <small class="text-muted">Your OTP will be sent to this number</small>
-                        </div>
-                        <button type="button" class="btn btn-primary" id="requestOtpBtn" onclick="requestOtp()">
-                            <i class="fas fa-sms"></i> Send OTP
-                        </button>
-                    </div>
-
-                    <!-- Step 2: OTP Verification -->
-                    <div id="step2-otp" class="mb-4" style="display:none;">
-                        <h5>Step 2: Enter OTP</h5>
-                        <div class="form-group">
-                            <label for="otpCode" class="form-label">OTP Code (6 digits)</label>
-                            <input type="text" id="otpCode" class="form-control" maxlength="6" placeholder="000000" />
-                            <small class="text-muted">Valid for 10 minutes. Attempts remaining: <span id="otpAttempts">3</span></small>
-                        </div>
-                    </div>
-
-                    <!-- Step 3: Razorpay Payment -->
-                    <div id="step3-payment" class="mb-4" style="display:none;">
-                        <h5>Step 3: Choose Payment Method</h5>
-                        <input type="hidden" id="bookingId" value="@Model.BookingId" />
-                        <input type="hidden" id="amount" value="@Model.OnlineAmount" />
-                        <button type="button" class="btn btn-success btn-lg w-100" id="paymentBtn" onclick="initiatePayment()">
-                            <i class="fas fa-lock"></i> Pay ₹@Model.OnlineAmount.ToString("F2") with Razorpay
-                        </button>
-                        <small class="d-block mt-2 text-muted">
-                            ✓ Your card details are NOT stored<br />
-                            ✓ Tokenized payment (PCI-DSS Compliant)<br />
-                            ✓ Secured by Razorpay (NPCI certified)
-                        </small>
-                    </div>
-
-                    <!-- Messages -->
-                    <div id="successMessage" class="alert alert-success" style="display:none;"></div>
-                    <div id="errorMessage" class="alert alert-danger" style="display:none;"></div>
-
-                    <!-- Back Button -->
-                    <div class="mt-4">
-                        <a asp-controller="Client" asp-action="MyBookings" class="btn btn-secondary">Cancel</a>
-                    </div>
+                <div class="summary-item">
+                    <label>✅ Already Paid Online:</label>
+                    <span class="value">₹@Model.AlreadyPaidOnline.ToString("F2")</span>
+                </div>
+                <div class="summary-item">
+                    <label>🔄 Paid to Worker:</label>
+                    <span class="value">₹@Model.AlreadyPaidToWorker.ToString("F2")</span>
+                </div>
+                <div class="summary-item" style="border-top: 1px solid rgba(0, 255, 200, 0.2); padding-top: 12px;">
+                    <label>⚠️ Balance Due:</label>
+                    <span class="value danger">₹@Model.BalanceDue.ToString("F2")</span>
                 </div>
             </div>
 
+            <!-- Step 1: Phone Number for OTP -->
+            <div id="step1-phone" class="step-container">
+                <div class="step-header">
+                    <span class="step-number">1</span>
+                    Enter Phone Number for OTP
+                </div>
+                <div class="form-group">
+                    <label for="phoneNumber" class="form-label">📱 Phone Number</label>
+                    <input type="tel" id="phoneNumber" class="form-control" placeholder="+91 XXXXXXXXXX" value="+91" />
+                    <span class="form-text">✓ Your OTP will be sent securely to this number</span>
+                </div>
+                <button type="button" class="btn btn-pay" id="requestOtpBtn" onclick="requestOtp()">
+                    <i class="fas fa-sms"></i> Send OTP
+                </button>
+            </div>
+
+            <!-- Step 2: OTP Verification -->
+            <div id="step2-otp" class="step-container" style="display:none;">
+                <div class="step-header">
+                    <span class="step-number">2</span>
+                    Verify OTP
+                </div>
+                <div class="form-group">
+                    <label for="otpCode" class="form-label">🔐 Enter OTP Code</label>
+                    <input type="text" id="otpCode" class="form-control" maxlength="6" placeholder="000000" />
+                    <span class="form-text">✓ Valid for 10 minutes • Attempts remaining: <span id="otpAttempts">3</span></span>
+                </div>
+            </div>
+
+            <!-- Step 3: Payment Method Selection -->
+            <div id="step3-payment" class="step-container" style="display:none;">
+                <div class="step-header">
+                    <span class="step-number">3</span>
+                    Select Payment Method
+                </div>
+                <input type="hidden" id="bookingId" value="@Model.BookingId" />
+                <input type="hidden" id="amount" value="@Model.OnlineAmount" />
+                
+                <div class="payment-methods">
+                    <button type="button" class="payment-method-btn active" id="cardMethod" onclick="selectPaymentMethod('card')">
+                        💳 Card/Net Banking
+                    </button>
+                    <button type="button" class="payment-method-btn" id="upiMethod" onclick="selectPaymentMethod('upi')">
+                        📲 UPI
+                    </button>
+                </div>
+
+                <button type="button" class="btn btn-pay" id="paymentBtn" onclick="initiatePayment()">
+                    🔒 Pay ₹@Model.OnlineAmount.ToString("F2")
+                </button>
+
+                <div class="mt-3" style="position: relative; z-index: 2;">
+                    <div class="security-badge">✓ PCI-DSS Compliant</div>
+                    <div class="security-badge">✓ Tokenized Payment</div>
+                    <div class="security-badge">✓ NPCI Certified</div>
+                </div>
+            </div>
+
+            <!-- Messages -->
+            <div id="successMessage" class="alert alert-success" style="display:none;"></div>
+            <div id="errorMessage" class="alert alert-danger" style="display:none;"></div>
+
+            <!-- Cancel Button -->
+            <a asp-controller="Client" asp-action="MyBookings" class="btn btn-cancel">← Back to Bookings</a>
+
             <!-- Compliance Notice -->
-            <div class="alert alert-info mt-4 small">
-                <strong>🇮🇳 RBI Compliance Notice:</strong> This payment gateway complies with RBI Payment Systems Regulations 2008 (amended 2021). 
-                Payments are tokenized and card data is never stored on our servers. 2FA via OTP is mandatory for all card transactions.
+            <div class="compliance-notice">
+                <strong>🇮🇳 RBI Compliance Certified</strong>
+                This payment gateway fully complies with RBI Payment Systems Regulations 2008 (amended 2021). All card data is tokenized and never stored on our servers. 2FA via OTP is mandatory for all transactions.
             </div>
         </div>
     </div>
@@ -86,6 +494,20 @@
     const amount = parseFloat(document.getElementById('amount').value);
     let razorpayOrderId = '';
     let otpVerified = false;
+    let selectedPaymentMethod = 'card';
+
+    // Payment Method Selection
+    function selectPaymentMethod(method) {
+        selectedPaymentMethod = method;
+        document.getElementById('cardMethod').classList.remove('active');
+        document.getElementById('upiMethod').classList.remove('active');
+        
+        if (method === 'card') {
+            document.getElementById('cardMethod').classList.add('active');
+        } else {
+            document.getElementById('upiMethod').classList.add('active');
+        }
+    }
 
     // Step 1: Request OTP
     function requestOtp() {
@@ -104,7 +526,7 @@
         .then(r => r.json())
         .then(data => {
             if (data.success) {
-                showSuccess('OTP sent successfully to ' + phoneNumber);
+                showSuccess('✓ OTP sent to ' + phoneNumber);
                 document.getElementById('step1-phone').style.display = 'none';
                 document.getElementById('step2-otp').style.display = 'block';
             } else {
@@ -136,7 +558,7 @@
                 otpVerified = true;
                 document.getElementById('step2-otp').style.display = 'none';
                 document.getElementById('step3-payment').style.display = 'block';
-                showSuccess('OTP verified! Now choose your payment method');
+                showSuccess('✓ OTP verified! Choose payment method');
             } else {
                 showError(data.message || 'Failed to create order');
             }
@@ -144,7 +566,7 @@
         .catch(e => showError('Error: ' + e.message));
     }
 
-    // Step 3: Initiate Razorpay Payment
+    // Step 3: Initiate Payment
     function initiatePayment() {
         if (!razorpayOrderId) {
             // Verify OTP first if not done
@@ -152,22 +574,30 @@
             return;
         }
 
+        if (selectedPaymentMethod === 'upi') {
+            initiateUPIPayment();
+        } else {
+            initiateCardPayment();
+        }
+    }
+
+    // Card/Net Banking Payment
+    function initiateCardPayment() {
         const options = {
             key: '@Model.RazorpayKeyId',
             amount: Math.round(amount * 100),
             currency: 'INR',
-            name: 'WorkerBookingSystem',
+            name: '⚡ WorkerBookingSystem',
             description: 'Payment for Booking #' + bookingId,
             order_id: razorpayOrderId,
             handler: function(response) {
-                // Payment successful - verify on server
                 verifyPayment(response.razorpay_payment_id, response.razorpay_signature);
             },
             prefill: {
                 name: '@User.Identity?.Name'
             },
             theme: {
-                color: '#0d6efd'
+                color: '#ff0055'
             },
             modal: {
                 ondismiss: function() {
@@ -180,7 +610,37 @@
         rzp.open();
     }
 
-    // Step 4: Server-side Verification
+    // UPI Payment
+    function initiateUPIPayment() {
+        const options = {
+            key: '@Model.RazorpayKeyId',
+            amount: Math.round(amount * 100),
+            currency: 'INR',
+            name: '⚡ WorkerBookingSystem',
+            description: 'Payment for Booking #' + bookingId,
+            order_id: razorpayOrderId,
+            method: 'upi',
+            handler: function(response) {
+                verifyPayment(response.razorpay_payment_id, response.razorpay_signature);
+            },
+            prefill: {
+                name: '@User.Identity?.Name'
+            },
+            theme: {
+                color: '#00ffcc'
+            },
+            modal: {
+                ondismiss: function() {
+                    showError('Payment cancelled');
+                }
+            }
+        };
+
+        const rzp = new Razorpay(options);
+        rzp.open();
+    }
+
+    // Server-side Verification
     function verifyPayment(paymentId, signature) {
         const otpCode = document.getElementById('otpCode').value;
 
@@ -198,7 +658,7 @@
         .then(r => r.json())
         .then(data => {
             if (data.success) {
-                showSuccess('✓ Payment completed successfully!');
+                showSuccess('✅ Payment completed successfully!');
                 setTimeout(() => window.location.href = '/Client/MyBookings', 2000);
             } else {
                 showError(data.message || 'Payment verification failed');
@@ -228,7 +688,7 @@
     }
 
     // Auto-verify OTP when all 6 digits entered
-    document.getElementById('otpCode').addEventListener('input', function() {
+    document.getElementById('otpCode')?.addEventListener('input', function() {
         if (this.value.length === 6) {
             verifyOtpAndCreateOrder();
         }

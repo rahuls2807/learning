@@ -2,138 +2,460 @@
     ViewData["Title"] = "Admin Dashboard";
 }
 
-<div class="container mt-5">
-    <h2>Admin Dashboard</h2>
-
-    <div class="row mb-4">
-        <div class="col-md-3">
-            <div class="card metric-card">
-                <div class="card-body">
-                    <h5 class="card-title">Total Workers</h5>
-                    <h2>@ViewBag.TotalWorkers</h2>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card metric-card">
-                <div class="card-body">
-                    <h5 class="card-title">Total Clients</h5>
-                    <h2>@ViewBag.TotalClients</h2>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card metric-card">
-                <div class="card-body">
-                    <h5 class="card-title">Total Bookings</h5>
-                    <h2>@ViewBag.TotalBookings</h2>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card metric-card">
-                <div class="card-body">
-                    <h5 class="card-title">Total Earnings</h5>
-                    <h2>$@ViewBag.TotalEarnings</h2>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="row">
-        <div class="col-md-4">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">Manage Hourly Rates</h5>
-                    <p class="card-text">Set and update hourly rates for workers by skill.</p>
-                    <a href="@Url.Action("ManageRates")" class="btn btn-primary">Manage Rates</a>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">Manage Bookings</h5>
-                    <p class="card-text">Approve, confirm, or cancel bookings.</p>
-                    <a href="@Url.Action("ManageBookings")" class="btn btn-primary">Manage Bookings</a>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">Generate Report</h5>
-                    <p class="card-text">View earnings and booking reports.</p>
-                    <a href="@Url.Action("GenerateReport")" class="btn btn-primary">Generate Report</a>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4 mt-3">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">Manage Admins</h5>
-                    <p class="card-text">Create and review admin login access.</p>
-                    <a href="@Url.Action("ManageAdmins")" class="btn btn-primary">Manage Admins</a>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4 mt-3">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">Workers</h5>
-                    <p class="card-text">Review worker contacts, resumes, profiles, and ratings.</p>
-                    <a asp-controller="Worker" asp-action="Index" class="btn btn-primary">View Workers</a>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="row mb-4">
-        <div class="col-md-3">
-            <div class="card metric-card">
-                <div class="card-body">
-                    <h5 class="card-title">Active Jobs</h5>
-                    <h2>@ViewBag.ActiveBookings</h2>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card metric-card">
-                <div class="card-body">
-                    <h5 class="card-title">Online Collected</h5>
-                    <h2>$@ViewBag.AmountPaidOnline?.ToString("F2")</h2>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card metric-card">
-                <div class="card-body">
-                    <h5 class="card-title">Paid to Workers</h5>
-                    <h2>$@ViewBag.AmountPaidToWorkers?.ToString("F2")</h2>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card metric-card">
-                <div class="card-body">
-                    <h5 class="card-title">Outstanding</h5>
-                    <h2>$@ViewBag.OutstandingBalance?.ToString("F2")</h2>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="page-header">
-        <h2>Analytics</h2>
-        <p class="mb-1">Total bookings: @ViewBag.TotalBookings</p>
-        <p class="mb-1">Completed revenue: $@ViewBag.TotalEarnings?.ToString("F2")</p>
-        <p class="mb-0">Active workers: @ViewBag.TotalWorkers</p>
-    </div>
-
-    @if (ViewBag.TopSkills is List<string> topSkills && topSkills.Any())
-    {
-        <div class="alert alert-light border">
-            <strong>Top demand:</strong> @string.Join(", ", topSkills)
-        </div>
+<style>
+    * {
+        margin: 0;
+        padding: 0;
     }
+
+    body {
+        background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+        min-height: 100vh;
+        color: #e0e0e0;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .dashboard-wrapper {
+        background: linear-gradient(135deg, rgba(15, 12, 41, 0.95) 0%, rgba(48, 43, 99, 0.95) 50%, rgba(36, 36, 62, 0.95) 100%);
+        min-height: 100vh;
+        padding: 40px 0;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .dashboard-wrapper::before {
+        content: '';
+        position: fixed;
+        top: -50%;
+        right: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle at 20% 50%, rgba(255, 0, 0, 0.1) 0%, transparent 50%),
+                    radial-gradient(circle at 80% 80%, rgba(0, 255, 255, 0.08) 0%, transparent 50%),
+                    radial-gradient(circle at 50% 50%, rgba(255, 0, 170, 0.08) 0%, transparent 70%);
+        pointer-events: none;
+        animation: moveGradient 20s ease infinite;
+        z-index: 0;
+    }
+
+    @keyframes moveGradient {
+        0% { transform: translate(0, 0); }
+        50% { transform: translate(40px, 40px); }
+        100% { transform: translate(0, 0); }
+    }
+
+    .container {
+        position: relative;
+        z-index: 1;
+        max-width: 1400px;
+    }
+
+    .dashboard-header {
+        text-align: center;
+        margin-bottom: 60px;
+    }
+
+    .dashboard-header h1 {
+        font-size: 3.5rem;
+        font-weight: 700;
+        background: linear-gradient(135deg, #ff0055 0%, #00ffff 50%, #ff0055 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        text-shadow: 0 0 30px rgba(255, 0, 85, 0.3);
+        margin-bottom: 10px;
+        animation: glow 3s ease-in-out infinite;
+    }
+
+    @keyframes glow {
+        0%, 100% { filter: drop-shadow(0 0 20px rgba(255, 0, 85, 0.4)); }
+        50% { filter: drop-shadow(0 0 30px rgba(0, 255, 255, 0.4)); }
+    }
+
+    .dashboard-header p {
+        font-size: 1.1rem;
+        color: #ff0055;
+        opacity: 0.8;
+    }
+
+    .metrics-container {
+        margin-bottom: 50px;
+    }
+
+    .metric-card {
+        background: linear-gradient(135deg, rgba(255, 0, 0, 0.08) 0%, rgba(0, 255, 255, 0.08) 100%);
+        border: 2px solid;
+        border-image: linear-gradient(135deg, #ff0055 0%, #00ffff 100%) 1;
+        backdrop-filter: blur(10px);
+        border-radius: 15px;
+        padding: 30px;
+        margin-bottom: 25px;
+        height: 100%;
+        transition: all 0.4s cubic-bezier(0.23, 1, 0.320, 1);
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 8px 32px rgba(255, 0, 85, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    }
+
+    .metric-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent 0%, rgba(255, 0, 85, 0.3) 50%, transparent 100%);
+        transition: left 0.5s;
+    }
+
+    .metric-card:hover {
+        transform: translateY(-10px);
+        border-image: linear-gradient(135deg, #ff0055 0%, #ff00ff, #00ffff 100%) 1;
+        box-shadow: 0 15px 50px rgba(255, 0, 85, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    }
+
+    .metric-card:hover::before {
+        left: 100%;
+    }
+
+    .metric-icon {
+        font-size: 2.5rem;
+        margin-bottom: 15px;
+        color: #ff0055;
+        text-shadow: 0 0 15px rgba(255, 0, 85, 0.6);
+    }
+
+    .metric-card .card-title {
+        font-size: 0.95rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        color: #b0b0b0;
+        margin-bottom: 15px;
+    }
+
+    .metric-card .metric-value {
+        font-size: 2.8rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, #ff0055, #00ffcc);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .metric-value {
+        display: block;
+        margin: 10px 0;
+    }
+
+    .section-title {
+        font-size: 2rem;
+        font-weight: 700;
+        margin: 50px 0 30px 0;
+        color: #ffffff;
+        position: relative;
+        padding-bottom: 15px;
+    }
+
+    .section-title::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100px;
+        height: 3px;
+        background: linear-gradient(90deg, #00ffff, #ff00ff);
+        border-radius: 2px;
+    }
+
+    .action-card {
+        background: linear-gradient(135deg, rgba(255, 0, 0, 0.15) 0%, rgba(0, 200, 255, 0.15) 100%);
+        border: 2px solid rgba(255, 0, 85, 0.3);
+        backdrop-filter: blur(10px);
+        border-radius: 15px;
+        padding: 35px;
+        margin-bottom: 25px;
+        transition: all 0.4s cubic-bezier(0.23, 1, 0.320, 1);
+        height: 100%;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 8px 32px rgba(255, 0, 85, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    }
+
+    .action-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: -100%;
+        width: 200%;
+        height: 100%;
+        background: radial-gradient(circle at center, rgba(255, 0, 85, 0.2) 0%, transparent 70%);
+        transition: right 0.5s;
+    }
+
+    .action-card:hover {
+        transform: translateY(-15px);
+        border-color: rgba(255, 0, 85, 0.6);
+        box-shadow: 0 20px 60px rgba(255, 0, 85, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    }
+
+    .action-card:hover::before {
+        right: -50%;
+    }
+
+    .action-card .card-title {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: #ff0055;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .action-card .card-title i {
+        font-size: 1.5rem;
+        text-shadow: 0 0 10px rgba(255, 0, 85, 0.6);
+    }
+
+    .action-card .card-text {
+        color: #b0b0b0;
+        margin-bottom: 20px;
+        line-height: 1.6;
+    }
+
+    .btn-futuristic {
+        background: linear-gradient(135deg, #00ffff 0%, #00ff88 100%);
+        border: none;
+        color: #000;
+        font-weight: 700;
+        padding: 12px 30px;
+        border-radius: 8px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-size: 0.85rem;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 0 20px rgba(0, 255, 255, 0.4);
+    }
+
+    .btn-futuristic::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.3);
+        transition: left 0.3s;
+    }
+
+    .btn-futuristic:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 30px rgba(0, 255, 255, 0.6);
+    }
+
+    .btn-futuristic:hover::before {
+        left: 100%;
+    }
+
+    .analytics-section {
+        background: linear-gradient(135deg, rgba(0, 100, 150, 0.15) 0%, rgba(100, 0, 150, 0.15) 100%);
+        border: 2px solid rgba(0, 255, 255, 0.3);
+        backdrop-filter: blur(10px);
+        border-radius: 15px;
+        padding: 35px;
+        margin-top: 50px;
+        box-shadow: 0 8px 32px rgba(0, 200, 255, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    }
+
+    .analytics-section h3 {
+        font-size: 1.8rem;
+        font-weight: 700;
+        margin-bottom: 20px;
+        background: linear-gradient(135deg, #00ffff 0%, #ff00ff 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .analytics-stat {
+        display: flex;
+        align-items: center;
+        margin-bottom: 15px;
+        padding: 10px 0;
+        border-bottom: 1px solid rgba(0, 255, 255, 0.1);
+    }
+
+    .analytics-stat:last-child {
+        border-bottom: none;
+    }
+
+    .analytics-label {
+        color: #b0b0b0;
+        font-weight: 600;
+        flex: 1;
+    }
+
+    .analytics-value {
+        color: #00ffff;
+        font-weight: 700;
+        font-size: 1.2rem;
+        text-shadow: 0 0 10px rgba(0, 255, 255, 0.4);
+    }
+
+    .top-skills-badge {
+        display: inline-block;
+        background: linear-gradient(135deg, #00ffff 0%, #00ff88 100%);
+        color: #000;
+        padding: 8px 16px;
+        border-radius: 20px;
+        margin-right: 10px;
+        margin-bottom: 10px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        box-shadow: 0 4px 15px rgba(0, 255, 255, 0.3);
+    }
+</style>
+
+<div class="dashboard-wrapper">
+    <div class="container">
+        <div class="dashboard-header">
+            <h1>⚡ Admin Command Center</h1>
+            <p>Real-time Platform Analytics & Control Hub</p>
+        </div>
+
+        <div class="metrics-container">
+            <div class="row mb-4">
+                <div class="col-md-6 col-lg-3">
+                    <div class="metric-card">
+                        <div class="metric-icon">👥</div>
+                        <h5 class="card-title">Total Workers</h5>
+                        <span class="metric-value">@ViewBag.TotalWorkers</span>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <div class="metric-card">
+                        <div class="metric-icon">🧑‍💼</div>
+                        <h5 class="card-title">Total Clients</h5>
+                        <span class="metric-value">@ViewBag.TotalClients</span>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <div class="metric-card">
+                        <div class="metric-icon">📅</div>
+                        <h5 class="card-title">Total Bookings</h5>
+                        <span class="metric-value">@ViewBag.TotalBookings</span>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <div class="metric-card">
+                        <div class="metric-icon">💰</div>
+                        <h5 class="card-title">Total Earnings</h5>
+                        <span class="metric-value">$@ViewBag.TotalEarnings</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-md-6 col-lg-3">
+                    <div class="metric-card">
+                        <div class="metric-icon">🔴</div>
+                        <h5 class="card-title">Active Jobs</h5>
+                        <span class="metric-value">@ViewBag.ActiveBookings</span>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <div class="metric-card">
+                        <div class="metric-icon">💳</div>
+                        <h5 class="card-title">Online Collected</h5>
+                        <span class="metric-value">$@ViewBag.AmountPaidOnline?.ToString("F2")</span>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <div class="metric-card">
+                        <div class="metric-icon">✅</div>
+                        <h5 class="card-title">Paid to Workers</h5>
+                        <span class="metric-value">$@ViewBag.AmountPaidToWorkers?.ToString("F2")</span>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <div class="metric-card">
+                        <div class="metric-icon">⚠️</div>
+                        <h5 class="card-title">Outstanding</h5>
+                        <span class="metric-value">$@ViewBag.OutstandingBalance?.ToString("F2")</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <h2 class="section-title">🎮 Management Control Panel</h2>
+
+        <div class="row">
+            <div class="col-md-6 col-lg-4">
+                <div class="action-card">
+                    <h5 class="card-title"><i class="fas fa-dollar-sign"></i>Manage Hourly Rates</h5>
+                    <p class="card-text">Set and update hourly rates for workers by skill.</p>
+                    <a href="@Url.Action("ManageRates")" class="btn btn-futuristic">Access Panel</a>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="action-card">
+                    <h5 class="card-title"><i class="fas fa-calendar-check"></i>Manage Bookings</h5>
+                    <p class="card-text">Approve, confirm, or cancel bookings with ease.</p>
+                    <a href="@Url.Action("ManageBookings")" class="btn btn-futuristic">Access Panel</a>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="action-card">
+                    <h5 class="card-title"><i class="fas fa-chart-line"></i>Generate Report</h5>
+                    <p class="card-text">View earnings and booking reports with analytics.</p>
+                    <a href="@Url.Action("GenerateReport")" class="btn btn-futuristic">Access Panel</a>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="action-card">
+                    <h5 class="card-title"><i class="fas fa-user-shield"></i>Manage Admins</h5>
+                    <p class="card-text">Create and review admin login access credentials.</p>
+                    <a href="@Url.Action("ManageAdmins")" class="btn btn-futuristic">Access Panel</a>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="action-card">
+                    <h5 class="card-title"><i class="fas fa-users"></i>Workers</h5>
+                    <p class="card-text">Review worker profiles, resumes, and ratings.</p>
+                    <a asp-controller="Worker" asp-action="Index" class="btn btn-futuristic">View Workers</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="analytics-section">
+            <h3>📊 Platform Analytics Summary</h3>
+            <div class="analytics-stat">
+                <span class="analytics-label">Total Bookings on Platform</span>
+                <span class="analytics-value">@ViewBag.TotalBookings</span>
+            </div>
+            <div class="analytics-stat">
+                <span class="analytics-label">Completed Revenue</span>
+                <span class="analytics-value">$@ViewBag.TotalEarnings?.ToString("F2")</span>
+            </div>
+            <div class="analytics-stat">
+                <span class="analytics-label">Active Workers</span>
+                <span class="analytics-value">@ViewBag.TotalWorkers</span>
+            </div>
+            @if (ViewBag.TopSkills is List<string> topSkills && topSkills.Any())
+            {
+                <div class="analytics-stat" style="flex-direction: column; align-items: flex-start; border-bottom: 1px solid rgba(0, 255, 255, 0.1);">
+                    <span class="analytics-label" style="margin-bottom: 12px;">🔥 Top Demanded Skills</span>
+                    <div>
+                        @foreach (var skill in topSkills)
+                        {
+                            <span class="top-skills-badge">@skill</span>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
 </div>

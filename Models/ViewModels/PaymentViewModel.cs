@@ -2,6 +2,10 @@ using System.ComponentModel.DataAnnotations;
 
 namespace WorkerBookingSystem.Models.ViewModels
 {
+    /// <summary>
+    /// RBI-Compliant Payment View Model
+    /// No card data stored - uses tokenized Razorpay gateway
+    /// </summary>
     public class PaymentViewModel
     {
         public int BookingId { get; set; }
@@ -15,24 +19,55 @@ namespace WorkerBookingSystem.Models.ViewModels
         [Display(Name = "Amount to Pay Online")]
         public decimal OnlineAmount { get; set; }
 
-        [Required]
-        [CreditCard]
-        [Display(Name = "Card Number")]
-        public string CardNumber { get; set; } = string.Empty;
+        // Razorpay fields (tokenized, no card storage)
+        [Display(Name = "Razorpay Order ID")]
+        public string? RazorpayOrderId { get; set; }
 
-        [Required]
-        [StringLength(80)]
-        [Display(Name = "Name on Card")]
-        public string CardholderName { get; set; } = string.Empty;
+        [Display(Name = "Razorpay Payment ID")]
+        public string? RazorpayPaymentId { get; set; }
 
-        [Required]
-        [RegularExpression(@"^(0[1-9]|1[0-2])\/\d{2}$", ErrorMessage = "Use MM/YY format.")]
-        [Display(Name = "Expiry")]
-        public string Expiry { get; set; } = string.Empty;
+        [Display(Name = "Razorpay Signature")]
+        public string? RazorpaySignature { get; set; }
 
+        // OTP Verification fields
+        [Display(Name = "Phone Number for OTP")]
+        public string? PhoneNumber { get; set; }
+
+        [Display(Name = "OTP Code")]
+        [StringLength(6)]
+        public string? OtpCode { get; set; }
+
+        public bool OtpVerified { get; set; } = false;
+
+        [Display(Name = "Payment Method")]
+        public string PaymentMethod { get; set; } = "card"; // card, upi, netbanking, wallet
+
+        // Razorpay key for frontend
+        public string? RazorpayKeyId { get; set; }
+    }
+
+    /// <summary>
+    /// DTO for OTP Request
+    /// </summary>
+    public class OtpRequestViewModel
+    {
+        public int BookingId { get; set; }
+        
         [Required]
-        [RegularExpression(@"^\d{3,4}$", ErrorMessage = "Use the 3 or 4 digit security code.")]
-        [Display(Name = "CVV")]
-        public string Cvv { get; set; } = string.Empty;
+        [Phone]
+        public string PhoneNumber { get; set; } = string.Empty;
+    }
+
+    /// <summary>
+    /// DTO for OTP Verification
+    /// </summary>
+    public class OtpVerificationViewModel
+    {
+        public int BookingId { get; set; }
+        
+        [Required]
+        [StringLength(6, MinimumLength = 6)]
+        public string OtpCode { get; set; } = string.Empty;
     }
 }
+

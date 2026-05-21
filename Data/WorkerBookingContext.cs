@@ -19,6 +19,11 @@ namespace WorkerBookingSystem.Data
         public DbSet<Admin> Admins { get; set; }
         public DbSet<WorkerReview> WorkerReviews { get; set; }
 
+        // RBI Compliance Entities
+        public DbSet<PaymentAuditLog> PaymentAuditLogs { get; set; }
+        public DbSet<OtpVerification> OtpVerifications { get; set; }
+        public DbSet<RazorpayOrder> RazorpayOrders { get; set; }
+
 protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -139,6 +144,65 @@ protected override void OnModelCreating(ModelBuilder modelBuilder)
 
             modelBuilder.Entity<Booking>()
                 .Property(b => b.AmountPaidToWorker)
+                .HasPrecision(10, 2);
+
+            // Configure PaymentAuditLog entity (RBI Compliance)
+            modelBuilder.Entity<PaymentAuditLog>()
+                .HasKey(pal => pal.AuditLogId);
+
+            modelBuilder.Entity<PaymentAuditLog>()
+                .HasIndex(pal => new { pal.BookingId, pal.InitiatedAt });
+
+            modelBuilder.Entity<PaymentAuditLog>()
+                .HasIndex(pal => pal.TransactionId);
+
+            modelBuilder.Entity<PaymentAuditLog>()
+                .HasIndex(pal => pal.PaymentStatus);
+
+            modelBuilder.Entity<PaymentAuditLog>()
+                .HasOne(pal => pal.Booking)
+                .WithMany(b => b.AuditLogs)
+                .HasForeignKey(pal => pal.BookingId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<PaymentAuditLog>()
+                .Property(pal => pal.Amount)
+                .HasPrecision(10, 2);
+
+            // Configure OtpVerification entity (2FA)
+            modelBuilder.Entity<OtpVerification>()
+                .HasKey(ov => ov.OtpId);
+
+            modelBuilder.Entity<OtpVerification>()
+                .HasIndex(ov => new { ov.BookingId, ov.UserId });
+
+            modelBuilder.Entity<OtpVerification>()
+                .HasIndex(ov => ov.GeneratedAt);
+
+            modelBuilder.Entity<OtpVerification>()
+                .HasOne(ov => ov.Booking)
+                .WithMany(b => b.OtpVerifications)
+                .HasForeignKey(ov => ov.BookingId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Configure RazorpayOrder entity
+            modelBuilder.Entity<RazorpayOrder>()
+                .HasKey(ro => ro.OrderId);
+
+            modelBuilder.Entity<RazorpayOrder>()
+                .HasIndex(ro => ro.RazorpayOrderId);
+
+            modelBuilder.Entity<RazorpayOrder>()
+                .HasIndex(ro => new { ro.BookingId, ro.CreatedAt });
+
+            modelBuilder.Entity<RazorpayOrder>()
+                .HasOne(ro => ro.Booking)
+                .WithMany(b => b.RazorpayOrders)
+                .HasForeignKey(ro => ro.BookingId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<RazorpayOrder>()
+                .Property(ro => ro.Amount)
                 .HasPrecision(10, 2);
 
             // Seed sample data

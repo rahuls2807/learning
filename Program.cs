@@ -2,6 +2,7 @@ using WorkerBookingSystem.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 using WorkerBookingSystem.Models;
+using WorkerBookingSystem.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,9 +10,14 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
 builder.Services.AddHttpClient();
 
+// RBI Compliance Services Registration
+builder.Services.AddScoped<IRazorpayPaymentService, RazorpayPaymentService>();
+builder.Services.AddScoped<IOtpService, OtpService>();
+builder.Services.AddScoped<IPaymentAuditService, PaymentAuditService>();
+
 // Add Entity Framework Core with SQL Server
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
-    ?? "Server=(localdb)\\mssqllocaldb;Database=WorkerBookingSystemDb;Trusted_Connection=true;";
+    ?? "Server=(localdb)\\mssqllocaldb;Database=WorkerBookingSystemDb;Trusted_Connection=true;Encrypt=true;";
 builder.Services.AddDbContext<WorkerBookingContext>(options =>
     options.UseSqlServer(connectionString));
 

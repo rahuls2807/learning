@@ -31,6 +31,9 @@ namespace WorkerBookingSystem.Models
         // Navigation properties
         public Worker? Worker { get; set; }
         public Client? Client { get; set; }
+        public ICollection<PaymentAuditLog> AuditLogs { get; set; } = new List<PaymentAuditLog>();
+        public ICollection<OtpVerification> OtpVerifications { get; set; } = new List<OtpVerification>();
+        public ICollection<RazorpayOrder> RazorpayOrders { get; set; } = new List<RazorpayOrder>();
     }
 
     public enum BookingStatus

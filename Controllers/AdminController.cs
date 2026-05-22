@@ -1,23 +1,17 @@
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WorkerBookingSystem.Data;
 using WorkerBookingSystem.Models;
-using WorkerBookingSystem.Models.ViewModels;
 
 namespace WorkerBookingSystem.Controllers
 {
-    [Authorize(Roles = "Admin")]
     public class AdminController : Controller
     {
         private readonly WorkerBookingContext _context;
-        private readonly UserManager<ApplicationUser> _userManager;
 
-        public AdminController(WorkerBookingContext context, UserManager<ApplicationUser> userManager)
+        public AdminController(WorkerBookingContext context)
         {
             _context = context;
-            _userManager = userManager;
         }
 
         // GET: Admin/Dashboard
@@ -29,91 +23,13 @@ namespace WorkerBookingSystem.Controllers
             var totalEarnings = await _context.Bookings
                 .Where(b => b.Status == BookingStatus.Completed)
                 .SumAsync(b => b.TotalWage);
-            var activeBookings = await _context.Bookings
-                .CountAsync(b => b.Status == BookingStatus.Confirmed || b.Status == BookingStatus.InProgress);
-            var amountPaidOnline = await _context.Bookings.SumAsync(b => b.AmountPaidOnline);
-            var amountPaidToWorkers = await _context.Bookings.SumAsync(b => b.AmountPaidToWorker);
-            var totalBookingValue = await _context.Bookings.SumAsync(b => b.TotalWage);
-            var outstandingBalance = totalBookingValue - amountPaidOnline - amountPaidToWorkers;
-            var topSkills = await _context.Bookings
-                .AsNoTracking()
-                .Include(b => b.Worker)
-                .Where(b => b.Worker != null && b.Worker.Skill != null)
-                .GroupBy(b => b.Worker!.Skill!)
-                .Select(g => new { Skill = g.Key, Count = g.Count() })
-                .OrderByDescending(x => x.Count)
-                .Take(5)
-                .ToListAsync();
 
             ViewBag.TotalWorkers = totalWorkers;
             ViewBag.TotalClients = totalClients;
             ViewBag.TotalBookings = totalBookings;
             ViewBag.TotalEarnings = totalEarnings;
-            ViewBag.ActiveBookings = activeBookings;
-            ViewBag.AmountPaidOnline = amountPaidOnline;
-            ViewBag.AmountPaidToWorkers = amountPaidToWorkers;
-            ViewBag.OutstandingBalance = outstandingBalance;
-            ViewBag.TopSkills = topSkills.Select(x => $"{x.Skill} ({x.Count})").ToList();
 
             return View();
-        }
-
-        public async Task<IActionResult> ManageAdmins()
-        {
-            var admins = await _userManager.GetUsersInRoleAsync("Admin");
-            return View(admins.OrderBy(a => a.Email));
-        }
-
-        public IActionResult CreateAdmin()
-        {
-            return View(new AdminRegisterViewModel());
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CreateAdmin(AdminRegisterViewModel model)
-        {
-            if (!ModelState.IsValid)
-            {
-                return View(model);
-            }
-
-            var existingUser = await _userManager.FindByEmailAsync(model.Email);
-            if (existingUser != null)
-            {
-                if (!await _userManager.IsInRoleAsync(existingUser, "Admin"))
-                {
-                    await _userManager.AddToRoleAsync(existingUser, "Admin");
-                    TempData["AdminMessage"] = $"{model.Email} was granted admin access.";
-                    return RedirectToAction(nameof(ManageAdmins));
-                }
-
-                ModelState.AddModelError(nameof(model.Email), "This user is already an admin.");
-                return View(model);
-            }
-
-            var admin = new ApplicationUser
-            {
-                UserName = model.Email,
-                Email = model.Email,
-                EmailConfirmed = true
-            };
-
-            var result = await _userManager.CreateAsync(admin, model.Password);
-            if (!result.Succeeded)
-            {
-                foreach (var error in result.Errors)
-                {
-                    ModelState.AddModelError(string.Empty, error.Description);
-                }
-
-                return View(model);
-            }
-
-            await _userManager.AddToRoleAsync(admin, "Admin");
-            TempData["AdminMessage"] = $"{model.Email} was created as an admin.";
-
-            return RedirectToAction(nameof(ManageAdmins));
         }
 
         // GET: Admin/ManageRates
@@ -183,7 +99,6 @@ namespace WorkerBookingSystem.Controllers
 
         // POST: Admin/UpdateBookingStatus
         [HttpPost]
-        [ValidateAntiForgeryToken]
         public async Task<IActionResult> UpdateBookingStatus(int bookingId, BookingStatus status)
         {
             var booking = await _context.Bookings.FindAsync(bookingId);
@@ -220,6 +135,69 @@ namespace WorkerBookingSystem.Controllers
             ViewBag.TotalWages = completedBookings.Sum(b => b.TotalWage);
             ViewBag.StartDate = startDate;
             ViewBag.EndDate = endDate;
+
+            return View(bookings);
+        }
+
+        // GET: Admin/CreateBooking
+        public async Task<IActionResult> CreateBooking()
+        {
+            var workers = await _context.Workers
+                .Where(w => w.IsActive)
+                .ToListAsync();
+            ViewBag.Workers = workers;
+            return View();
+        }
+
+        // POST: Admin/CreateBooking
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CreateBooking([Bind("WorkerId,TaskDescription,BookingDate,TotalWage")] Booking booking)
+        {
+            if (ModelState.IsValid)
+            {
+                // Admin bookings have no client initially
+                booking.ClientId = null;
+                booking.Status = BookingStatus.Confirmed;
+                booking.CreatedDate = DateTime.Now;
+                booking.AmountPaidOnline = 0;
+                booking.AmountPaidToWorker = 0;
+                booking.PaymentStatus = PaymentStatus.Unpaid;
+                
+                // Set start and end time (assume 1 hour duration if not specified)
+                booking.StartTime = booking.BookingDate;
+                booking.EndTime = booking.BookingDate.AddHours(1);
+
+                _context.Add(booking);
+                await _context.SaveChangesAsync();
+
+                return RedirectToAction(nameof(MyBookings));
+            }
+
+            var workers = await _context.Workers.ToListAsync();
+            ViewBag.Workers = workers;
+            return View(booking);
+        }
+
+        // GET: Admin/MyBookings
+        public async Task<IActionResult> MyBookings()
+        {
+            var bookings = await _context.Bookings
+                .Include(b => b.Worker)
+                .Include(b => b.Client)
+                .Where(b => b.ClientId == null) // Admin-created bookings have no client
+                .ToListAsync();
+
+            var currentBookings = bookings
+                .Where(b => b.Status == BookingStatus.Pending || b.Status == BookingStatus.Confirmed || b.Status == BookingStatus.InProgress)
+                .ToList();
+
+            var historyBookings = bookings
+                .Where(b => b.Status == BookingStatus.Completed || b.Status == BookingStatus.Cancelled)
+                .ToList();
+
+            ViewBag.CurrentBookings = currentBookings;
+            ViewBag.HistoryBookings = historyBookings;
 
             return View(bookings);
         }

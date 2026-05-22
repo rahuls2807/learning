@@ -22,7 +22,7 @@
     <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="8.0.8" />
 
     <!-- RBI Compliance - Payment Gateway & OTP -->
-    <PackageReference Include="Razorpay.Api" Version="4.3.1" />
+    <PackageReference Include="Razorpay" Version="2.9.2" />
     <PackageReference Include="Twilio" Version="6.10.0" />
 
   </ItemGroup>

@@ -5,6 +5,7 @@ namespace WorkerBookingSystem.Models
     public class Worker
     {
         public int WorkerId { get; set; }
+        public string? UserId { get; set; } // Link to AspNetUser
         public string? FirstName { get; set; }
         public string? LastName { get; set; }
         public string? Email { get; set; }
@@ -13,7 +14,6 @@ namespace WorkerBookingSystem.Models
         public string? Skill { get; set; } // e.g., Plumbing, Electrical, etc.
         public string? ProfileImagePath { get; set; }
         public string? ResumePath { get; set; }
-        public string? UserId { get; set; }
         public bool IsActive { get; set; } = true;
         public DateTime CreatedDate { get; set; } = DateTime.Now;
 

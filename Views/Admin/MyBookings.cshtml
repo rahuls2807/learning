@@ -1,0 +1,385 @@
+@{
+    ViewData["Title"] = "My Bookings";
+    var currentBookings = ViewBag.CurrentBookings as List<WorkerBookingSystem.Models.Booking>;
+    var historyBookings = ViewBag.HistoryBookings as List<WorkerBookingSystem.Models.Booking>;
+}
+
+<style>
+    body {
+        background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+        min-height: 100vh;
+        color: #e0e0e0;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .bookings-wrapper {
+        background: linear-gradient(135deg, rgba(15, 12, 41, 0.95) 0%, rgba(48, 43, 99, 0.95) 50%, rgba(36, 36, 62, 0.95) 100%);
+        min-height: 100vh;
+        padding: 40px 20px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .bookings-wrapper::before {
+        content: '';
+        position: fixed;
+        top: -50%;
+        right: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle at 20% 50%, rgba(255, 0, 0, 0.1) 0%, transparent 50%),
+                    radial-gradient(circle at 80% 80%, rgba(0, 255, 255, 0.08) 0%, transparent 50%),
+                    radial-gradient(circle at 50% 50%, rgba(255, 0, 170, 0.08) 0%, transparent 70%);
+        pointer-events: none;
+        animation: moveGradient 20s ease infinite;
+        z-index: 0;
+    }
+
+    @@keyframes moveGradient {
+        0% { transform: translate(0, 0); }
+        50% { transform: translate(40px, 40px); }
+        100% { transform: translate(0, 0); }
+    }
+
+    .container {
+        position: relative;
+        z-index: 1;
+        max-width: 1200px;
+    }
+
+    .page-header {
+        text-align: center;
+        margin-bottom: 40px;
+    }
+
+    .page-title {
+        font-size: 2.8rem;
+        font-weight: 700;
+        background: linear-gradient(135deg, #ff0055 0%, #00ffcc 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 10px;
+        animation: titleGlow 3s ease-in-out infinite;
+    }
+
+    @@keyframes titleGlow {
+        0%, 100% { filter: drop-shadow(0 0 20px rgba(255, 0, 85, 0.3)); }
+        50% { filter: drop-shadow(0 0 25px rgba(0, 255, 204, 0.3)); }
+    }
+
+    .tabs-container {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 30px;
+        border-bottom: 2px solid rgba(255, 0, 85, 0.2);
+        flex-wrap: wrap;
+    }
+
+    .tab-button {
+        padding: 12px 30px;
+        background: transparent;
+        border: 2px solid rgba(0, 255, 204, 0.3);
+        color: #00ffcc;
+        border-radius: 25px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 0.95rem;
+        transition: all 0.3s ease;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .tab-button:hover {
+        border-color: #00ffcc;
+        box-shadow: 0 0 15px rgba(0, 255, 204, 0.3);
+    }
+
+    .tab-button.active {
+        background: linear-gradient(135deg, #ff0055 0%, #ff4477 100%);
+        color: #fff;
+        border-color: #ff0055;
+        box-shadow: 0 0 20px rgba(255, 0, 85, 0.5);
+    }
+
+    .tab-content {
+        display: none;
+    }
+
+    .tab-content.active {
+        display: block;
+    }
+
+    .bookings-table {
+        width: 100%;
+        background: linear-gradient(135deg, rgba(255, 0, 0, 0.05) 0%, rgba(0, 255, 255, 0.05) 100%);
+        border: 2px solid rgba(255, 0, 85, 0.2);
+        border-radius: 15px;
+        overflow: hidden;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 8px 32px rgba(255, 0, 85, 0.1);
+        border-collapse: collapse;
+    }
+
+    .bookings-table thead {
+        background: linear-gradient(135deg, rgba(255, 0, 85, 0.15) 0%, rgba(0, 255, 204, 0.1) 100%);
+    }
+
+    .bookings-table th {
+        padding: 15px 20px;
+        text-align: left;
+        color: #ff0055;
+        font-weight: 700;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        letter-spacing: 1px;
+        border-bottom: 2px solid rgba(255, 0, 85, 0.3);
+    }
+
+    .bookings-table td {
+        padding: 15px 20px;
+        border-bottom: 1px solid rgba(255, 0, 85, 0.1);
+        color: #e0e0e0;
+    }
+
+    .bookings-table tbody tr {
+        transition: all 0.3s ease;
+    }
+
+    .bookings-table tbody tr:hover {
+        background: rgba(255, 0, 85, 0.05);
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .badge-pending {
+        background: rgba(255, 165, 0, 0.2);
+        color: #ffaa00;
+        border: 1px solid rgba(255, 165, 0, 0.5);
+    }
+
+    .badge-confirmed {
+        background: rgba(0, 255, 204, 0.2);
+        color: #00ffcc;
+        border: 1px solid rgba(0, 255, 204, 0.5);
+    }
+
+    .badge-inprogress {
+        background: rgba(255, 0, 85, 0.2);
+        color: #ff0055;
+        border: 1px solid rgba(255, 0, 85, 0.5);
+    }
+
+    .badge-completed {
+        background: rgba(0, 255, 0, 0.2);
+        color: #00ff00;
+        border: 1px solid rgba(0, 255, 0, 0.5);
+    }
+
+    .badge-cancelled {
+        background: rgba(128, 128, 128, 0.2);
+        color: #a0a0a0;
+        border: 1px solid rgba(128, 128, 128, 0.5);
+    }
+
+    .action-button {
+        padding: 6px 12px;
+        border: 1px solid #ff0055;
+        background: transparent;
+        color: #ff0055;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 0.8rem;
+        transition: all 0.3s ease;
+        margin-right: 5px;
+    }
+
+    .action-button:hover {
+        background: rgba(255, 0, 85, 0.2);
+        box-shadow: 0 0 10px rgba(255, 0, 85, 0.4);
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: #00ffcc;
+    }
+
+    .empty-state-icon {
+        font-size: 3rem;
+        margin-bottom: 20px;
+        opacity: 0.5;
+    }
+
+    .empty-state-text {
+        font-size: 1.1rem;
+        margin-bottom: 20px;
+    }
+
+    .btn-create {
+        padding: 12px 30px;
+        background: linear-gradient(135deg, #ff0055 0%, #ff4477 100%);
+        color: #fff;
+        border: none;
+        border-radius: 25px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        display: inline-block;
+        text-decoration: none;
+        margin-top: 20px;
+    }
+
+    .btn-create:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 30px rgba(255, 0, 85, 0.5);
+    }
+</style>
+
+<div class="bookings-wrapper">
+    <div class="container">
+        <div class="page-header">
+            <h1 class="page-title">My Bookings</h1>
+        </div>
+
+        <div class="tabs-container">
+            <button class="tab-button active" onclick="showTab('current')">Current</button>
+            <button class="tab-button" onclick="showTab('history')">History</button>
+        </div>
+
+        <!-- Current Bookings Tab -->
+        <div id="current" class="tab-content active">
+            @if (currentBookings != null && currentBookings.Count > 0)
+            {
+                <table class="bookings-table">
+                    <thead>
+                        <tr>
+                            <th>Worker</th>
+                            <th>Task</th>
+                            <th>Date & Time</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var booking in currentBookings)
+                        {
+                            <tr>
+                                <td>
+                                    <strong>@booking.Worker?.FirstName @booking.Worker?.LastName</strong><br/>
+                                    <small>@booking.Worker?.Skill</small>
+                                </td>
+                                <td>@booking.TaskDescription</td>
+                                <td>@booking.BookingDate.ToString("MMM dd, yyyy HH:mm")</td>
+                                <td>₹@booking.TotalWage.ToString("N2")</td>
+                                <td>
+                                    @{
+                                        var statusClass = booking.Status.ToString() switch
+                                        {
+                                            "Pending" => "badge-pending",
+                                            "Confirmed" => "badge-confirmed",
+                                            "InProgress" => "badge-inprogress",
+                                            _ => "badge-pending"
+                                        };
+                                    }
+                                    <span class="status-badge @statusClass">@booking.Status</span>
+                                </td>
+                                <td>
+                                    <a href="@Url.Action("ManageBookings", "Admin")" class="action-button">Manage</a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            else
+            {
+                <div class="empty-state">
+                    <div class="empty-state-icon">📋</div>
+                    <div class="empty-state-text">No current bookings</div>
+                    <a href="@Url.Action("CreateBooking", "Admin")" class="btn-create">Create Booking</a>
+                </div>
+            }
+        </div>
+
+        <!-- History Tab -->
+        <div id="history" class="tab-content">
+            @if (historyBookings != null && historyBookings.Count > 0)
+            {
+                <table class="bookings-table">
+                    <thead>
+                        <tr>
+                            <th>Worker</th>
+                            <th>Task</th>
+                            <th>Date & Time</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var booking in historyBookings)
+                        {
+                            <tr>
+                                <td>
+                                    <strong>@booking.Worker?.FirstName @booking.Worker?.LastName</strong><br/>
+                                    <small>@booking.Worker?.Skill</small>
+                                </td>
+                                <td>@booking.TaskDescription</td>
+                                <td>@booking.BookingDate.ToString("MMM dd, yyyy HH:mm")</td>
+                                <td>₹@booking.TotalWage.ToString("N2")</td>
+                                <td>
+                                    @{
+                                        var statusClass = booking.Status.ToString() switch
+                                        {
+                                            "Completed" => "badge-completed",
+                                            "Cancelled" => "badge-cancelled",
+                                            _ => "badge-pending"
+                                        };
+                                    }
+                                    <span class="status-badge @statusClass">@booking.Status</span>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            else
+            {
+                <div class="empty-state">
+                    <div class="empty-state-icon">📜</div>
+                    <div class="empty-state-text">No booking history</div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<script>
+    function showTab(tabName) {
+        // Hide all tabs
+        const tabs = document.querySelectorAll('.tab-content');
+        tabs.forEach(tab => tab.classList.remove('active'));
+
+        // Remove active class from all buttons
+        const buttons = document.querySelectorAll('.tab-button');
+        buttons.forEach(btn => btn.classList.remove('active'));
+
+        // Show selected tab
+        document.getElementById(tabName).classList.add('active');
+
+        // Add active class to clicked button
+        event.target.classList.add('active');
+    }
+</script>

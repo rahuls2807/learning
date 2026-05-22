@@ -39,7 +39,7 @@
         z-index: 0;
     }
 
-    @keyframes moveGradient {
+    @@keyframes moveGradient {
         0% { transform: translate(0, 0); }
         50% { transform: translate(40px, 40px); }
         100% { transform: translate(0, 0); }
@@ -67,7 +67,7 @@
         animation: titleGlow 3s ease-in-out infinite;
     }
 
-    @keyframes titleGlow {
+    @@keyframes titleGlow {
         0%, 100% { filter: drop-shadow(0 0 20px rgba(255, 0, 85, 0.4)); }
         50% { filter: drop-shadow(0 0 30px rgba(0, 255, 200, 0.4)); }
     }
@@ -312,7 +312,7 @@
         animation: slideIn 0.5s ease;
     }
 
-    @keyframes slideIn {
+    @@keyframes slideIn {
         from {
             opacity: 0;
             transform: translateY(-20px);
@@ -537,32 +537,3 @@
         event.target.classList.add('active');
     }
 </script>
-                                            <option value="4">Cancelled</option>
-                                        </select>
-                                        <button type="submit" class="btn btn-sm btn-outline-primary">Update</button>
-                                    </form>
-                                    @if (!string.IsNullOrWhiteSpace(booking.ClientStatusNote))
-                                    {
-                                        <small class="text-muted">@booking.ClientStatusNote</small>
-                                    }
-                                    @if (booking.Worker != null)
-                                    {
-                                        <a asp-controller="Worker" asp-action="Details" asp-route-id="@booking.WorkerId" class="btn btn-sm btn-outline-primary">Profile & Review</a>
-                                    }
-                                </div>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
-    }
-    else
-    {
-        <div class="alert alert-info">You haven't booked any workers yet. <a href="@Url.Action("BookWorker")">Book a worker now</a></div>
-    }
-
-    <div class="mt-3">
-        <a href="@Url.Action("Index", "Home")" class="btn btn-secondary">Back to Home</a>
-    </div>
-</div>

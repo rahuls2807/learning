@@ -1,6 +1,9 @@
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using Microsoft.EntityFrameworkCore;
+using WorkerBookingSystem.Data;
+using WorkerBookingSystem.Models;
 
 namespace WorkerBookingSystem.Services
 {

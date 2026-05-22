@@ -2,6 +2,9 @@ using Twilio;
 using Twilio.Rest.Api.V2010.Account;
 using Twilio.Types;
 using System.Security.Cryptography;
+using Microsoft.EntityFrameworkCore;
+using WorkerBookingSystem.Data;
+using WorkerBookingSystem.Models;
 
 namespace WorkerBookingSystem.Services
 {

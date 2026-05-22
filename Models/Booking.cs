@@ -8,8 +8,7 @@ namespace WorkerBookingSystem.Models
         public int BookingId { get; set; }
         [Required]
         public int WorkerId { get; set; }
-        [Required]
-        public int ClientId { get; set; }
+        public int? ClientId { get; set; }
         [Required]
         public DateTime BookingDate { get; set; }
         [Required]

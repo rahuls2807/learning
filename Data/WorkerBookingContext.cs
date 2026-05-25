@@ -214,6 +214,94 @@ protected override void OnModelCreating(ModelBuilder modelBuilder)
                 .Property(ro => ro.Amount)
                 .HasPrecision(10, 2);
 
+            modelBuilder.Entity<Message>()
+                .HasOne(m => m.Sender)
+                .WithMany()
+                .HasForeignKey(m => m.SenderId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<Message>()
+                .HasOne(m => m.Receiver)
+                .WithMany()
+                .HasForeignKey(m => m.ReceiverId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<ReferralProgram>()
+                .HasOne(r => r.Referrer)
+                .WithMany()
+                .HasForeignKey(r => r.ReferrerId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<ReferralProgram>()
+                .HasOne(r => r.Referee)
+                .WithMany()
+                .HasForeignKey(r => r.RefereeId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<UserWallet>()
+                .Property(w => w.BalanceAmount)
+                .HasPrecision(12, 2);
+
+            modelBuilder.Entity<UserWallet>()
+                .Property(w => w.TotalRecharged)
+                .HasPrecision(12, 2);
+
+            modelBuilder.Entity<UserWallet>()
+                .Property(w => w.TotalUsed)
+                .HasPrecision(12, 2);
+
+            modelBuilder.Entity<WalletTransaction>()
+                .Property(t => t.Amount)
+                .HasPrecision(12, 2);
+
+            modelBuilder.Entity<WalletTransaction>()
+                .Property(t => t.OpeningBalance)
+                .HasPrecision(12, 2);
+
+            modelBuilder.Entity<WalletTransaction>()
+                .Property(t => t.ClosingBalance)
+                .HasPrecision(12, 2);
+
+            modelBuilder.Entity<ReferralProgram>()
+                .Property(r => r.FirstBookingAmount)
+                .HasPrecision(12, 2);
+
+            modelBuilder.Entity<ReferralProgram>()
+                .Property(r => r.BonusAmount)
+                .HasPrecision(12, 2);
+
+            modelBuilder.Entity<WorkerMetrics>()
+                .Property(m => m.TotalEarnings)
+                .HasPrecision(12, 2);
+
+            modelBuilder.Entity<WorkerMetrics>()
+                .Property(m => m.AverageEarningsPerBooking)
+                .HasPrecision(12, 2);
+
+            modelBuilder.Entity<WorkerMetrics>()
+                .Property(m => m.AverageRating)
+                .HasPrecision(4, 2);
+
+            modelBuilder.Entity<WorkerMetrics>()
+                .Property(m => m.PunctualityScore)
+                .HasPrecision(4, 2);
+
+            modelBuilder.Entity<WorkerMetrics>()
+                .Property(m => m.QualityScore)
+                .HasPrecision(4, 2);
+
+            modelBuilder.Entity<WorkerMetrics>()
+                .Property(m => m.CommunicationScore)
+                .HasPrecision(4, 2);
+
+            modelBuilder.Entity<WorkerMetrics>()
+                .Property(m => m.ProfessionalismScore)
+                .HasPrecision(4, 2);
+
+            modelBuilder.Entity<WorkerMetrics>()
+                .Property(m => m.CancellationRate)
+                .HasPrecision(5, 2);
+
             // Seed sample data
             // modelBuilder.Entity<Worker>().HasData(
             //     new Worker { WorkerId = 1, FirstName = "John", LastName = "Doe", Email = "john@worker.com", PhoneNumber = "123-456", Skill = "Plumbing", IsActive = true, CreatedDate = DateTime.Parse("2024-1-1") },

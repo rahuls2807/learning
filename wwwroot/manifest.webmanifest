@@ -1,0 +1,41 @@
+{
+  "name": "Worker Mandi",
+  "short_name": "Worker Mandi",
+  "description": "Book workers, manage jobs, payments, profiles, reviews, and admin workflows.",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0f0c29",
+  "theme_color": "#ff0055",
+  "categories": ["business", "productivity", "utilities"],
+  "icons": [
+    {
+      "src": "/images/app-icon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Find Workers",
+      "short_name": "Workers",
+      "url": "/Client/BookWorker",
+      "description": "Search available workers"
+    },
+    {
+      "name": "My Bookings",
+      "short_name": "Bookings",
+      "url": "/Client/MyBookings",
+      "description": "Review current bookings"
+    },
+    {
+      "name": "Admin Dashboard",
+      "short_name": "Admin",
+      "url": "/Admin/Dashboard",
+      "description": "Open the admin dashboard"
+    }
+  ]
+}

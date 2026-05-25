@@ -436,3 +436,36 @@ body {
   padding: 0 14px;
   font-weight: 700;
 }
+
+.mobile-install-page .card {
+  min-height: 100%;
+}
+
+.mobile-install-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.mobile-install-action {
+  min-width: 180px;
+  min-height: 48px;
+}
+
+@media (display-mode: standalone) {
+  .mobile-install-action {
+    display: none !important;
+  }
+}
+
+@media (max-width: 767px) {
+  .mobile-install-hero {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .mobile-install-action {
+    width: 100%;
+  }
+}

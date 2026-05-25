@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using WorkerBookingSystem.Data;
 
@@ -11,9 +12,11 @@ using WorkerBookingSystem.Data;
 namespace WorkerBookingSystem.Migrations
 {
     [DbContext(typeof(WorkerBookingContext))]
-    partial class WorkerBookingContextModelSnapshot : ModelSnapshot
+    [Migration("20260525192915_AddFinancialPrecision")]
+    partial class AddFinancialPrecision
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1276,13 +1279,13 @@ namespace WorkerBookingSystem.Migrations
                     b.HasOne("WorkerBookingSystem.Models.ApplicationUser", "Receiver")
                         .WithMany()
                         .HasForeignKey("ReceiverId")
-                        .OnDelete(DeleteBehavior.NoAction)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("WorkerBookingSystem.Models.ApplicationUser", "Sender")
                         .WithMany()
                         .HasForeignKey("SenderId")
-                        .OnDelete(DeleteBehavior.NoAction)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Booking");
@@ -1330,13 +1333,13 @@ namespace WorkerBookingSystem.Migrations
                     b.HasOne("WorkerBookingSystem.Models.ApplicationUser", "Referee")
                         .WithMany()
                         .HasForeignKey("RefereeId")
-                        .OnDelete(DeleteBehavior.NoAction)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("WorkerBookingSystem.Models.ApplicationUser", "Referrer")
                         .WithMany()
                         .HasForeignKey("ReferrerId")
-                        .OnDelete(DeleteBehavior.NoAction)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Referee");

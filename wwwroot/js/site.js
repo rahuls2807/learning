@@ -1,7 +1,47 @@
-﻿// Please see documentation at https://learn.microsoft.com/aspnet/core/client-side/bundling-and-minification
-// for details on configuring this project to bundle and minify static web assets.
+let workerMandiInstallPrompt = null;
+
+window.addEventListener("beforeinstallprompt", (event) => {
+  event.preventDefault();
+  workerMandiInstallPrompt = event;
+
+  const installButton = document.getElementById("pwaInstallButton");
+  if (installButton) {
+    installButton.hidden = false;
+  }
+});
+
+window.addEventListener("appinstalled", () => {
+  workerMandiInstallPrompt = null;
+
+  const installButton = document.getElementById("pwaInstallButton");
+  if (installButton) {
+    installButton.hidden = true;
+  }
+});
+
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/service-worker.js").catch(() => {
+      // The app remains fully usable online if service worker registration is unavailable.
+    });
+  });
+}
 
 document.addEventListener("DOMContentLoaded", () => {
+  const installButton = document.getElementById("pwaInstallButton");
+  if (installButton) {
+    installButton.addEventListener("click", async () => {
+      if (!workerMandiInstallPrompt) {
+        return;
+      }
+
+      workerMandiInstallPrompt.prompt();
+      await workerMandiInstallPrompt.userChoice;
+      workerMandiInstallPrompt = null;
+      installButton.hidden = true;
+    });
+  }
+
   const assistant = document.getElementById("appAssistant");
   const toggle = document.getElementById("assistantToggle");
   const close = document.getElementById("assistantClose");

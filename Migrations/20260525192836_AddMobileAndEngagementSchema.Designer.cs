@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using WorkerBookingSystem.Data;
 
@@ -11,9 +12,11 @@ using WorkerBookingSystem.Data;
 namespace WorkerBookingSystem.Migrations
 {
     [DbContext(typeof(WorkerBookingContext))]
-    partial class WorkerBookingContextModelSnapshot : ModelSnapshot
+    [Migration("20260525192836_AddMobileAndEngagementSchema")]
+    partial class AddMobileAndEngagementSchema
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -760,8 +763,7 @@ namespace WorkerBookingSystem.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<decimal>("BonusAmount")
-                        .HasPrecision(12, 2)
-                        .HasColumnType("decimal(12,2)");
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<DateTime?>("BonusCreditedAt")
                         .HasColumnType("datetime2");
@@ -773,8 +775,7 @@ namespace WorkerBookingSystem.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<decimal>("FirstBookingAmount")
-                        .HasPrecision(12, 2)
-                        .HasColumnType("decimal(12,2)");
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("RefereeId")
                         .IsRequired()
@@ -864,8 +865,7 @@ namespace WorkerBookingSystem.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<decimal>("BalanceAmount")
-                        .HasPrecision(12, 2)
-                        .HasColumnType("decimal(12,2)");
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -880,12 +880,10 @@ namespace WorkerBookingSystem.Migrations
                         .HasColumnType("int");
 
                     b.Property<decimal>("TotalRecharged")
-                        .HasPrecision(12, 2)
-                        .HasColumnType("decimal(12,2)");
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<decimal>("TotalUsed")
-                        .HasPrecision(12, 2)
-                        .HasColumnType("decimal(12,2)");
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("UserId")
                         .IsRequired()
@@ -907,15 +905,13 @@ namespace WorkerBookingSystem.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<decimal>("Amount")
-                        .HasPrecision(12, 2)
-                        .HasColumnType("decimal(12,2)");
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<int?>("BookingId")
                         .HasColumnType("int");
 
                     b.Property<decimal>("ClosingBalance")
-                        .HasPrecision(12, 2)
-                        .HasColumnType("decimal(12,2)");
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -929,8 +925,7 @@ namespace WorkerBookingSystem.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("OpeningBalance")
-                        .HasPrecision(12, 2)
-                        .HasColumnType("decimal(12,2)");
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -1047,12 +1042,10 @@ namespace WorkerBookingSystem.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<decimal>("AverageEarningsPerBooking")
-                        .HasPrecision(12, 2)
-                        .HasColumnType("decimal(12,2)");
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<decimal>("AverageRating")
-                        .HasPrecision(4, 2)
-                        .HasColumnType("decimal(4,2)");
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<int>("AverageResponseTime")
                         .HasColumnType("int");
@@ -1062,12 +1055,10 @@ namespace WorkerBookingSystem.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("CancellationRate")
-                        .HasPrecision(5, 2)
-                        .HasColumnType("decimal(5,2)");
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<decimal>("CommunicationScore")
-                        .HasPrecision(4, 2)
-                        .HasColumnType("decimal(4,2)");
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<DateTime>("LastUpdatedAt")
                         .HasColumnType("datetime2");
@@ -1077,16 +1068,13 @@ namespace WorkerBookingSystem.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("ProfessionalismScore")
-                        .HasPrecision(4, 2)
-                        .HasColumnType("decimal(4,2)");
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<decimal>("PunctualityScore")
-                        .HasPrecision(4, 2)
-                        .HasColumnType("decimal(4,2)");
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<decimal>("QualityScore")
-                        .HasPrecision(4, 2)
-                        .HasColumnType("decimal(4,2)");
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<int>("TotalBookingsActive")
                         .HasColumnType("int");
@@ -1098,8 +1086,7 @@ namespace WorkerBookingSystem.Migrations
                         .HasColumnType("int");
 
                     b.Property<decimal>("TotalEarnings")
-                        .HasPrecision(12, 2)
-                        .HasColumnType("decimal(12,2)");
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<int>("TotalReviews")
                         .HasColumnType("int");
@@ -1276,13 +1263,13 @@ namespace WorkerBookingSystem.Migrations
                     b.HasOne("WorkerBookingSystem.Models.ApplicationUser", "Receiver")
                         .WithMany()
                         .HasForeignKey("ReceiverId")
-                        .OnDelete(DeleteBehavior.NoAction)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("WorkerBookingSystem.Models.ApplicationUser", "Sender")
                         .WithMany()
                         .HasForeignKey("SenderId")
-                        .OnDelete(DeleteBehavior.NoAction)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Booking");
@@ -1330,13 +1317,13 @@ namespace WorkerBookingSystem.Migrations
                     b.HasOne("WorkerBookingSystem.Models.ApplicationUser", "Referee")
                         .WithMany()
                         .HasForeignKey("RefereeId")
-                        .OnDelete(DeleteBehavior.NoAction)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("WorkerBookingSystem.Models.ApplicationUser", "Referrer")
                         .WithMany()
                         .HasForeignKey("ReferrerId")
-                        .OnDelete(DeleteBehavior.NoAction)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Referee");

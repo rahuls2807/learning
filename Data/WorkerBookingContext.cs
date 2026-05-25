@@ -18,11 +18,20 @@ namespace WorkerBookingSystem.Data
         public DbSet<HourlyRate> HourlyRates { get; set; }
         public DbSet<Admin> Admins { get; set; }
         public DbSet<WorkerReview> WorkerReviews { get; set; }
+        public DbSet<ClientReview> ClientReviews { get; set; }
 
         // RBI Compliance Entities
         public DbSet<PaymentAuditLog> PaymentAuditLogs { get; set; }
         public DbSet<OtpVerification> OtpVerifications { get; set; }
         public DbSet<RazorpayOrder> RazorpayOrders { get; set; }
+
+        // World-Class Features
+        public DbSet<UserWallet> UserWallets { get; set; }
+        public DbSet<WalletTransaction> WalletTransactions { get; set; }
+        public DbSet<UserNotification> UserNotifications { get; set; }
+        public DbSet<Message> Messages { get; set; }
+        public DbSet<ReferralProgram> ReferralPrograms { get; set; }
+        public DbSet<WorkerMetrics> WorkerMetrics { get; set; }
 
 protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

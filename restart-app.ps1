@@ -1,3 +1,6 @@
+# Set execution policy for this process to allow script execution
+Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process -Force
+
 $appPath = "c:\Users\rsing\source\repos\WorkerBookingSystem"
 
 Write-Host "`n========================================" -ForegroundColor Cyan
@@ -16,7 +19,7 @@ if ($dotnetProcs) {
 }
 
 Write-Host "`nStarting the application...`n" -ForegroundColor Green
-Set-Location $appPath
+Push-Location $appPath
 
 # Clean build artifacts if needed
 if (Test-Path -Path "bin") {
@@ -26,3 +29,4 @@ if (Test-Path -Path "bin") {
 }
 
 dotnet run
+Pop-Location

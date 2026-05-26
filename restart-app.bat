@@ -28,4 +28,9 @@ if not exist bin\nul (
 )
 
 dotnet run
-pause
+if !errorlevel! neq 0 (
+    echo.
+    echo [ERROR] Application failed to start!
+    echo.
+    pause
+)

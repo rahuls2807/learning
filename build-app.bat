@@ -37,6 +37,5 @@ if !errorlevel! equ 0 (
     echo.
     echo [ERROR] Build failed with errors!
     echo.
+    pause
 )
-
-pause

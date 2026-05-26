@@ -12,4 +12,9 @@ echo.
 cd /d c:\Users\rsing\source\repos\WorkerBookingSystem
 
 dotnet run
-pause
+if !errorlevel! neq 0 (
+    echo.
+    echo [ERROR] Application failed to start!
+    echo.
+    pause
+)

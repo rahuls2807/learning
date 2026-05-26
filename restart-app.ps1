@@ -29,4 +29,13 @@ if (Test-Path -Path "bin") {
 }
 
 dotnet run
+$exitCode = $LASTEXITCODE
+
 Pop-Location
+
+if ($exitCode -ne 0) {
+    Write-Host "`n[ERROR] Application failed to start!`n" -ForegroundColor Red
+    Read-Host "Press Enter to close"
+}
+
+exit $exitCode

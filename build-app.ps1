@@ -26,11 +26,15 @@ Remove-Item -Path "obj" -Recurse -Force -ErrorAction SilentlyContinue
 Write-Host "`nBuilding the project...`n" -ForegroundColor Green
 
 dotnet build
+$exitCode = $LASTEXITCODE
 
-if ($LASTEXITCODE -eq 0) {
+Pop-Location
+
+if ($exitCode -eq 0) {
     Write-Host "`n[SUCCESS] Build completed successfully!`n" -ForegroundColor Green
 } else {
     Write-Host "`n[ERROR] Build failed with errors!`n" -ForegroundColor Red
+    Read-Host "Press Enter to close"
 }
 
-Pop-Location
+exit $exitCode

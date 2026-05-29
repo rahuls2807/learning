@@ -56,6 +56,7 @@ using (var scope = app.Services.CreateScope())
     // through user-secrets, environment variables, or deployment secret configuration.
     var adminEmail = builder.Configuration["AdminSeed:Email"];
     var adminPassword = builder.Configuration["AdminSeed:Password"];
+    var resetAdminPassword = builder.Configuration.GetValue<bool>("AdminSeed:ResetPassword");
 
     if (!string.IsNullOrWhiteSpace(adminEmail) && !string.IsNullOrWhiteSpace(adminPassword))
     {
@@ -66,7 +67,8 @@ using (var scope = app.Services.CreateScope())
             {
                 UserName = adminEmail,
                 Email = adminEmail,
-                EmailConfirmed = true
+                EmailConfirmed = true,
+                Address = string.Empty  // Set Address to prevent NULL errors
             };
             var createResult = await userManager.CreateAsync(admin, adminPassword);
             if (createResult.Succeeded)
@@ -82,6 +84,21 @@ using (var scope = app.Services.CreateScope())
         else if (!await userManager.IsInRoleAsync(adminUser, "Admin"))
         {
             await userManager.AddToRoleAsync(adminUser, "Admin");
+        }
+
+        if (adminUser != null && resetAdminPassword)
+        {
+            var resetToken = await userManager.GeneratePasswordResetTokenAsync(adminUser);
+            var resetResult = await userManager.ResetPasswordAsync(adminUser, resetToken, adminPassword);
+            if (!resetResult.Succeeded)
+            {
+                var errors = string.Join("; ", resetResult.Errors.Select(e => e.Description));
+                app.Logger.LogWarning("Admin seed password for {AdminEmail} was not reset: {Errors}", adminEmail, errors);
+            }
+            else
+            {
+                app.Logger.LogInformation("Admin seed password was reset for {AdminEmail}. Disable AdminSeed:ResetPassword after recovery.", adminEmail);
+            }
         }
     }
 

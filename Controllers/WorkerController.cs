@@ -151,7 +151,8 @@ namespace WorkerBookingSystem.Controllers
                     {
                         UserName = model.Email,
                         Email = model.Email,
-                        EmailConfirmed = true
+                        EmailConfirmed = true,
+                        Address = string.Empty  // Set Address to prevent NULL errors
                     };
 
                     var result = await _userManager.CreateAsync(user, model.Password);

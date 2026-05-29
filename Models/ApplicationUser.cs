@@ -6,8 +6,8 @@ namespace WorkerBookingSystem.Models
     public class ApplicationUser : IdentityUser
     {
         // Referral Program
-        public string ReferralCode { get; set; }
-        public string ReferredBy { get; set; } // UserId who referred this user
+        public string ReferralCode { get; set; } = string.Empty;
+        public string ReferredBy { get; set; } = string.Empty;
 
         // User Status
         public bool IsVerified { get; set; } = false;
@@ -18,12 +18,12 @@ namespace WorkerBookingSystem.Models
         public DateTime? KycCompletedAt { get; set; }
 
         // Profile fields
-        public string Address { get; set; }
-        public string City { get; set; }
-        public string State { get; set; }
-        public string PinCode { get; set; }
-        public string ProfileImageUrl { get; set; }
-        public string BioDescription { get; set; }
+        public string Address { get; set; } = string.Empty;
+        public string City { get; set; } = string.Empty;
+        public string State { get; set; } = string.Empty;
+        public string PinCode { get; set; } = string.Empty;
+        public string ProfileImageUrl { get; set; } = string.Empty;
+        public string BioDescription { get; set; } = string.Empty;
 
         // Preferences
         public bool NotificationsEnabled { get; set; } = true;
@@ -42,7 +42,7 @@ namespace WorkerBookingSystem.Models
         // Account status
         public bool IsActive { get; set; } = true;
         public bool IsBlocked { get; set; } = false;
-        public string BlockReason { get; set; }
+        public string BlockReason { get; set; } = string.Empty;
     }
 }
 

@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WorkerBookingSystem.Data;
@@ -200,6 +201,82 @@ namespace WorkerBookingSystem.Controllers
             ViewBag.HistoryBookings = historyBookings;
 
             return View(bookings);
+        }
+
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> UpiPayments()
+        {
+            var submissions = await _context.UpiPaymentSubmissions
+                .Include(u => u.Booking)
+                    .ThenInclude(b => b!.Client)
+                .Include(u => u.Booking)
+                    .ThenInclude(b => b!.Worker)
+                .OrderByDescending(u => u.SubmittedAt)
+                .ToListAsync();
+
+            return View(submissions);
+        }
+
+        [HttpPost]
+        [Authorize(Roles = "Admin")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ApproveUpiPayment(int upiPaymentId, string? adminNotes)
+        {
+            var submission = await _context.UpiPaymentSubmissions
+                .Include(u => u.Booking)
+                .FirstOrDefaultAsync(u => u.UpiPaymentId == upiPaymentId);
+
+            if (submission?.Booking == null)
+                return NotFound();
+
+            if (submission.Status != UpiPaymentStatuses.Pending)
+            {
+                TempData["PaymentMessage"] = "This UPI payment was already processed.";
+                return RedirectToAction(nameof(UpiPayments));
+            }
+
+            var booking = submission.Booking;
+            booking.AmountPaidOnline += submission.Amount;
+            booking.PaymentReference = $"UPI-{submission.TransactionReference}";
+            booking.Status = BookingStatus.Confirmed;
+            ApplyPaymentStatus(booking);
+            booking.PaidDate ??= DateTime.UtcNow;
+
+            submission.Status = UpiPaymentStatuses.Approved;
+            submission.ReviewedAt = DateTime.UtcNow;
+            submission.AdminNotes = adminNotes;
+
+            await _context.SaveChangesAsync();
+            TempData["PaymentMessage"] = $"UPI payment approved for booking #{booking.BookingId}. Pay worker from client UPI: {submission.ClientUpiId}";
+            return RedirectToAction(nameof(UpiPayments));
+        }
+
+        [HttpPost]
+        [Authorize(Roles = "Admin")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RejectUpiPayment(int upiPaymentId, string? adminNotes)
+        {
+            var submission = await _context.UpiPaymentSubmissions.FindAsync(upiPaymentId);
+            if (submission == null)
+                return NotFound();
+
+            submission.Status = UpiPaymentStatuses.Rejected;
+            submission.ReviewedAt = DateTime.UtcNow;
+            submission.AdminNotes = adminNotes;
+            await _context.SaveChangesAsync();
+
+            TempData["PaymentMessage"] = "UPI payment rejected.";
+            return RedirectToAction(nameof(UpiPayments));
+        }
+
+        private static void ApplyPaymentStatus(Booking booking)
+        {
+            var paid = booking.AmountPaidOnline + booking.AmountPaidToWorker;
+            booking.PaymentStatus = paid <= 0
+                ? PaymentStatus.Unpaid
+                : paid >= booking.TotalWage
+                    ? PaymentStatus.Paid
+                    : PaymentStatus.PartiallyPaid;
         }
     }
 }

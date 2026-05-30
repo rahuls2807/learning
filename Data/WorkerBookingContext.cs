@@ -24,6 +24,7 @@ namespace WorkerBookingSystem.Data
         public DbSet<PaymentAuditLog> PaymentAuditLogs { get; set; }
         public DbSet<OtpVerification> OtpVerifications { get; set; }
         public DbSet<RazorpayOrder> RazorpayOrders { get; set; }
+        public DbSet<UpiPaymentSubmission> UpiPaymentSubmissions { get; set; }
 
         // World-Class Features
         public DbSet<UserWallet> UserWallets { get; set; }
@@ -212,6 +213,22 @@ protected override void OnModelCreating(ModelBuilder modelBuilder)
 
             modelBuilder.Entity<RazorpayOrder>()
                 .Property(ro => ro.Amount)
+                .HasPrecision(10, 2);
+
+            modelBuilder.Entity<UpiPaymentSubmission>()
+                .HasKey(u => u.UpiPaymentId);
+
+            modelBuilder.Entity<UpiPaymentSubmission>()
+                .HasIndex(u => new { u.BookingId, u.Status });
+
+            modelBuilder.Entity<UpiPaymentSubmission>()
+                .HasOne(u => u.Booking)
+                .WithMany()
+                .HasForeignKey(u => u.BookingId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<UpiPaymentSubmission>()
+                .Property(u => u.Amount)
                 .HasPrecision(10, 2);
 
             modelBuilder.Entity<Message>()

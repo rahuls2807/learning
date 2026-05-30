@@ -53,10 +53,23 @@ namespace WorkerBookingSystem.Controllers
             }
 
             var model = ToPaymentViewModel(booking);
-            model.RazorpayKeyId = _configuration["Razorpay:KeyId"];
+            var razorpayKeyId = _configuration["Razorpay:KeyId"] ?? "";
+            model.RazorpayKeyId = razorpayKeyId;
+            model.RazorpayConfigured = !string.IsNullOrWhiteSpace(razorpayKeyId)
+                && !razorpayKeyId.Contains("YOUR_RAZORPAY", StringComparison.OrdinalIgnoreCase);
 
-            // Log payment initiation
-            await _auditService.LogPaymentInitiationAsync(bookingId, booking.ClientId.ToString(), booking.TotalWage, "razorpay", HttpContext);
+            var merchantVpa = _configuration["Upi:MerchantVpa"] ?? "rsinghrahul402@ybl";
+            var merchantName = _configuration["Upi:MerchantName"] ?? "Indian Worker Mandi";
+            model.MerchantUpiId = merchantVpa;
+            model.MerchantName = merchantName;
+            model.UpiPayUri = UpiPaymentHelper.BuildUpiPayUri(
+                merchantVpa,
+                merchantName,
+                model.OnlineAmount,
+                $"Booking #{booking.BookingId}");
+            model.UpiQrCodeUrl = UpiPaymentHelper.BuildQrCodeUrl(model.UpiPayUri);
+
+            await _auditService.LogPaymentInitiationAsync(bookingId, booking.ClientId.ToString(), booking.TotalWage, "payment-portal", HttpContext);
 
             return View(model);
         }
@@ -76,18 +89,17 @@ namespace WorkerBookingSystem.Controllers
 
             try
             {
-                // Generate and send OTP - returns the actual OTP code sent
-                var (success, message, otpCode) = await _otpService.SendOtpAsync(model.PhoneNumber, userId, model.BookingId);
+                var normalizedPhone = UpiPaymentHelper.NormalizeIndiaPhone(model.PhoneNumber);
+                var (success, message, otpCode, devMode) = await _otpService.SendOtpAsync(normalizedPhone, userId!, model.BookingId);
 
-                if (success)
+                if (success && !string.IsNullOrWhiteSpace(otpCode))
                 {
-                    // CRITICAL FIX: Save the SAME OTP that was sent, not a new one
                     var otp = new OtpVerification
                     {
                         BookingId = model.BookingId,
                         UserId = userId!,
-                        PhoneNumber = model.PhoneNumber,
-                        OtpCode = otpCode,  // Use the OTP that was actually sent
+                        PhoneNumber = normalizedPhone,
+                        OtpCode = otpCode,
                         GeneratedAt = DateTime.UtcNow,
                         IsVerified = false,
                         AttemptsRemaining = 3
@@ -95,16 +107,116 @@ namespace WorkerBookingSystem.Controllers
                     _context.OtpVerifications.Add(otp);
                     await _context.SaveChangesAsync();
 
-                    _logger.LogInformation($"OTP requested for booking {model.BookingId}");
-                    return Json(new { success = true, message = message });
+                    _logger.LogInformation("OTP requested for booking {BookingId} (devMode={DevMode})", model.BookingId, devMode);
+                    return Json(new
+                    {
+                        success = true,
+                        message,
+                        devMode,
+                        devOtp = devMode ? otpCode : null
+                    });
                 }
 
-                return Json(new { success = false, message = message });
+                return Json(new { success = false, message });
             }
             catch (Exception ex)
             {
                 _logger.LogError($"Error in RequestOtp: {ex.Message}");
                 return Json(new { success = false, message = "Error sending OTP" });
+            }
+        }
+
+        /// <summary>
+        /// Verify OTP without creating a Razorpay order (for direct UPI flow).
+        /// </summary>
+        [HttpPost]
+        [Route("Payment/VerifyOtpOnly")]
+        public async Task<IActionResult> VerifyOtpOnly([FromBody] VerifyOtpOnlyRequestViewModel model)
+        {
+            var booking = await GetClientBooking(model.BookingId);
+            if (booking == null)
+                return Json(new { success = false, message = "Booking not found" });
+
+            var userId = _userManager.GetUserId(User);
+            if (string.IsNullOrWhiteSpace(userId))
+                return Json(new { success = false, message = "Unable to identify user. Please log in again." });
+
+            var (otpValid, otpMessage) = await _otpService.VerifyOtpAsync(userId, model.BookingId, model.OtpCode, _context);
+            if (!otpValid)
+                return Json(new { success = false, message = otpMessage });
+
+            return Json(new { success = true, message = otpMessage });
+        }
+
+        /// <summary>
+        /// Client pays via direct UPI to merchant VPA; admin approves later.
+        /// </summary>
+        [HttpPost]
+        [Route("Payment/SubmitUpiPayment")]
+        public async Task<IActionResult> SubmitUpiPayment([FromBody] SubmitUpiPaymentRequestViewModel model)
+        {
+            if (!ModelState.IsValid)
+                return Json(new { success = false, message = "Please enter your UPI ID and payment reference (UTR)." });
+
+            var booking = await GetClientBooking(model.BookingId);
+            if (booking == null)
+                return Json(new { success = false, message = "Booking not found" });
+
+            var userId = _userManager.GetUserId(User);
+            if (string.IsNullOrWhiteSpace(userId))
+                return Json(new { success = false, message = "Unable to identify user. Please log in again." });
+
+            var pendingExists = await _context.UpiPaymentSubmissions.AnyAsync(u =>
+                u.BookingId == model.BookingId && u.Status == UpiPaymentStatuses.Pending);
+            if (pendingExists)
+                return Json(new { success = false, message = "A UPI payment is already pending review for this booking." });
+
+            try
+            {
+                var (otpValid, otpMessage) = await _otpService.VerifyOtpAsync(userId, model.BookingId, model.OtpCode, _context);
+                if (!otpValid)
+                    return Json(new { success = false, message = otpMessage });
+
+                var merchantVpa = _configuration["Upi:MerchantVpa"] ?? "rsinghrahul402@ybl";
+                var submission = new UpiPaymentSubmission
+                {
+                    BookingId = model.BookingId,
+                    UserId = userId,
+                    ClientUpiId = model.ClientUpiId.Trim(),
+                    TransactionReference = model.TransactionReference.Trim(),
+                    Amount = model.Amount,
+                    MerchantUpiId = merchantVpa,
+                    Status = UpiPaymentStatuses.Pending,
+                    SubmittedAt = DateTime.UtcNow
+                };
+                _context.UpiPaymentSubmissions.Add(submission);
+
+                var client = await _context.Clients.FirstOrDefaultAsync(c => c.ClientId == booking.ClientId);
+                if (client != null)
+                {
+                    client.UpiId = model.ClientUpiId.Trim();
+                }
+
+                booking.PaymentReference = $"UPI-PENDING-{model.TransactionReference.Trim()}";
+                await _context.SaveChangesAsync();
+
+                await _auditService.LogPaymentInitiationAsync(
+                    model.BookingId,
+                    booking.ClientId.ToString(),
+                    model.Amount,
+                    "upi-direct-pending",
+                    HttpContext);
+
+                return Json(new
+                {
+                    success = true,
+                    message = "UPI payment submitted. Admin will verify and confirm your booking."
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error submitting UPI payment for booking {BookingId}", model.BookingId);
+                return Json(new { success = false, message = "Could not submit UPI payment. Please try again." });
             }
         }
 

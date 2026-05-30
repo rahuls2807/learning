@@ -44,6 +44,12 @@ namespace WorkerBookingSystem.Models.ViewModels
 
         // Razorpay key for frontend
         public string? RazorpayKeyId { get; set; }
+
+        public string MerchantUpiId { get; set; } = "rsinghrahul402@ybl";
+        public string MerchantName { get; set; } = "Indian Worker Mandi";
+        public string UpiPayUri { get; set; } = string.Empty;
+        public string UpiQrCodeUrl { get; set; } = string.Empty;
+        public bool RazorpayConfigured { get; set; }
     }
 
     /// <summary>
@@ -101,6 +107,35 @@ namespace WorkerBookingSystem.Models.ViewModels
         [Required]
         [StringLength(6, MinimumLength = 6)]
         public string OtpCode { get; set; } = string.Empty;
+    }
+
+    public class VerifyOtpOnlyRequestViewModel
+    {
+        public int BookingId { get; set; }
+
+        [Required]
+        [StringLength(6, MinimumLength = 6)]
+        public string OtpCode { get; set; } = string.Empty;
+    }
+
+    public class SubmitUpiPaymentRequestViewModel
+    {
+        public int BookingId { get; set; }
+
+        [Range(0.01, 999999)]
+        public decimal Amount { get; set; }
+
+        [Required]
+        [StringLength(6, MinimumLength = 6)]
+        public string OtpCode { get; set; } = string.Empty;
+
+        [Required]
+        [MaxLength(100)]
+        public string ClientUpiId { get; set; } = string.Empty;
+
+        [Required]
+        [MaxLength(50)]
+        public string TransactionReference { get; set; } = string.Empty;
     }
 }
 

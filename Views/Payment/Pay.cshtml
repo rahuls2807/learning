@@ -412,6 +412,13 @@
                 </div>
             </div>
 
+            <input type="hidden" id="bookingId" value="@Model.BookingId" />
+            <input type="hidden" id="amount" value="@Model.OnlineAmount" />
+            <input type="hidden" id="merchantUpi" value="@Model.MerchantUpiId" />
+            <input type="hidden" id="upiPayUri" value="@Model.UpiPayUri" />
+
+            <div id="devOtpBanner" class="alert alert-success" style="display:none; position:relative; z-index:2;"></div>
+
             <!-- Step 1: Phone Number for OTP -->
             <div id="step1-phone" class="step-container">
                 <div class="step-header">
@@ -421,7 +428,7 @@
                 <div class="form-group">
                     <label for="phoneNumber" class="form-label">📱 Phone Number</label>
                     <input type="tel" id="phoneNumber" class="form-control" placeholder="+91 XXXXXXXXXX" value="+91" />
-                    <span class="form-text">✓ Your OTP will be sent securely to this number</span>
+                    <span class="form-text">OTP by SMS when configured; otherwise it appears on this screen.</span>
                 </div>
                 <button type="button" class="btn btn-pay" id="requestOtpBtn" onclick="requestOtp()">
                     <i class="fas fa-sms"></i> Send OTP
@@ -447,26 +454,52 @@
                     <span class="step-number">3</span>
                     Select Payment Method
                 </div>
-                <input type="hidden" id="bookingId" value="@Model.BookingId" />
-                <input type="hidden" id="amount" value="@Model.OnlineAmount" />
-                
-                <div class="payment-methods">
-                    <button type="button" class="payment-method-btn active" id="cardMethod" onclick="selectPaymentMethod('card')">
-                        💳 Card/Net Banking
+
+                <div class="payment-methods" style="grid-template-columns: 1fr;">
+                    <button type="button" class="payment-method-btn active" id="directUpiMethod" onclick="selectPaymentMethod('direct-upi')">
+                        📲 Pay via UPI / QR (rsinghrahul402@ybl)
                     </button>
-                    <button type="button" class="payment-method-btn" id="upiMethod" onclick="selectPaymentMethod('upi')">
-                        📲 UPI
+                    @if (Model.RazorpayConfigured)
+                    {
+                        <button type="button" class="payment-method-btn" id="cardMethod" onclick="selectPaymentMethod('card')">
+                            💳 Card / Net Banking (Razorpay)
+                        </button>
+                        <button type="button" class="payment-method-btn" id="upiMethod" onclick="selectPaymentMethod('upi')">
+                            📲 UPI via Razorpay
+                        </button>
+                    }
+                </div>
+
+                <div id="directUpiPanel" class="summary-box" style="margin-top:20px;">
+                    <p style="margin-bottom:12px;">Scan or pay to <strong>@Model.MerchantUpiId</strong> — amount <strong>₹@Model.OnlineAmount.ToString("F2")</strong></p>
+                    <div style="text-align:center; margin-bottom:16px;">
+                        <img src="@Model.UpiQrCodeUrl" alt="UPI QR code" width="260" height="260" style="border-radius:12px; background:#fff; padding:8px;" />
+                    </div>
+                    <p class="form-text" style="margin-bottom:16px;">
+                        <a href="@Model.UpiPayUri" class="btn btn-sm btn-outline-light">Open in UPI app</a>
+                        <button type="button" class="btn btn-sm btn-outline-light ms-2" onclick="copyMerchantUpi()">Copy UPI ID</button>
+                    </p>
+                    <div class="form-group">
+                        <label class="form-label">Your UPI ID (for admin to pay worker later)</label>
+                        <input type="text" id="clientUpiId" class="form-control" placeholder="yourname@@ybl" />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">UPI transaction reference (UTR)</label>
+                        <input type="text" id="upiTransactionRef" class="form-control" placeholder="12-digit UTR from your bank app" />
+                    </div>
+                    <button type="button" class="btn btn-pay" onclick="submitDirectUpiPayment()">
+                        ✓ I have paid — submit for verification
                     </button>
                 </div>
 
-                <button type="button" class="btn btn-pay" id="paymentBtn" onclick="initiatePayment()">
-                    🔒 Pay ₹@Model.OnlineAmount.ToString("F2")
-                </button>
-
-                <div class="mt-3" style="position: relative; z-index: 2;">
-                    <div class="security-badge">✓ PCI-DSS Compliant</div>
-                    <div class="security-badge">✓ Tokenized Payment</div>
-                    <div class="security-badge">✓ NPCI Certified</div>
+                <div id="razorpayPanel" style="display:none;">
+                    <button type="button" class="btn btn-pay" id="paymentBtn" onclick="initiatePayment()">
+                        🔒 Pay ₹@Model.OnlineAmount.ToString("F2") with Razorpay
+                    </button>
+                    <div class="mt-3" style="position: relative; z-index: 2;">
+                        <div class="security-badge">✓ PCI-DSS Compliant</div>
+                        <div class="security-badge">✓ Tokenized Payment</div>
+                    </div>
                 </div>
             </div>
 
@@ -492,28 +525,40 @@
 <script>
     const bookingId = document.getElementById('bookingId').value;
     const amount = parseFloat(document.getElementById('amount').value);
+    const razorpayEnabled = @(Model.RazorpayConfigured ? "true" : "false");
     let razorpayOrderId = '';
     let otpVerified = false;
-    let selectedPaymentMethod = 'card';
+    let selectedPaymentMethod = 'direct-upi';
 
-    // Payment Method Selection
     function selectPaymentMethod(method) {
         selectedPaymentMethod = method;
-        document.getElementById('cardMethod').classList.remove('active');
-        document.getElementById('upiMethod').classList.remove('active');
-        
-        if (method === 'card') {
-            document.getElementById('cardMethod').classList.add('active');
+        ['directUpiMethod', 'cardMethod', 'upiMethod'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.classList.remove('active');
+        });
+        if (method === 'direct-upi') document.getElementById('directUpiMethod')?.classList.add('active');
+        if (method === 'card') document.getElementById('cardMethod')?.classList.add('active');
+        if (method === 'upi') document.getElementById('upiMethod')?.classList.add('active');
+
+        const directPanel = document.getElementById('directUpiPanel');
+        const razorpayPanel = document.getElementById('razorpayPanel');
+        if (method === 'direct-upi') {
+            directPanel.style.display = 'block';
+            razorpayPanel.style.display = 'none';
         } else {
-            document.getElementById('upiMethod').classList.add('active');
+            directPanel.style.display = 'none';
+            razorpayPanel.style.display = 'block';
         }
     }
 
-    // Step 1: Request OTP
+    function copyMerchantUpi() {
+        const vpa = document.getElementById('merchantUpi').value;
+        navigator.clipboard.writeText(vpa).then(() => showSuccess('UPI ID copied: ' + vpa));
+    }
+
     function requestOtp() {
         const phoneNumber = document.getElementById('phoneNumber').value.trim();
-        
-        if (!phoneNumber || phoneNumber.length < 10) {
+        if (!phoneNumber || phoneNumber.replace(/\D/g, '').length < 10) {
             showError('Please enter a valid phone number');
             return;
         }
@@ -521,12 +566,19 @@
         fetch('/Payment/RequestOtp', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ bookingId: bookingId, phoneNumber: phoneNumber })
+            body: JSON.stringify({ bookingId: parseInt(bookingId, 10), phoneNumber: phoneNumber })
         })
         .then(r => r.json())
         .then(data => {
             if (data.success) {
-                showSuccess('✓ OTP sent to ' + phoneNumber);
+                if (data.devMode && data.devOtp) {
+                    const banner = document.getElementById('devOtpBanner');
+                    banner.style.display = 'block';
+                    banner.innerHTML = '<strong>SMS not configured.</strong> Your OTP is: <span style="font-size:1.4rem; letter-spacing:4px;">' + data.devOtp + '</span>';
+                    showSuccess(data.message);
+                } else {
+                    showSuccess('✓ OTP sent by SMS to ' + phoneNumber);
+                }
                 document.getElementById('step1-phone').style.display = 'none';
                 document.getElementById('step2-otp').style.display = 'block';
             } else {
@@ -536,49 +588,113 @@
         .catch(e => showError('Error: ' + e.message));
     }
 
-    // Step 2: Verify OTP and Create Order
-    function verifyOtpAndCreateOrder() {
+    function proceedAfterOtpVerified(message) {
+        otpVerified = true;
+        document.getElementById('step2-otp').style.display = 'none';
+        document.getElementById('step3-payment').style.display = 'block';
+        selectPaymentMethod(selectedPaymentMethod);
+        showSuccess(message);
+    }
+
+    function verifyOtpForPaymentStep() {
         const otpCode = document.getElementById('otpCode').value.trim();
-        
         if (!otpCode || otpCode.length !== 6) {
             showError('Please enter a valid 6-digit OTP');
-            return false;
+            return;
         }
 
-        // Verify OTP and create Razorpay Order
-        fetch('/Payment/CreateOrder', {
+        fetch('/Payment/VerifyOtpOnly', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ bookingId: bookingId, amount: amount, otpCode: otpCode })
+            body: JSON.stringify({ bookingId: parseInt(bookingId, 10), otpCode: otpCode })
         })
         .then(r => r.json())
         .then(data => {
             if (data.success) {
-                razorpayOrderId = data.orderId;
-                otpVerified = true;
-                document.getElementById('step2-otp').style.display = 'none';
-                document.getElementById('step3-payment').style.display = 'block';
-                showSuccess('✓ OTP verified and payment order created! Choose payment method');
+                proceedAfterOtpVerified('✓ OTP verified. Choose how to pay below.');
             } else {
-                showError(data.message || 'Failed to verify OTP and create order');
+                showError(data.message || 'Invalid OTP');
             }
         })
         .catch(e => showError('Error: ' + e.message));
     }
 
-    // Step 3: Initiate Payment
-    function initiatePayment() {
-        if (!razorpayOrderId) {
-            // Verify OTP first if not done
-            verifyOtpAndCreateOrder();
+    function submitDirectUpiPayment() {
+        const otpCode = document.getElementById('otpCode').value.trim();
+        const clientUpiId = document.getElementById('clientUpiId').value.trim();
+        const transactionRef = document.getElementById('upiTransactionRef').value.trim();
+
+        if (!otpCode || otpCode.length !== 6) {
+            showError('Enter the OTP from step 2');
+            return;
+        }
+        if (!clientUpiId || clientUpiId.indexOf('@@') < 1) {
+            showError('Enter your UPI ID (e.g. name@@ybl)');
+            return;
+        }
+        if (!transactionRef || transactionRef.length < 6) {
+            showError('Enter the UTR / transaction reference from your UPI app');
             return;
         }
 
-        if (selectedPaymentMethod === 'upi') {
-            initiateUPIPayment();
-        } else {
-            initiateCardPayment();
+        fetch('/Payment/SubmitUpiPayment', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                bookingId: parseInt(bookingId, 10),
+                amount: amount,
+                otpCode: otpCode,
+                clientUpiId: clientUpiId,
+                transactionReference: transactionRef
+            })
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                showSuccess('✅ ' + data.message);
+                setTimeout(() => window.location.href = '/Client/MyBookings', 2500);
+            } else {
+                showError(data.message || 'Could not submit UPI payment');
+            }
+        })
+        .catch(e => showError('Error: ' + e.message));
+    }
+
+    function initiatePayment() {
+        const otpCode = document.getElementById('otpCode').value.trim();
+        if (!otpCode || otpCode.length !== 6) {
+            showError('Enter your 6-digit OTP first');
+            return;
         }
+
+        const openRazorpay = () => {
+            if (selectedPaymentMethod === 'upi') {
+                initiateUPIPayment();
+            } else {
+                initiateCardPayment();
+            }
+        };
+
+        if (razorpayOrderId) {
+            openRazorpay();
+            return;
+        }
+
+        fetch('/Payment/CreateOrder', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ bookingId: parseInt(bookingId, 10), amount: amount, otpCode: otpCode })
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                razorpayOrderId = data.orderId;
+                openRazorpay();
+            } else {
+                showError(data.message || 'Could not start Razorpay payment');
+            }
+        })
+        .catch(e => showError('Error: ' + e.message));
     }
 
     // Card/Net Banking Payment
@@ -687,11 +803,12 @@
         document.getElementById('successMessage').style.display = 'none';
     }
 
-    // Auto-verify OTP when all 6 digits entered
     document.getElementById('otpCode')?.addEventListener('input', function() {
         if (this.value.length === 6) {
-            verifyOtpAndCreateOrder();
+            verifyOtpForPaymentStep();
         }
     });
+
+    selectPaymentMethod('direct-upi');
 </script>
 

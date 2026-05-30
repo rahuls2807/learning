@@ -1,0 +1,90 @@
+@model IEnumerable<WorkerBookingSystem.Models.UpiPaymentSubmission>
+@{
+    ViewData["Title"] = "UPI Payments";
+}
+
+<div class="container mt-5">
+    <h2>UPI payment review</h2>
+    <p class="text-muted">Clients pay to <strong>rsinghrahul402@ybl</strong>. Approve after you see the payment in your UPI app. Use the client UPI ID below when you pay the worker.</p>
+
+    @if (TempData["PaymentMessage"] != null)
+    {
+        <div class="alert alert-info">@TempData["PaymentMessage"]</div>
+    }
+
+    @if (!Model.Any())
+    {
+        <p>No UPI submissions yet.</p>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Booking</th>
+                        <th>Client</th>
+                        <th>Client UPI</th>
+                        <th>Worker</th>
+                        <th>Amount</th>
+                        <th>UTR / Ref</th>
+                        <th>Status</th>
+                        <th>Submitted</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>#@item.BookingId</td>
+                            <td>
+                                @item.Booking?.Client?.FirstName @item.Booking?.Client?.LastName<br />
+                                <small>@item.Booking?.Client?.PhoneNumber</small>
+                            </td>
+                            <td><strong>@item.ClientUpiId</strong></td>
+                            <td>@item.Booking?.Worker?.FirstName @item.Booking?.Worker?.LastName</td>
+                            <td>₹@item.Amount.ToString("F2")</td>
+                            <td>@item.TransactionReference</td>
+                            <td>
+                                @if (item.Status == WorkerBookingSystem.Models.UpiPaymentStatuses.Pending)
+                                {
+                                    <span class="badge bg-warning">Pending</span>
+                                }
+                                else if (item.Status == WorkerBookingSystem.Models.UpiPaymentStatuses.Approved)
+                                {
+                                    <span class="badge bg-success">Approved</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-danger">Rejected</span>
+                                }
+                            </td>
+                            <td>@item.SubmittedAt.ToLocalTime().ToString("g")</td>
+                            <td>
+                                @if (item.Status == WorkerBookingSystem.Models.UpiPaymentStatuses.Pending)
+                                {
+                                    <form asp-action="ApproveUpiPayment" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="upiPaymentId" value="@item.UpiPaymentId" />
+                                        <input type="text" name="adminNotes" class="form-control form-control-sm mb-1" placeholder="Notes (optional)" />
+                                        <button type="submit" class="btn btn-sm btn-success">Approve</button>
+                                    </form>
+                                    <form asp-action="RejectUpiPayment" method="post" class="d-inline ms-1">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="upiPaymentId" value="@item.UpiPaymentId" />
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">Reject</button>
+                                    </form>
+                                }
+                                else if (!string.IsNullOrWhiteSpace(item.AdminNotes))
+                                {
+                                    <small>@item.AdminNotes</small>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

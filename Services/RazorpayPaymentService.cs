@@ -4,12 +4,9 @@ using System.Text;
 
 namespace WorkerBookingSystem.Services
 {
-    /// <summary>
-    /// RBI-Compliant Razorpay Payment Gateway Service
-    /// Handles tokenized payments without storing card data
-    /// </summary>
     public interface IRazorpayPaymentService
     {
+        bool IsConfigured { get; }
         Task<Dictionary<string, object>> CreateOrderAsync(int bookingId, decimal amount, string clientEmail, string clientPhone);
         Task<bool> VerifyPaymentSignatureAsync(string razorpayOrderId, string razorpayPaymentId, string razorpaySignature);
         Task<Dictionary<string, object>> CapturePaymentAsync(string razorpayPaymentId, decimal amount);
@@ -22,20 +19,38 @@ namespace WorkerBookingSystem.Services
         private readonly string _keySecret;
         private readonly ILogger<RazorpayPaymentService> _logger;
 
+        public bool IsConfigured =>
+            !string.IsNullOrWhiteSpace(_keyId)
+            && !_keyId.Contains("YOUR_RAZORPAY", StringComparison.OrdinalIgnoreCase)
+            && !string.IsNullOrWhiteSpace(_keySecret)
+            && !_keySecret.Contains("YOUR_RAZORPAY", StringComparison.OrdinalIgnoreCase);
+
         public RazorpayPaymentService(IConfiguration configuration, ILogger<RazorpayPaymentService> logger)
         {
-            _keyId = configuration["Razorpay:KeyId"] ?? throw new InvalidOperationException("Razorpay KeyId not configured");
-            _keySecret = configuration["Razorpay:KeySecret"] ?? throw new InvalidOperationException("Razorpay KeySecret not configured");
+            _keyId = configuration["Razorpay:KeyId"] ?? "";
+            _keySecret = configuration["Razorpay:KeySecret"] ?? "";
             _logger = logger;
+
+            if (!IsConfigured)
+            {
+                _logger.LogWarning("Razorpay is not configured. Use appsettings or user secrets for KeyId and KeySecret.");
+            }
         }
 
         public async Task<Dictionary<string, object>> CreateOrderAsync(int bookingId, decimal amount, string clientEmail, string clientPhone)
         {
+            if (!IsConfigured)
+            {
+                return new Dictionary<string, object>
+                {
+                    { "success", false },
+                    { "error", "Razorpay is not configured. Add Razorpay:KeyId and Razorpay:KeySecret in configuration." }
+                };
+            }
+
             try
             {
                 var client = new RazorpayClient(_keyId, _keySecret);
-                
-                // Amount in paise (smallest unit for INR)
                 var amountInPaise = (long)(amount * 100);
 
                 var options = new Dictionary<string, object>
@@ -43,7 +58,7 @@ namespace WorkerBookingSystem.Services
                     { "amount", amountInPaise },
                     { "currency", "INR" },
                     { "receipt", $"booking_{bookingId}_{DateTime.UtcNow:yyyyMMddHHmmss}" },
-                    { "notes", new Dictionary<string, object> 
+                    { "notes", new Dictionary<string, object>
                         {
                             { "booking_id", bookingId },
                             { "email", clientEmail },
@@ -53,12 +68,12 @@ namespace WorkerBookingSystem.Services
                 };
 
                 var order = client.Order.Create(options);
-                
-                _logger.LogInformation($"Razorpay order created: {order["id"]} for booking {bookingId} with UPI support");
+                string orderId = order["id"]?.ToString() ?? string.Empty;
+                _logger.LogInformation("Razorpay order created for booking {BookingId}", bookingId);
 
                 return new Dictionary<string, object>
                 {
-                    { "order_id", order["id"] },
+                    { "order_id", orderId },
                     { "amount", amountInPaise },
                     { "key_id", _keyId },
                     { "success", true }
@@ -66,7 +81,7 @@ namespace WorkerBookingSystem.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Error creating Razorpay order: {ex.Message}");
+                _logger.LogError(ex, "Error creating Razorpay order for booking {BookingId}", bookingId);
                 return new Dictionary<string, object>
                 {
                     { "success", false },
@@ -75,107 +90,79 @@ namespace WorkerBookingSystem.Services
             }
         }
 
-        /// <summary>
-        /// Verify payment signature - CRITICAL for security
-        /// Confirms payment came from Razorpay and was not tampered
-        /// </summary>
         public async Task<bool> VerifyPaymentSignatureAsync(string razorpayOrderId, string razorpayPaymentId, string razorpaySignature)
         {
+            if (!IsConfigured)
+            {
+                return false;
+            }
+
             try
             {
                 var expectedSignature = GenerateSignature(razorpayOrderId, razorpayPaymentId);
-                
                 var isValid = expectedSignature == razorpaySignature;
-                
+
                 if (!isValid)
                 {
-                    _logger.LogWarning($"Signature verification failed for payment {razorpayPaymentId}");
-                }
-                else
-                {
-                    _logger.LogInformation($"Payment signature verified for {razorpayPaymentId}");
+                    _logger.LogWarning("Signature verification failed for payment {PaymentId}", razorpayPaymentId);
                 }
 
                 return await Task.FromResult(isValid);
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Error verifying signature: {ex.Message}");
+                _logger.LogError(ex, "Error verifying Razorpay signature");
                 return false;
             }
         }
 
-        /// <summary>
-        /// Generate HMAC SHA256 signature
-        /// </summary>
         private string GenerateSignature(string orderId, string paymentId)
         {
             var message = $"{orderId}|{paymentId}";
-            
-            using (var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(_keySecret)))
-            {
-                var hash = hmac.ComputeHash(Encoding.UTF8.GetBytes(message));
-                return BitConverter.ToString(hash).Replace("-", "").ToLower();
-            }
+            using var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(_keySecret));
+            var hash = hmac.ComputeHash(Encoding.UTF8.GetBytes(message));
+            return BitConverter.ToString(hash).Replace("-", "").ToLower();
         }
 
-        public async Task<Dictionary<string, object>> CapturePaymentAsync(string razorpayPaymentId, decimal amount)
+        public Task<Dictionary<string, object>> CapturePaymentAsync(string razorpayPaymentId, decimal amount)
         {
-            try
+            return Task.FromResult(new Dictionary<string, object>
             {
-                // Razorpay automatically captures payments for authorized amounts
-                // This method is kept for API compatibility
-                _logger.LogInformation($"Payment auto-captured by Razorpay: {razorpayPaymentId}");
+                { "success", true },
+                { "payment_id", razorpayPaymentId }
+            });
+        }
 
-                return new Dictionary<string, object>
-                {
-                    { "success", true },
-                    { "payment_id", razorpayPaymentId }
-                };
-            }
-            catch (Exception ex)
+        public Task<Dictionary<string, object>> RefundPaymentAsync(string razorpayPaymentId, decimal amount)
+        {
+            if (!IsConfigured)
             {
-                _logger.LogError($"Error capturing payment: {ex.Message}");
-                return new Dictionary<string, object>
+                return Task.FromResult(new Dictionary<string, object>
                 {
                     { "success", false },
-                    { "error", ex.Message }
-                };
+                    { "error", "Razorpay is not configured." }
+                });
             }
-        }
 
-        public async Task<Dictionary<string, object>> RefundPaymentAsync(string razorpayPaymentId, decimal amount)
-        {
             try
             {
-                // Refund implementation for Razorpay SDK 3.0.0
                 var client = new RazorpayClient(_keyId, _keySecret);
                 var amountInPaise = (long)(amount * 100);
-
-                // Create refund via API
-                var options = new Dictionary<string, object>
-                {
-                    { "amount", amountInPaise }
-                };
-
-                var refund = client.Refund.Create(options);
-                
-                _logger.LogInformation($"Refund processed: {razorpayPaymentId}");
-
-                return new Dictionary<string, object>
+                var refund = client.Refund.Create(new Dictionary<string, object> { { "amount", amountInPaise } });
+                return Task.FromResult(new Dictionary<string, object>
                 {
                     { "success", true },
                     { "refund_id", refund["id"] }
-                };
+                });
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Error refunding payment: {ex.Message}");
-                return new Dictionary<string, object>
+                _logger.LogError(ex, "Error refunding payment {PaymentId}", razorpayPaymentId);
+                return Task.FromResult(new Dictionary<string, object>
                 {
                     { "success", false },
                     { "error", ex.Message }
-                };
+                });
             }
         }
     }

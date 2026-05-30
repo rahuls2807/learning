@@ -50,6 +50,8 @@ namespace WorkerBookingSystem.Models.ViewModels
         public string UpiPayUri { get; set; } = string.Empty;
         public string UpiQrCodeUrl { get; set; } = string.Empty;
         public bool RazorpayConfigured { get; set; }
+        public string DefaultOtpPhone { get; set; } = "+916392424389";
+        public string? ClientUpiId { get; set; }
     }
 
     /// <summary>
@@ -129,13 +131,11 @@ namespace WorkerBookingSystem.Models.ViewModels
         [StringLength(6, MinimumLength = 6)]
         public string OtpCode { get; set; } = string.Empty;
 
-        [Required]
         [MaxLength(100)]
-        public string ClientUpiId { get; set; } = string.Empty;
+        public string? ClientUpiId { get; set; }
 
-        [Required]
         [MaxLength(50)]
-        public string TransactionReference { get; set; } = string.Empty;
+        public string? TransactionReference { get; set; }
     }
 }
 

@@ -53,10 +53,22 @@ namespace WorkerBookingSystem.Controllers
             }
 
             var model = ToPaymentViewModel(booking);
-            var razorpayKeyId = _configuration["Razorpay:KeyId"] ?? "";
-            model.RazorpayKeyId = razorpayKeyId;
-            model.RazorpayConfigured = !string.IsNullOrWhiteSpace(razorpayKeyId)
-                && !razorpayKeyId.Contains("YOUR_RAZORPAY", StringComparison.OrdinalIgnoreCase);
+            model.RazorpayConfigured = _razorpayService.IsConfigured;
+            model.RazorpayKeyId = _configuration["Razorpay:KeyId"];
+            model.DefaultOtpPhone = _configuration["Otp:DefaultPhoneNumber"] ?? "+916392424389";
+
+            var client = await _context.Clients.FirstOrDefaultAsync(c => c.ClientId == booking.ClientId);
+            if (client != null)
+            {
+                model.PhoneNumber = !string.IsNullOrWhiteSpace(client.PhoneNumber)
+                    ? UpiPaymentHelper.NormalizeIndiaPhone(client.PhoneNumber)
+                    : model.DefaultOtpPhone;
+                model.ClientUpiId = client.UpiId;
+            }
+            else
+            {
+                model.PhoneNumber = model.DefaultOtpPhone;
+            }
 
             var merchantVpa = _configuration["Upi:MerchantVpa"] ?? "rsinghrahul402@ybl";
             var merchantName = _configuration["Upi:MerchantName"] ?? "Indian Worker Mandi";
@@ -156,7 +168,7 @@ namespace WorkerBookingSystem.Controllers
         public async Task<IActionResult> SubmitUpiPayment([FromBody] SubmitUpiPaymentRequestViewModel model)
         {
             if (!ModelState.IsValid)
-                return Json(new { success = false, message = "Please enter your UPI ID and payment reference (UTR)." });
+                return Json(new { success = false, message = "Please confirm your payment details." });
 
             var booking = await GetClientBooking(model.BookingId);
             if (booking == null)
@@ -178,12 +190,17 @@ namespace WorkerBookingSystem.Controllers
                     return Json(new { success = false, message = otpMessage });
 
                 var merchantVpa = _configuration["Upi:MerchantVpa"] ?? "rsinghrahul402@ybl";
+                var clientUpi = string.IsNullOrWhiteSpace(model.ClientUpiId) ? "not-provided" : model.ClientUpiId.Trim();
+                var transactionRef = string.IsNullOrWhiteSpace(model.TransactionReference)
+                    ? $"MANUAL-{model.BookingId}-{DateTime.UtcNow:yyyyMMddHHmmss}"
+                    : model.TransactionReference.Trim();
+
                 var submission = new UpiPaymentSubmission
                 {
                     BookingId = model.BookingId,
                     UserId = userId,
-                    ClientUpiId = model.ClientUpiId.Trim(),
-                    TransactionReference = model.TransactionReference.Trim(),
+                    ClientUpiId = clientUpi,
+                    TransactionReference = transactionRef,
                     Amount = model.Amount,
                     MerchantUpiId = merchantVpa,
                     Status = UpiPaymentStatuses.Pending,
@@ -192,9 +209,9 @@ namespace WorkerBookingSystem.Controllers
                 _context.UpiPaymentSubmissions.Add(submission);
 
                 var client = await _context.Clients.FirstOrDefaultAsync(c => c.ClientId == booking.ClientId);
-                if (client != null)
+                if (client != null && clientUpi != "not-provided")
                 {
-                    client.UpiId = model.ClientUpiId.Trim();
+                    client.UpiId = clientUpi;
                 }
 
                 booking.PaymentReference = $"UPI-PENDING-{model.TransactionReference.Trim()}";
@@ -210,7 +227,7 @@ namespace WorkerBookingSystem.Controllers
                 return Json(new
                 {
                     success = true,
-                    message = "UPI payment submitted. Admin will verify and confirm your booking."
+                    message = "Payment submitted. Admin will verify in your UPI app and confirm the booking."
                 });
             }
             catch (Exception ex)

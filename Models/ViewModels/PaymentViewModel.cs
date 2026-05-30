@@ -69,5 +69,38 @@ namespace WorkerBookingSystem.Models.ViewModels
         [StringLength(6, MinimumLength = 6)]
         public string OtpCode { get; set; } = string.Empty;
     }
+
+    /// <summary>
+    /// DTO for order creation with OTP validation
+    /// </summary>
+    public class CreateOrderRequestViewModel
+    {
+        public int BookingId { get; set; }
+
+        [Range(0.01, 999999)]
+        public decimal Amount { get; set; }
+
+        [Required]
+        [StringLength(6, MinimumLength = 6)]
+        public string OtpCode { get; set; } = string.Empty;
+    }
+
+    public class VerifyPaymentRequestViewModel
+    {
+        public int BookingId { get; set; }
+
+        [Required]
+        public string RazorpayOrderId { get; set; } = string.Empty;
+
+        [Required]
+        public string RazorpayPaymentId { get; set; } = string.Empty;
+
+        [Required]
+        public string RazorpaySignature { get; set; } = string.Empty;
+
+        [Required]
+        [StringLength(6, MinimumLength = 6)]
+        public string OtpCode { get; set; } = string.Empty;
+    }
 }
 

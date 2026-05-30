@@ -1,8 +1,8 @@
-# Worker Mandi - Application Guide
+# Indian Worker Mandi - Application Guide
 
 ## Purpose
 
-Worker Mandi connects clients with skilled workers, tracks bookings, splits payments between online and cash-to-worker payments, and gives admins visibility into operational earnings, worker payouts, and outstanding balances.
+Indian Worker Mandi connects clients with skilled workers, tracks bookings, splits payments between online and cash-to-worker payments, and gives admins visibility into operational earnings, worker payouts, and outstanding balances.
 
 ## Main Roles
 

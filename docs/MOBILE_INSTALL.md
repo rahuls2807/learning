@@ -1,6 +1,6 @@
 # Mobile Install
 
-Worker Mandi is now installable as a Progressive Web App.
+Indian Worker Mandi is now installable as a Progressive Web App.
 
 ## Download / Install Link
 

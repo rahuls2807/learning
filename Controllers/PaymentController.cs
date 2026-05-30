@@ -76,18 +76,18 @@ namespace WorkerBookingSystem.Controllers
 
             try
             {
-                // Generate and send OTP
-                var result = await _otpService.SendOtpAsync(model.PhoneNumber, userId, model.BookingId);
+                // Generate and send OTP - returns the actual OTP code sent
+                var (success, message, otpCode) = await _otpService.SendOtpAsync(model.PhoneNumber, userId, model.BookingId);
 
-                if (result.success)
+                if (success)
                 {
-                    // Save OTP to database
+                    // CRITICAL FIX: Save the SAME OTP that was sent, not a new one
                     var otp = new OtpVerification
                     {
                         BookingId = model.BookingId,
                         UserId = userId!,
                         PhoneNumber = model.PhoneNumber,
-                        OtpCode = _otpService.GenerateOtp(),
+                        OtpCode = otpCode,  // Use the OTP that was actually sent
                         GeneratedAt = DateTime.UtcNow,
                         IsVerified = false,
                         AttemptsRemaining = 3
@@ -96,10 +96,10 @@ namespace WorkerBookingSystem.Controllers
                     await _context.SaveChangesAsync();
 
                     _logger.LogInformation($"OTP requested for booking {model.BookingId}");
-                    return Json(new { success = true, message = "OTP sent to your phone" });
+                    return Json(new { success = true, message = message });
                 }
 
-                return Json(new { success = false, message = result.message });
+                return Json(new { success = false, message = message });
             }
             catch (Exception ex)
             {
@@ -113,12 +113,15 @@ namespace WorkerBookingSystem.Controllers
         /// </summary>
         [HttpPost]
         [Route("Payment/CreateOrder")]
-        public async Task<IActionResult> CreateOrder([FromBody] dynamic data)
+        public async Task<IActionResult> CreateOrder([FromBody] CreateOrderRequestViewModel model)
         {
-            int bookingId = data.bookingId;
-            decimal amount = data.amount;
+            if (!ModelState.IsValid)
+                return Json(new { success = false, message = "Invalid payment request. Please re-enter the OTP and try again." });
 
-            var booking = await GetClientBooking(bookingId);
+            if (model.Amount <= 0)
+                return Json(new { success = false, message = "Invalid payment amount. Please refresh the page and try again." });
+
+            var booking = await GetClientBooking(model.BookingId);
             if (booking == null)
                 return Json(new { success = false, message = "Booking not found" });
 
@@ -126,11 +129,19 @@ namespace WorkerBookingSystem.Controllers
             if (client == null)
                 return Json(new { success = false, message = "Client not found" });
 
+            var userId = _userManager.GetUserId(User);
+            if (string.IsNullOrWhiteSpace(userId))
+                return Json(new { success = false, message = "Unable to identify user. Please log in again." });
+
             try
             {
+                var (otpValid, otpMessage) = await _otpService.VerifyOtpAsync(userId, model.BookingId, model.OtpCode, _context);
+                if (!otpValid)
+                    return Json(new { success = false, message = otpMessage });
+
                 var result = await _razorpayService.CreateOrderAsync(
-                    bookingId,
-                    amount,
+                    model.BookingId,
+                    model.Amount,
                     client.Email ?? "",
                     client.PhoneNumber ?? ""
                 );
@@ -140,9 +151,9 @@ namespace WorkerBookingSystem.Controllers
                     // Save Razorpay order to database
                     var razorpayOrder = new RazorpayOrder
                     {
-                        BookingId = bookingId,
+                        BookingId = model.BookingId,
                         RazorpayOrderId = (string)result["order_id"],
-                        Amount = amount,
+                        Amount = model.Amount,
                         CreatedAt = DateTime.UtcNow,
                         Status = "created"
                     };
@@ -166,56 +177,52 @@ namespace WorkerBookingSystem.Controllers
         /// </summary>
         [HttpPost]
         [Route("Payment/VerifyPayment")]
-        public async Task<IActionResult> VerifyPayment([FromBody] dynamic data)
+        public async Task<IActionResult> VerifyPayment([FromBody] VerifyPaymentRequestViewModel model)
         {
-            int bookingId = data.bookingId;
-            string razorpayOrderId = data.razorpayOrderId;
-            string razorpayPaymentId = data.razorpayPaymentId;
-            string razorpaySignature = data.razorpaySignature;
-            string otpCode = data.otpCode;
+            if (!ModelState.IsValid)
+                return Json(new { success = false, message = "Payment verification failed. Please complete all required fields." });
 
-            var booking = await GetClientBooking(bookingId);
+            var booking = await GetClientBooking(model.BookingId);
             if (booking == null)
                 return Json(new { success = false, message = "Booking not found" });
 
             var userId = _userManager.GetUserId(User);
+            if (string.IsNullOrWhiteSpace(userId))
+                return Json(new { success = false, message = "Unable to identify user. Please log in again." });
 
             try
             {
-                // Step 1: Verify OTP (2FA)
-                var (otpValid, otpMessage) = await _otpService.VerifyOtpAsync(userId, bookingId, otpCode, _context);
-                if (!otpValid)
-                    return Json(new { success = false, message = otpMessage });
-
-                // Step 2: Verify Razorpay Signature (Security)
+                // Step 1: Verify Razorpay Signature (Security)
                 var signatureValid = await _razorpayService.VerifyPaymentSignatureAsync(
-                    razorpayOrderId,
-                    razorpayPaymentId,
-                    razorpaySignature
+                    model.RazorpayOrderId,
+                    model.RazorpayPaymentId,
+                    model.RazorpaySignature
                 );
 
                 if (!signatureValid)
                 {
-                    await _auditService.LogPaymentVerificationAsync(bookingId, razorpayPaymentId, false, "Invalid signature");
-                    _logger.LogWarning($"Invalid signature for payment {razorpayPaymentId}");
+                    await _auditService.LogPaymentVerificationAsync(model.BookingId, model.RazorpayPaymentId, false, "Invalid signature");
+                    _logger.LogWarning($"Invalid signature for payment {model.RazorpayPaymentId}");
                     return Json(new { success = false, message = "Payment signature verification failed. Possible fraud detected." });
                 }
 
-                // Step 3: Update booking with payment details
                 var razorpayOrder = await _context.RazorpayOrders
-                    .FirstOrDefaultAsync(ro => ro.RazorpayOrderId == razorpayOrderId);
+                    .FirstOrDefaultAsync(ro => ro.RazorpayOrderId == model.RazorpayOrderId);
 
-                if (razorpayOrder != null)
+                if (razorpayOrder == null)
                 {
-                    razorpayOrder.RazorpayPaymentId = razorpayPaymentId;
-                    razorpayOrder.RazorpaySignature = razorpaySignature;
-                    razorpayOrder.Status = "verified";
-                    razorpayOrder.PaidAt = DateTime.UtcNow;
+                    await _auditService.LogPaymentVerificationAsync(model.BookingId, model.RazorpayPaymentId, false, "Razorpay order record not found");
+                    return Json(new { success = false, message = "Payment order not found. Please contact support." });
                 }
 
+                razorpayOrder.RazorpayPaymentId = model.RazorpayPaymentId;
+                razorpayOrder.RazorpaySignature = model.RazorpaySignature;
+                razorpayOrder.Status = "verified";
+                razorpayOrder.PaidAt = DateTime.UtcNow;
+
                 // Update booking
-                booking.AmountPaidOnline += razorpayOrder?.Amount ?? 0;
-                booking.PaymentReference = razorpayPaymentId;
+                booking.AmountPaidOnline += razorpayOrder.Amount;
+                booking.PaymentReference = model.RazorpayPaymentId;
                 booking.Status = BookingStatus.Confirmed;
                 UpdatePaymentStatus(booking);
                 booking.PaidDate = DateTime.UtcNow;
@@ -224,21 +231,21 @@ namespace WorkerBookingSystem.Controllers
 
                 // Audit logging
                 await _auditService.LogPaymentCompletionAsync(
-                    bookingId,
-                    razorpayPaymentId,
+                    model.BookingId,
+                    model.RazorpayPaymentId,
                     booking.PaymentStatus,
-                    $"Razorpay verified: {razorpayPaymentId}"
+                    $"Razorpay verified: {model.RazorpayPaymentId}"
                 );
 
                 TempData["PaymentMessage"] = "✓ Payment successful! Your card details were NOT stored (PCI-DSS Compliant).";
 
-                _logger.LogInformation($"Payment verified and processed for booking {bookingId}");
+                _logger.LogInformation($"Payment verified and processed for booking {model.BookingId}");
                 return Json(new { success = true, message = "Payment verified successfully" });
             }
             catch (Exception ex)
             {
                 _logger.LogError($"Error verifying payment: {ex.Message}");
-                await _auditService.LogPaymentVerificationAsync(bookingId, razorpayPaymentId, false, ex.Message);
+                await _auditService.LogPaymentVerificationAsync(model.BookingId, model.RazorpayPaymentId, false, ex.Message);
                 return Json(new { success = false, message = "Error verifying payment" });
             }
         }

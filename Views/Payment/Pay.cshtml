@@ -545,11 +545,11 @@
             return false;
         }
 
-        // Create Razorpay Order
+        // Verify OTP and create Razorpay Order
         fetch('/Payment/CreateOrder', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ bookingId: bookingId, amount: amount })
+            body: JSON.stringify({ bookingId: bookingId, amount: amount, otpCode: otpCode })
         })
         .then(r => r.json())
         .then(data => {
@@ -558,9 +558,9 @@
                 otpVerified = true;
                 document.getElementById('step2-otp').style.display = 'none';
                 document.getElementById('step3-payment').style.display = 'block';
-                showSuccess('✓ OTP verified! Choose payment method');
+                showSuccess('✓ OTP verified and payment order created! Choose payment method');
             } else {
-                showError(data.message || 'Failed to create order');
+                showError(data.message || 'Failed to verify OTP and create order');
             }
         })
         .catch(e => showError('Error: ' + e.message));
@@ -587,7 +587,7 @@
             key: '@Model.RazorpayKeyId',
             amount: Math.round(amount * 100),
             currency: 'INR',
-            name: '⚡ WorkerBookingSystem',
+            name: '⚡ Indian Worker Mandi',
             description: 'Payment for Booking #' + bookingId,
             order_id: razorpayOrderId,
             handler: function(response) {
@@ -616,7 +616,7 @@
             key: '@Model.RazorpayKeyId',
             amount: Math.round(amount * 100),
             currency: 'INR',
-            name: '⚡ WorkerBookingSystem',
+            name: '⚡ Indian Worker Mandi',
             description: 'Payment for Booking #' + bookingId,
             order_id: razorpayOrderId,
             method: 'upi',

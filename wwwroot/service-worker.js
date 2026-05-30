@@ -1,4 +1,4 @@
-const CACHE_VERSION = "worker-mandi-v1";
+const CACHE_VERSION = "indian-worker-mandi-v2";
 const APP_SHELL = [
   "/",
   "/Mobile/Install",

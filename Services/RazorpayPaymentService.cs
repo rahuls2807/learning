@@ -54,7 +54,7 @@ namespace WorkerBookingSystem.Services
 
                 var order = client.Order.Create(options);
                 
-                _logger.LogInformation($"Razorpay order created: {order["id"]} for booking {bookingId}");
+                _logger.LogInformation($"Razorpay order created: {order["id"]} for booking {bookingId} with UPI support");
 
                 return new Dictionary<string, object>
                 {

@@ -14,7 +14,7 @@ namespace WorkerBookingSystem.Services
     /// </summary>
     public interface IOtpService
     {
-        Task<(bool success, string message)> SendOtpAsync(string phoneNumber, string userId, int bookingId);
+        Task<(bool success, string message, string otpCode)> SendOtpAsync(string phoneNumber, string userId, int bookingId);
         Task<(bool success, string message)> VerifyOtpAsync(string userId, int bookingId, string otpCode, WorkerBookingContext context);
         string GenerateOtp();
     }
@@ -25,40 +25,66 @@ namespace WorkerBookingSystem.Services
         private readonly string _twilioAuthToken;
         private readonly string _twilioPhoneNumber;
         private readonly ILogger<OtpService> _logger;
+        private readonly bool _isTwilioConfigured;
 
         public OtpService(IConfiguration configuration, ILogger<OtpService> logger)
         {
-            _twilioAccountSid = configuration["Twilio:AccountSid"] ?? throw new InvalidOperationException("Twilio AccountSid not configured");
-            _twilioAuthToken = configuration["Twilio:AuthToken"] ?? throw new InvalidOperationException("Twilio AuthToken not configured");
-            _twilioPhoneNumber = configuration["Twilio:PhoneNumber"] ?? throw new InvalidOperationException("Twilio PhoneNumber not configured");
             _logger = logger;
+            
+            // Read Twilio credentials
+            _twilioAccountSid = configuration["Twilio:AccountSid"] ?? "";
+            _twilioAuthToken = configuration["Twilio:AuthToken"] ?? "";
+            _twilioPhoneNumber = configuration["Twilio:PhoneNumber"] ?? "";
+            
+            // Check if Twilio is properly configured
+            _isTwilioConfigured = !string.IsNullOrWhiteSpace(_twilioAccountSid) 
+                && !_twilioAccountSid.Contains("YOUR_TWILIO")
+                && !string.IsNullOrWhiteSpace(_twilioAuthToken)
+                && !string.IsNullOrWhiteSpace(_twilioPhoneNumber);
 
-            // Initialize Twilio
-            TwilioClient.Init(_twilioAccountSid, _twilioAuthToken);
+            if (_isTwilioConfigured)
+            {
+                // Initialize Twilio only if configured
+                TwilioClient.Init(_twilioAccountSid, _twilioAuthToken);
+                _logger.LogInformation("Twilio OTP service initialized");
+            }
+            else
+            {
+                _logger.LogWarning("Twilio not configured. Using mock OTP mode for development.");
+            }
         }
 
-        public async Task<(bool success, string message)> SendOtpAsync(string phoneNumber, string userId, int bookingId)
+        public async Task<(bool success, string message, string otpCode)> SendOtpAsync(string phoneNumber, string userId, int bookingId)
         {
             try
             {
                 var otp = GenerateOtp();
-                var message = $"Your WorkerBookingSystem payment OTP is: {otp}. Valid for 10 minutes. Do not share this code.";
+                var message = $"Your Indian Worker Mandi payment OTP is: {otp}. Valid for 10 minutes. Do not share this code.";
 
-                // Send SMS via Twilio
-                var result = await MessageResource.CreateAsync(
-                    body: message,
-                    from: new PhoneNumber(_twilioPhoneNumber),
-                    to: new PhoneNumber(phoneNumber)
-                );
+                if (_isTwilioConfigured)
+                {
+                    // Send SMS via Twilio
+                    var result = await MessageResource.CreateAsync(
+                        body: message,
+                        from: new PhoneNumber(_twilioPhoneNumber),
+                        to: new PhoneNumber(phoneNumber)
+                    );
 
-                _logger.LogInformation($"OTP sent to {phoneNumber} for booking {bookingId}");
-
-                return (true, "OTP sent successfully");
+                    _logger.LogInformation($"OTP sent via Twilio to {phoneNumber} for booking {bookingId}");
+                    return (true, "OTP sent successfully", otp);
+                }
+                else
+                {
+                    // Development mode: Log OTP to console/logs instead
+                    _logger.LogWarning($"[DEV MODE] OTP for {phoneNumber}: {otp}");
+                    _logger.LogInformation($"OTP would be sent to {phoneNumber} (Twilio not configured)");
+                    return (true, $"OTP sent successfully (Dev Mode). Use code {otp}", otp);
+                }
             }
             catch (Exception ex)
             {
                 _logger.LogError($"Error sending OTP: {ex.Message}");
-                return (false, "Failed to send OTP. Please try again.");
+                return (false, "Failed to send OTP. Please try again.", "");
             }
         }
 
@@ -68,7 +94,7 @@ namespace WorkerBookingSystem.Services
             {
                 // Get the most recent OTP for this user and booking
                 var otp = await context.OtpVerifications
-                    .Where(o => o.UserId == userId && o.BookingId == bookingId && !o.IsVerified)
+                    .Where(o => o.UserId == userId && o.BookingId == bookingId)
                     .OrderByDescending(o => o.GeneratedAt)
                     .FirstOrDefaultAsync();
 
@@ -80,13 +106,16 @@ namespace WorkerBookingSystem.Services
                 // Check if OTP has expired (10 minutes validity)
                 if ((DateTime.UtcNow - otp.GeneratedAt).TotalMinutes > 10)
                 {
-                    otp.AttemptsRemaining = 0;
-                    await context.SaveChangesAsync();
-                    return (false, "OTP has expired. Please request a new one.");
+                    if (!otp.IsVerified)
+                    {
+                        otp.AttemptsRemaining = 0;
+                        await context.SaveChangesAsync();
+                        return (false, "OTP has expired. Please request a new one.");
+                    }
                 }
 
-                // Check attempts remaining
-                if (otp.AttemptsRemaining <= 0)
+                // Check attempts remaining only for unverified OTPs
+                if (!otp.IsVerified && otp.AttemptsRemaining <= 0)
                 {
                     return (false, "Maximum OTP attempts exceeded. Please request a new one.");
                 }
@@ -94,9 +123,20 @@ namespace WorkerBookingSystem.Services
                 // Verify OTP code
                 if (otp.OtpCode != otpCode)
                 {
-                    otp.AttemptsRemaining--;
-                    await context.SaveChangesAsync();
-                    return (false, $"Invalid OTP. Attempts remaining: {otp.AttemptsRemaining}");
+                    if (!otp.IsVerified)
+                    {
+                        otp.AttemptsRemaining--;
+                        await context.SaveChangesAsync();
+                        return (false, $"Invalid OTP. Attempts remaining: {otp.AttemptsRemaining}");
+                    }
+
+                    return (false, "Invalid OTP. Please request a new one.");
+                }
+
+                if (otp.IsVerified)
+                {
+                    _logger.LogInformation($"OTP already verified for user {userId}, booking {bookingId}");
+                    return (true, "OTP verified successfully");
                 }
 
                 // Mark as verified

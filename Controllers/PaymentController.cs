@@ -55,19 +55,11 @@ namespace WorkerBookingSystem.Controllers
             var model = ToPaymentViewModel(booking);
             model.RazorpayConfigured = _razorpayService.IsConfigured;
             model.RazorpayKeyId = _configuration["Razorpay:KeyId"];
-            model.DefaultOtpPhone = _configuration["Otp:DefaultPhoneNumber"] ?? "+916392424389";
-
             var client = await _context.Clients.FirstOrDefaultAsync(c => c.ClientId == booking.ClientId);
-            if (client != null)
+            if (client != null && !string.IsNullOrWhiteSpace(client.PhoneNumber))
             {
-                model.PhoneNumber = !string.IsNullOrWhiteSpace(client.PhoneNumber)
-                    ? UpiPaymentHelper.NormalizeIndiaPhone(client.PhoneNumber)
-                    : model.DefaultOtpPhone;
+                model.PhoneNumber = UpiPaymentHelper.NormalizeIndiaPhone(client.PhoneNumber);
                 model.ClientUpiId = client.UpiId;
-            }
-            else
-            {
-                model.PhoneNumber = model.DefaultOtpPhone;
             }
 
             var merchantVpa = _configuration["Upi:MerchantVpa"] ?? "rsinghrahul402@ybl";

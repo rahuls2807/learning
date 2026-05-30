@@ -1,17 +1,10 @@
-using Twilio;
-using Twilio.Rest.Api.V2010.Account;
-using Twilio.Types;
 using System.Security.Cryptography;
 using Microsoft.EntityFrameworkCore;
 using WorkerBookingSystem.Data;
-using WorkerBookingSystem.Models;
+using WorkerBookingSystem.Services.Sms;
 
 namespace WorkerBookingSystem.Services
 {
-    /// <summary>
-    /// RBI 2FA Compliance: OTP Service via Twilio
-    /// Implements One-Time Password for payment authentication
-    /// </summary>
     public interface IOtpService
     {
         Task<(bool success, string message, string otpCode, bool devMode)> SendOtpAsync(string phoneNumber, string userId, int bookingId);
@@ -21,38 +14,20 @@ namespace WorkerBookingSystem.Services
 
     public class OtpService : IOtpService
     {
-        private readonly string _twilioAccountSid;
-        private readonly string _twilioAuthToken;
-        private readonly string _twilioPhoneNumber;
+        private readonly IEnumerable<ISmsOtpSender> _senders;
         private readonly ILogger<OtpService> _logger;
-        private readonly bool _isTwilioConfigured;
         private readonly bool _showDevOtpOnScreen;
+        private readonly string _preferredProvider;
 
-        public OtpService(IConfiguration configuration, ILogger<OtpService> logger)
+        public OtpService(
+            IEnumerable<ISmsOtpSender> senders,
+            IConfiguration configuration,
+            ILogger<OtpService> logger)
         {
+            _senders = senders.OrderBy(s => s.Priority);
             _logger = logger;
-            
-            _twilioAccountSid = configuration["Twilio:AccountSid"] ?? "";
-            _twilioAuthToken = configuration["Twilio:AuthToken"] ?? "";
-            _twilioPhoneNumber = configuration["Twilio:PhoneNumber"] ?? "";
             _showDevOtpOnScreen = configuration.GetValue("Otp:ShowDevOtpOnScreen", true);
-            
-            _isTwilioConfigured = !string.IsNullOrWhiteSpace(_twilioAccountSid) 
-                && !_twilioAccountSid.Contains("YOUR_TWILIO", StringComparison.OrdinalIgnoreCase)
-                && !string.IsNullOrWhiteSpace(_twilioAuthToken)
-                && !_twilioAuthToken.Contains("YOUR_TWILIO", StringComparison.OrdinalIgnoreCase)
-                && !string.IsNullOrWhiteSpace(_twilioPhoneNumber)
-                && !_twilioPhoneNumber.Contains("YOUR_TWILIO", StringComparison.OrdinalIgnoreCase);
-
-            if (_isTwilioConfigured)
-            {
-                TwilioClient.Init(_twilioAccountSid, _twilioAuthToken);
-                _logger.LogInformation("Twilio OTP service initialized");
-            }
-            else
-            {
-                _logger.LogWarning("Twilio not configured. OTP will be shown on-screen when enabled (Otp:ShowDevOtpOnScreen).");
-            }
+            _preferredProvider = configuration["Sms:Provider"] ?? "Auto";
         }
 
         public async Task<(bool success, string message, string otpCode, bool devMode)> SendOtpAsync(string phoneNumber, string userId, int bookingId)
@@ -60,47 +35,85 @@ namespace WorkerBookingSystem.Services
             try
             {
                 var normalizedPhone = UpiPaymentHelper.NormalizeIndiaPhone(phoneNumber);
-                var otp = GenerateOtp();
-                var message = $"Your Indian Worker Mandi payment OTP is: {otp}. Valid for 10 minutes. Do not share this code.";
-
-                if (_isTwilioConfigured)
+                if (normalizedPhone.Replace("+", "").Length < 12)
                 {
-                    var result = await MessageResource.CreateAsync(
-                        body: message,
-                        from: new PhoneNumber(_twilioPhoneNumber),
-                        to: new PhoneNumber(normalizedPhone)
-                    );
-
-                    if (string.IsNullOrWhiteSpace(result.Sid))
-                    {
-                        _logger.LogError("Twilio returned no message SID for booking {BookingId}", bookingId);
-                        return (false, "SMS could not be sent. Check your phone number or try again.", "", false);
-                    }
-
-                    _logger.LogInformation("OTP sent via Twilio to {Phone} for booking {BookingId}", normalizedPhone, bookingId);
-                    return (true, "OTP sent to your phone by SMS.", otp, false);
+                    return (false, "Enter a valid 10-digit mobile number with country code (+91).", "", false);
                 }
 
-                _logger.LogWarning("[DEV OTP] Booking {BookingId} phone {Phone}: {Otp}", bookingId, normalizedPhone, otp);
+                var otp = GenerateOtp();
+                var sender = ResolveSender();
+
+                if (sender != null)
+                {
+                    var (sent, error) = await sender.SendOtpAsync(normalizedPhone, otp, bookingId);
+                    if (sent)
+                    {
+                        return (true, $"OTP sent by SMS to {MaskPhone(normalizedPhone)}.", otp, false);
+                    }
+
+                    _logger.LogWarning("Primary SMS provider {Provider} failed for booking {BookingId}: {Error}", sender.ProviderName, bookingId, error);
+
+                    var fallback = _senders.FirstOrDefault(s => s.IsConfigured && s.ProviderName != sender.ProviderName);
+                    if (fallback != null)
+                    {
+                        var (fallbackSent, fallbackError) = await fallback.SendOtpAsync(normalizedPhone, otp, bookingId);
+                        if (fallbackSent)
+                        {
+                            return (true, $"OTP sent by SMS to {MaskPhone(normalizedPhone)}.", otp, false);
+                        }
+
+                        _logger.LogWarning("Fallback SMS provider {Provider} failed: {Error}", fallback.ProviderName, fallbackError);
+                    }
+                }
+
+                _logger.LogWarning("[DEV OTP] Booking {BookingId} phone {Phone}", bookingId, normalizedPhone);
 
                 if (_showDevOtpOnScreen)
                 {
                     return (true,
-                        "SMS is not configured. Use the OTP shown below to continue.",
+                        "SMS provider is not configured. Use the OTP shown on this screen.",
                         otp,
                         true);
                 }
 
                 return (false,
-                    "SMS OTP is not configured on this server. Ask the administrator to set Twilio credentials in appsettings.",
+                    "SMS OTP is not configured. Set MSG91 or Twilio credentials in user secrets.",
                     "",
                     false);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error sending OTP for booking {BookingId}", bookingId);
-                return (false, $"Failed to send OTP: {ex.Message}", "", false);
+                return (false, "Failed to send OTP. Please try again.", "", false);
             }
+        }
+
+        private ISmsOtpSender? ResolveSender()
+        {
+            if (_preferredProvider.Equals("Msg91", StringComparison.OrdinalIgnoreCase))
+            {
+                return _senders.FirstOrDefault(s => s.ProviderName == "MSG91" && s.IsConfigured)
+                    ?? _senders.FirstOrDefault(s => s.IsConfigured);
+            }
+
+            if (_preferredProvider.Equals("Twilio", StringComparison.OrdinalIgnoreCase))
+            {
+                return _senders.FirstOrDefault(s => s.ProviderName == "Twilio" && s.IsConfigured)
+                    ?? _senders.FirstOrDefault(s => s.IsConfigured);
+            }
+
+            return _senders.FirstOrDefault(s => s.IsConfigured);
+        }
+
+        private static string MaskPhone(string phone)
+        {
+            var digits = new string(phone.Where(char.IsDigit).ToArray());
+            if (digits.Length < 4)
+            {
+                return phone;
+            }
+
+            return "******" + digits[^4..];
         }
 
         public async Task<(bool success, string message)> VerifyOtpAsync(string userId, int bookingId, string otpCode, WorkerBookingContext context)
@@ -146,7 +159,6 @@ namespace WorkerBookingSystem.Services
 
                 if (otp.IsVerified)
                 {
-                    _logger.LogInformation("OTP already verified for user {UserId}, booking {BookingId}", userId, bookingId);
                     return (true, "OTP verified successfully");
                 }
 
@@ -154,7 +166,6 @@ namespace WorkerBookingSystem.Services
                 otp.VerifiedAt = DateTime.UtcNow;
                 await context.SaveChangesAsync();
 
-                _logger.LogInformation("OTP verified for user {UserId}, booking {BookingId}", userId, bookingId);
                 return (true, "OTP verified successfully");
             }
             catch (Exception ex)

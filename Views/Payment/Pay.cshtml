@@ -427,8 +427,8 @@
                 </div>
                 <div class="form-group">
                     <label for="phoneNumber" class="form-label">📱 Phone Number</label>
-                    <input type="tel" id="phoneNumber" class="form-control" placeholder="+91 XXXXXXXXXX" value="@Model.PhoneNumber" />
-                    <span class="form-text">OTP by SMS when configured; otherwise it appears on this screen.</span>
+                    <input type="tel" id="phoneNumber" class="form-control" placeholder="+91 XXXXXXXXXX" value="@(Model.PhoneNumber ?? string.Empty)" />
+                    <span class="form-text">OTP is sent to the client's mobile number via SMS (MSG91 or Twilio).</span>
                 </div>
                 <button type="button" class="btn btn-pay" id="requestOtpBtn" onclick="requestOtp()">
                     <i class="fas fa-sms"></i> Send OTP
@@ -526,7 +526,6 @@
     const bookingId = document.getElementById('bookingId').value;
     const amount = parseFloat(document.getElementById('amount').value);
     const razorpayEnabled = @(Model.RazorpayConfigured ? "true" : "false");
-    const defaultPhone = '@Model.DefaultOtpPhone';
     let razorpayOrderId = '';
     let gatewayPaymentMethod = 'upi';
 
@@ -536,9 +535,9 @@
     }
 
     function requestOtp() {
-        const phoneNumber = document.getElementById('phoneNumber').value.trim() || defaultPhone;
+        const phoneNumber = document.getElementById('phoneNumber').value.trim();
         if (phoneNumber.replace(/\D/g, '').length < 10) {
-            showError('Please enter a valid phone number');
+            showError('Enter the client mobile number (10 digits, +91)');
             return;
         }
 
@@ -553,7 +552,7 @@
                 if (data.devMode && data.devOtp) {
                     const banner = document.getElementById('devOtpBanner');
                     banner.style.display = 'block';
-                    banner.innerHTML = '<strong>SMS not configured yet.</strong> Your OTP: <span style="font-size:1.4rem; letter-spacing:4px;">' + data.devOtp + '</span>';
+                    banner.innerHTML = '<strong>SMS provider not configured.</strong> Dev OTP: <span style="font-size:1.4rem; letter-spacing:4px;">' + data.devOtp + '</span>';
                 }
                 showSuccess(data.devMode ? data.message : ('OTP sent by SMS to ' + phoneNumber));
                 document.getElementById('step1-phone').style.display = 'none';

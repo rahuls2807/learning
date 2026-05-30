@@ -3,16 +3,19 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 using WorkerBookingSystem.Models;
 using WorkerBookingSystem.Services;
+using WorkerBookingSystem.Services.Sms;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 builder.Services.AddHttpClient();
+builder.Services.AddHttpClient("Msg91");
 
-// RBI Compliance Services Registration
-builder.Services.AddScoped<IRazorpayPaymentService, RazorpayPaymentService>();
+builder.Services.AddScoped<ISmsOtpSender, Msg91SmsOtpSender>();
+builder.Services.AddScoped<ISmsOtpSender, TwilioSmsOtpSender>();
 builder.Services.AddScoped<IOtpService, OtpService>();
+builder.Services.AddScoped<IRazorpayPaymentService, RazorpayPaymentService>();
 builder.Services.AddScoped<IPaymentAuditService, PaymentAuditService>();
 
 // Add Entity Framework Core with SQL Server

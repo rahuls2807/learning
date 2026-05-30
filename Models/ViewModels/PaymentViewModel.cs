@@ -50,7 +50,6 @@ namespace WorkerBookingSystem.Models.ViewModels
         public string UpiPayUri { get; set; } = string.Empty;
         public string UpiQrCodeUrl { get; set; } = string.Empty;
         public bool RazorpayConfigured { get; set; }
-        public string DefaultOtpPhone { get; set; } = "+916392424389";
         public string? ClientUpiId { get; set; }
     }
 

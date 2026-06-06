@@ -1,3 +1,4 @@
+using System.Data.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -93,7 +94,7 @@ namespace WorkerBookingSystem.Controllers
                 .GroupBy(r => r.WorkerId)
                 .ToDictionary(
                     g => g.Key,
-                    g => g.OrderByDescending(r => r.EffectiveDate).First().RatePerHour * 0.90m);
+                    g => g.OrderByDescending(r => r.EffectiveDate).First().RatePerHour);
 
             foreach (var worker in workers)
             {
@@ -279,16 +280,67 @@ namespace WorkerBookingSystem.Controllers
                 .OrderByDescending(r => r.CreatedDate)
                 .ToList();
 
-            return View(new WorkerProfileViewModel
+            var currentRate = await _context.HourlyRates
+                .Where(hr => hr.WorkerId == worker.WorkerId && hr.IsActive)
+                .OrderByDescending(hr => hr.EffectiveDate)
+                .Select(hr => hr.RatePerHour)
+                .FirstOrDefaultAsync();
+
+            var profileModel = new WorkerProfileViewModel
             {
                 Worker = worker,
                 CanSeeContact = canSeeContact,
                 CanReview = canReview,
+                CanBook = await GetCurrentClient() != null,
                 BookingIdForReview = bookingIdForReview,
+                CurrentRate = currentRate > 0 ? currentRate : null,
                 AverageRating = reviews.Any() ? reviews.Average(r => r.Rating) : null,
                 ReviewCount = reviews.Count,
                 Reviews = reviews
-            });
+            };
+
+            ViewBag.WorkerTakePercentage = (100m - await GetProfitCutPercentageAsync()) / 100m;
+            return View(profileModel);
+        }
+
+        public async Task<IActionResult> MyBookings()
+        {
+            var userId = _userManager.GetUserId(User);
+            var worker = await _context.Workers.FirstOrDefaultAsync(w => w.UserId == userId);
+            if (worker == null) return Forbid();
+
+            var bookings = await _context.Bookings
+                .Include(b => b.Client)
+                .Where(b => b.WorkerId == worker.WorkerId)
+                .OrderByDescending(b => b.BookingDate)
+                .ToListAsync();
+
+            var profitCut = await GetProfitCutPercentageAsync();
+            ViewBag.ProfitCutPercentage = profitCut;
+            ViewBag.WorkerTakePercentage = (100m - profitCut) / 100m;
+
+            return View(bookings);
+        }
+
+        private async Task<decimal> GetProfitCutPercentageAsync()
+        {
+            try
+            {
+                var setting = await _context.PlatformSettings
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(ps => ps.Key == "WorkerProfitCutPercentage");
+                if (setting == null || !decimal.TryParse(setting.Value, out var profitCut))
+                {
+                    return 10.00m;
+                }
+
+                return Math.Clamp(profitCut, 0m, 100m);
+            }
+            catch (Exception)
+            {
+                // If the PlatformSettings table doesn't exist yet, fall back to default values.
+                return 10.00m;
+            }
         }
 
         [HttpPost]
@@ -368,21 +420,6 @@ namespace WorkerBookingSystem.Controllers
             await _context.SaveChangesAsync();
 
             return RedirectToAction("ManageAvailability", new { id = workerId });
-        }
-
-        public async Task<IActionResult> MyBookings()
-        {
-            var userId = _userManager.GetUserId(User);
-            var worker = await _context.Workers.FirstOrDefaultAsync(w => w.UserId == userId);
-            if (worker == null) return Forbid();
-
-            var bookings = await _context.Bookings
-                .Include(b => b.Client)
-                .Where(b => b.WorkerId == worker.WorkerId)
-                .OrderByDescending(b => b.BookingDate)
-                .ToListAsync();
-
-            return View(bookings);
         }
 
         private bool WorkerExists(int id)

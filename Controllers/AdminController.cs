@@ -1,18 +1,24 @@
+using System.Data.Common;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WorkerBookingSystem.Data;
 using WorkerBookingSystem.Models;
+using WorkerBookingSystem.Models.ViewModels;
 
 namespace WorkerBookingSystem.Controllers
 {
+    [Authorize(Roles = "Admin")]
     public class AdminController : Controller
     {
         private readonly WorkerBookingContext _context;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public AdminController(WorkerBookingContext context)
+        public AdminController(WorkerBookingContext context, UserManager<ApplicationUser> userManager)
         {
             _context = context;
+            _userManager = userManager;
         }
 
         // GET: Admin/Dashboard
@@ -88,6 +94,62 @@ namespace WorkerBookingSystem.Controllers
             return View(hourlyRate);
         }
 
+        // GET: Admin/ManageAdmins
+        public async Task<IActionResult> ManageAdmins()
+        {
+            var admins = await _userManager.GetUsersInRoleAsync("Admin");
+            return View(admins);
+        }
+
+        // GET: Admin/CreateAdmin
+        public IActionResult CreateAdmin()
+        {
+            return View(new AdminRegisterViewModel());
+        }
+
+        // POST: Admin/CreateAdmin
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CreateAdmin(AdminRegisterViewModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                var user = new ApplicationUser
+                {
+                    UserName = model.Email,
+                    Email = model.Email,
+                    EmailConfirmed = true,
+                    Address = string.Empty,
+                    City = string.Empty,
+                    State = string.Empty,
+                    PinCode = string.Empty,
+                    ProfileImageUrl = string.Empty,
+                    BioDescription = string.Empty,
+                    ReferralCode = string.Empty,
+                    ReferredBy = string.Empty,
+                    KycStatus = "PENDING",
+                    IsActive = true,
+                    IsBlocked = false,
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                var result = await _userManager.CreateAsync(user, model.Password);
+                if (result.Succeeded)
+                {
+                    await _userManager.AddToRoleAsync(user, "Admin");
+                    TempData["AdminMessage"] = "Admin account created successfully.";
+                    return RedirectToAction(nameof(ManageAdmins));
+                }
+
+                foreach (var error in result.Errors)
+                {
+                    ModelState.AddModelError(string.Empty, error.Description);
+                }
+            }
+
+            return View(model);
+        }
+
         // GET: Admin/ManageBookings
         public async Task<IActionResult> ManageBookings()
         {
@@ -95,6 +157,11 @@ namespace WorkerBookingSystem.Controllers
                 .Include(b => b.Worker)
                 .Include(b => b.Client)
                 .ToListAsync();
+
+            var profitCut = await GetProfitCutPercentageAsync();
+            ViewBag.ProfitCutPercentage = profitCut;
+            ViewBag.WorkerTakePercentage = (100m - profitCut) / 100m;
+
             return View(bookings);
         }
 
@@ -137,10 +204,70 @@ namespace WorkerBookingSystem.Controllers
             ViewBag.StartDate = startDate;
             ViewBag.EndDate = endDate;
 
+            var profitCut = await GetProfitCutPercentageAsync();
+            ViewBag.ProfitCutPercentage = profitCut;
+            ViewBag.WorkerTakePercentage = (100m - profitCut) / 100m;
+
             return View(bookings);
         }
 
-        // GET: Admin/CreateBooking
+        // GET: Admin/ProfitCut
+        public async Task<IActionResult> ProfitCut()
+        {
+            var profitCut = await GetProfitCutPercentageAsync();
+            ViewBag.CurrentProfitCut = profitCut;
+            return View(profitCut);
+        }
+
+        // POST: Admin/ProfitCut
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ProfitCut(decimal profitCutPercentage)
+        {
+            if (profitCutPercentage < 0 || profitCutPercentage > 100)
+            {
+                ModelState.AddModelError(nameof(profitCutPercentage), "Enter a percentage between 0 and 100.");
+            }
+
+            if (!ModelState.IsValid)
+            {
+                ViewBag.CurrentProfitCut = profitCutPercentage;
+                return View(profitCutPercentage);
+            }
+
+            try
+            {
+                var setting = await _context.PlatformSettings
+                    .FirstOrDefaultAsync(ps => ps.Key == "WorkerProfitCutPercentage");
+
+                if (setting == null)
+                {
+                    setting = new PlatformSetting
+                    {
+                        Key = "WorkerProfitCutPercentage",
+                        Value = profitCutPercentage.ToString("F2"),
+                        UpdatedAt = DateTime.UtcNow
+                    };
+                    _context.Add(setting);
+                }
+                else
+                {
+                    setting.Value = profitCutPercentage.ToString("F2");
+                    setting.UpdatedAt = DateTime.UtcNow;
+                }
+
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception)
+            {
+                // If the PlatformSettings table is missing or the database schema is unavailable,
+                // ignore the update and continue with the default profit cut.
+                // The actual schema migration should still be applied separately.
+            }
+
+            TempData["ProfitCutMessage"] = $"Updated platform profit cut to {profitCutPercentage:F2}%.";
+            return RedirectToAction(nameof(Dashboard));
+        }
         public async Task<IActionResult> CreateBooking()
         {
             var workers = await _context.Workers
@@ -267,6 +394,29 @@ namespace WorkerBookingSystem.Controllers
 
             TempData["PaymentMessage"] = "UPI payment rejected.";
             return RedirectToAction(nameof(UpiPayments));
+        }
+
+        private async Task<decimal> GetProfitCutPercentageAsync()
+        {
+            try
+            {
+                var setting = await _context.PlatformSettings
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(ps => ps.Key == "WorkerProfitCutPercentage");
+
+                if (setting == null || !decimal.TryParse(setting.Value, out var profitCut))
+                {
+                    return 10.00m;
+                }
+
+                return Math.Clamp(profitCut, 0m, 100m);
+            }
+            catch (Exception)
+            {
+                // If the PlatformSettings table is missing or the database schema is not migrated yet,
+                // fall back to the default profit cut instead of crashing the page.
+                return 10.00m;
+            }
         }
 
         private static void ApplyPaymentStatus(Booking booking)

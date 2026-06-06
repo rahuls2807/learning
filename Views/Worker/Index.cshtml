@@ -4,9 +4,11 @@
     ViewData["Title"] = "Workers";
 }
 
-<div class="container mt-5">
+<div class="container">
     <div class="page-header">
+        <div class="section-kicker">Worker operations</div>
         <h2>Workers</h2>
+        <p class="text-muted">Search, review, and manage worker profiles from a cleaner dashboard that also works on phone screens.</p>
         <form method="get" class="row g-2 align-items-end">
             <div class="col-md-7">
                 <label class="form-label" for="search">Search</label>
@@ -21,13 +23,19 @@
                 </select>
             </div>
             <div class="col-md-3">
-                <button type="submit" class="btn btn-primary w-100">Search</button>
+                <button type="submit" class="btn btn-primary w-100">Search Workers</button>
             </div>
         </form>
+        <div class="filter-chip-row mt-3">
+            <span class="filter-chip">Profile health</span>
+            <span class="filter-chip">Availability control</span>
+            <span class="filter-chip">Rate visibility</span>
+            <span class="filter-chip">Ratings ready</span>
+        </div>
         <p class="text-muted mt-3 mb-0">@Model.TotalItems workers found. Page @Model.Page of @Model.TotalPages.</p>
     </div>
     
-    <a asp-action="Create" class="btn btn-primary mb-3">+ Register New Worker</a>
+    <a asp-action="Create" class="btn btn-primary mb-3">Register New Worker</a>
 
     @if (Model.Items.Any())
     {
@@ -55,7 +63,7 @@
                             <td>
                                 @if (worker.DisplayRate.HasValue && worker.DisplayRate.Value > 0)
                                 {
-                                    <span>$@worker.DisplayRate.Value.ToString("F2")/hr</span>
+                                    <span>₹@worker.DisplayRate.Value.ToString("F2")/hr</span>
                                 }
                                 else
                                 {

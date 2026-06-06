@@ -7,7 +7,7 @@
     <link rel="manifest" href="~/manifest.webmanifest" />
     <link rel="icon" href="~/images/app-icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="~/images/app-icon.svg" />
-    <meta name="theme-color" content="#ff0055" />
+    <meta name="theme-color" content="#e23744" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="Indian Worker Mandi" />
@@ -15,264 +15,13 @@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/WorkerBookingSystem.styles.css" asp-append-version="true" />
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        html, body {
-            width: 100%;
-            min-height: 100%;
-            background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
-            color: #e0e0e0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        body {
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            overflow-x: hidden;
-        }
-
-        /* Global Background Animation */
-        body::before {
-            content: '';
-            position: fixed;
-            top: -50%;
-            right: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle at 20% 50%, rgba(255, 0, 0, 0.08) 0%, transparent 50%),
-                        radial-gradient(circle at 80% 80%, rgba(0, 255, 255, 0.06) 0%, transparent 50%),
-                        radial-gradient(circle at 50% 50%, rgba(255, 0, 170, 0.06) 0%, transparent 70%);
-            pointer-events: none;
-            animation: globalGradient 25s ease infinite;
-            z-index: 0;
-        }
-
-        @@keyframes globalGradient {
-            0% { transform: translate(0, 0) scale(1); }
-            50% { transform: translate(50px, 50px) scale(1.1); }
-            100% { transform: translate(0, 0) scale(1); }
-        }
-
-        /* Enhanced Navbar */
-        header {
-            position: relative;
-            z-index: 1000;
-            background: linear-gradient(135deg, rgba(15, 12, 41, 0.95) 0%, rgba(48, 43, 99, 0.95) 100%);
-            border-bottom: 3px solid;
-            border-image: linear-gradient(135deg, #ff0055 0%, #00ffcc 100%) 1;
-            backdrop-filter: blur(15px);
-            box-shadow: 0 8px 32px rgba(255, 0, 85, 0.2), 0 0 20px rgba(0, 255, 204, 0.1);
-        }
-
-        .navbar {
-            background: transparent !important;
-            padding: 12px 0 !important;
-        }
-
-        .navbar-brand {
-            font-size: 1.8rem !important;
-            font-weight: 800 !important;
-            background: linear-gradient(135deg, #ff0055 0%, #00ffcc 50%, #ff00ff 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            animation: brandGlow 3s ease-in-out infinite;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-        }
-
-        @@keyframes brandGlow {
-            0%, 100% { filter: drop-shadow(0 0 15px rgba(255, 0, 85, 0.4)); }
-            50% { filter: drop-shadow(0 0 25px rgba(0, 255, 204, 0.4)); }
-        }
-
-        .nav-link {
-            color: #00ffcc !important;
-            font-weight: 600 !important;
-            position: relative;
-            padding: 8px 16px !important;
-            margin: 0 5px !important;
-            border-radius: 8px !important;
-            transition: all 0.3s cubic-bezier(0.23, 1, 0.320, 1) !important;
-            text-transform: uppercase;
-            font-size: 0.9rem;
-            letter-spacing: 0.5px;
-        }
-
-        .nav-link::before {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 0;
-            height: 2px;
-            background: linear-gradient(90deg, #ff0055, #00ffcc);
-            transition: width 0.4s cubic-bezier(0.23, 1, 0.320, 1);
-        }
-
-        .nav-link:hover {
-            color: #ff0055 !important;
-            background: rgba(255, 0, 85, 0.1) !important;
-            transform: translateY(-3px);
-            box-shadow: 0 0 15px rgba(255, 0, 85, 0.4) !important;
-        }
-
-        .nav-link:hover::before {
-            width: 100%;
-        }
-
-        .navbar-toggler {
-            border-color: #ff0055 !important;
-        }
-
-        .navbar-toggler-icon {
-            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='%23ff0055' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e") !important;
-        }
-
-        /* User Info Styling */
-        .user-info {
-            color: #ff0055 !important;
-            font-weight: 700 !important;
-            animation: pulse 2s ease-in-out infinite;
-        }
-
-        @@keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.7; }
-        }
-
-        /* Main Content */
-        main {
-            position: relative;
-            z-index: 1;
-            margin-top: 40px;
-            margin-bottom: 60px;
-        }
-
-        .container {
-            position: relative;
-            z-index: 1;
-            max-width: 1400px;
-        }
-
-        body > .container {
-            flex: 1 0 auto;
-            width: 100%;
-        }
-
-        /* Footer */
-        footer.footer {
-            position: static !important;
-            bottom: auto !important;
-            width: 100%;
-            flex-shrink: 0;
-            line-height: normal !important;
-            white-space: normal !important;
-            z-index: 1;
-            background: linear-gradient(135deg, rgba(15, 12, 41, 0.95) 0%, rgba(48, 43, 99, 0.95) 100%) !important;
-            border-top: 3px solid !important;
-            border-image: linear-gradient(135deg, #ff00ff 0%, #ff0055 100%) 1 !important;
-            color: #00ffcc !important;
-            padding: 30px 0 !important;
-            backdrop-filter: blur(15px);
-            box-shadow: 0 -8px 32px rgba(255, 0, 85, 0.15);
-        }
-
-        footer a {
-            color: #ff0055 !important;
-            text-decoration: none;
-            font-weight: 700;
-            transition: all 0.3s ease;
-        }
-
-        footer a:hover {
-            color: #00ffcc !important;
-            text-shadow: 0 0 10px rgba(0, 255, 204, 0.5);
-        }
-
-        /* Button Global Styles */
-        .btn-primary {
-            background: linear-gradient(135deg, #ff0055 0%, #ff4477 100%) !important;
-            border: 2px solid #ff0055 !important;
-            color: #fff !important;
-            font-weight: 700 !important;
-            border-radius: 12px !important;
-            padding: 10px 24px !important;
-            transition: all 0.3s cubic-bezier(0.23, 1, 0.320, 1) !important;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            box-shadow: 0 0 20px rgba(255, 0, 85, 0.3) !important;
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-4px) scale(1.05);
-            box-shadow: 0 10px 35px rgba(255, 0, 85, 0.5) !important;
-            background: linear-gradient(135deg, #ff4477 0%, #ff0055 100%) !important;
-        }
-
-        .btn-secondary {
-            background: transparent !important;
-            border: 2px solid #00ffcc !important;
-            color: #00ffcc !important;
-            font-weight: 700 !important;
-            border-radius: 12px !important;
-            padding: 10px 24px !important;
-            transition: all 0.3s ease !important;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .btn-secondary:hover {
-            background: rgba(0, 255, 204, 0.1) !important;
-            box-shadow: 0 0 20px rgba(0, 255, 204, 0.4) !important;
-            transform: translateY(-3px);
-        }
-
-        /* Link Hover Effects */
-        a {
-            transition: all 0.3s ease;
-        }
-
-        a:not(.nav-link):not(.btn) {
-            color: #00ffcc;
-        }
-
-        a:not(.nav-link):not(.btn):hover {
-            color: #ff0055;
-            text-shadow: 0 0 10px rgba(255, 0, 85, 0.4);
-        }
-
-        /* Scrollbar Styling */
-        ::-webkit-scrollbar {
-            width: 10px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: rgba(255, 0, 85, 0.05);
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: linear-gradient(135deg, #ff0055, #00ffcc);
-            border-radius: 5px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: linear-gradient(135deg, #ff4477, #00ffff);
-        }
-    </style>
 </head>
 <body>
-    <header>
-        <nav class="navbar navbar-expand-lg navbar-dark">
+    <header class="app-header">
+        <nav class="navbar navbar-expand-lg navbar-light">
             <div class="container-fluid px-4">
                 <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">
-                    ⚡ INDIAN WORKER MANDI ⚡
+                    <span class="brand-mark">IWM</span>Indian Worker Mandi
                 </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
                         aria-expanded="false" aria-label="Toggle navigation">
@@ -281,46 +30,49 @@
                 <div class="navbar-collapse collapse d-lg-inline-flex justify-content-between">
                     <ul class="navbar-nav flex-grow-1">
                         <li class="nav-item">
-                            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Index">🏠 Home</a>
+                            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
                         </li>
                         @if (User.IsInRole("Client"))
                         {
                             <li class="nav-item">
-                                <a class="nav-link" asp-controller="Client" asp-action="MyBookings">📋 My Bookings</a>
+                                <a class="nav-link" asp-controller="Client" asp-action="MyBookings">Bookings</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" asp-controller="Client" asp-action="BookWorker">🔍 Find Workers</a>
+                                <a class="nav-link" asp-controller="Client" asp-action="BookWorker">Find Workers</a>
                             </li>
                         }
                         @if (User.IsInRole("Worker"))
                         {
                             <li class="nav-item">
-                                <a class="nav-link" asp-controller="Worker" asp-action="MyBookings">💼 My Jobs</a>
+                                <a class="nav-link" asp-controller="Worker" asp-action="MyBookings">Jobs</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" asp-controller="Worker" asp-action="Index">👤 My Profile</a>
+                                <a class="nav-link" asp-controller="Worker" asp-action="Index">Profile</a>
                             </li>
                         }
                         @if (User.IsInRole("Admin"))
                         {
                             <li class="nav-item">
-                                <a class="nav-link" asp-controller="Admin" asp-action="Dashboard">📊 Dashboard</a>
+                                <a class="nav-link" asp-controller="Admin" asp-action="Dashboard">Dashboard</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" asp-controller="Admin" asp-action="CreateBooking">➕ Create Booking</a>
+                                <a class="nav-link" asp-controller="Admin" asp-action="CreateBooking">Create Booking</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" asp-controller="Admin" asp-action="MyBookings">📅 My Bookings</a>
+                                <a class="nav-link" asp-controller="Admin" asp-action="MyBookings">Bookings</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" asp-controller="Admin" asp-action="ManageRates">💰 Rates</a>
+                                <a class="nav-link" asp-controller="Admin" asp-action="ManageRates">Rates</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" asp-controller="Admin" asp-action="UpiPayments">📲 UPI Payments</a>
+                                <a class="nav-link" asp-controller="Admin" asp-action="ProfitCut">Profit Cut</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Admin" asp-action="UpiPayments">UPI Payments</a>
                             </li>
                         }
                         <li class="nav-item">
-                            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Privacy">🔒 Privacy</a>
+                            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" asp-controller="Mobile" asp-action="Install">Install App</a>
@@ -330,18 +82,18 @@
                         @if (User.Identity?.IsAuthenticated == true)
                         {
                             <li class="nav-item">
-                                <span class="nav-link user-info">👤 @User.Identity.Name</span>
+                                <span class="nav-link nav-user">@User.Identity.Name</span>
                             </li>
                             <li class="nav-item">
                                 <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
-                                    <button type="submit" class="nav-link" style="background:none;border:none;cursor:pointer;color:#ff0055;font-weight:700;">🚪 Logout</button>
+                                    <button type="submit" class="nav-logout">Logout</button>
                                 </form>
                             </li>
                         }
                         else
                         {
                             <li class="nav-item">
-                                <a class="nav-link" asp-controller="Account" asp-action="Login">🔑 Login</a>
+                                <a class="nav-link" asp-controller="Account" asp-action="Login">Login</a>
                             </li>
                         }
                     </ul>
@@ -355,15 +107,49 @@
         </main>
     </div>
 
-    <footer class="border-top footer">
+    <footer class="app-footer">
         <div class="container">
-            <div style="text-align: center; padding: 10px;">
+            <div class="text-center py-2">
                 <p style="margin: 0;">© 2026 - Indian Worker Mandi | 
                 <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy Policy</a> | 
-                Built with 🔴 Red & 🔵 Cyan Technology</p>
+                Built for fast, trusted worker bookings</p>
             </div>
         </div>
     </footer>
+
+    <nav class="mobile-bottom-nav" aria-label="Mobile quick navigation">
+        <a asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+        @if (User.IsInRole("Client"))
+        {
+            <a asp-controller="Client" asp-action="BookWorker">Find</a>
+            <a asp-controller="Client" asp-action="MyBookings">Bookings</a>
+        }
+        else if (User.IsInRole("Worker"))
+        {
+            <a asp-controller="Worker" asp-action="MyBookings">Jobs</a>
+            <a asp-controller="Worker" asp-action="Index">Profile</a>
+        }
+        else if (User.IsInRole("Admin"))
+        {
+            <a asp-controller="Admin" asp-action="Dashboard">Admin</a>
+            <a asp-controller="Admin" asp-action="ManageBookings">Bookings</a>
+        }
+        else
+        {
+            <a asp-controller="Client" asp-action="BookWorker">Find</a>
+            <a asp-controller="Account" asp-action="Login">Login</a>
+        }
+        @if (User.Identity?.IsAuthenticated == true)
+        {
+            <form asp-controller="Account" asp-action="Logout" method="post">
+                <button type="submit">Logout</button>
+            </form>
+        }
+        else
+        {
+            <a asp-controller="Mobile" asp-action="Install">Install</a>
+        }
+    </nav>
 
     <div class="app-assistant" id="appAssistant">
         @Html.AntiForgeryToken()

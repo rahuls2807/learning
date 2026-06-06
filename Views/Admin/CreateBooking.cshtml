@@ -4,225 +4,57 @@
     ViewData["Title"] = "Create Booking";
 }
 
-<style>
-    body {
-        background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
-        min-height: 100vh;
-        color: #e0e0e0;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <section class="market-panel">
+            <div class="section-kicker">Admin action</div>
+            <h1 class="section-title">Create Booking</h1>
+            <p class="text-muted">Assign a worker, describe the task, and record the wage amount from one clean form.</p>
 
-    .create-booking-wrapper {
-        background: linear-gradient(135deg, rgba(15, 12, 41, 0.95) 0%, rgba(48, 43, 99, 0.95) 50%, rgba(36, 36, 62, 0.95) 100%);
-        min-height: 100vh;
-        padding: 40px 20px;
-        position: relative;
-        overflow: hidden;
-    }
+            <form asp-action="CreateBooking" method="post">
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
 
-    .create-booking-wrapper::before {
-        content: '';
-        position: fixed;
-        top: -50%;
-        right: -50%;
-        width: 200%;
-        height: 200%;
-        background: radial-gradient(circle at 20% 50%, rgba(255, 0, 0, 0.1) 0%, transparent 50%),
-                    radial-gradient(circle at 80% 80%, rgba(0, 255, 255, 0.08) 0%, transparent 50%),
-                    radial-gradient(circle at 50% 50%, rgba(255, 0, 170, 0.08) 0%, transparent 70%);
-        pointer-events: none;
-        animation: moveGradient 20s ease infinite;
-        z-index: 0;
-    }
-
-    @@keyframes moveGradient {
-        0% { transform: translate(0, 0); }
-        50% { transform: translate(40px, 40px); }
-        100% { transform: translate(0, 0); }
-    }
-
-    .form-container {
-        position: relative;
-        z-index: 1;
-        max-width: 600px;
-        margin: 40px auto;
-        background: linear-gradient(135deg, rgba(255, 0, 0, 0.05) 0%, rgba(0, 255, 255, 0.05) 100%);
-        border: 2px solid #ff0055;
-        border-radius: 20px;
-        padding: 40px;
-        backdrop-filter: blur(15px);
-        box-shadow: 0 8px 32px rgba(255, 0, 85, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1);
-    }
-
-    .page-title {
-        text-align: center;
-        font-size: 2.5rem;
-        font-weight: 700;
-        background: linear-gradient(135deg, #ff0055 0%, #00ffcc 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        margin-bottom: 10px;
-        animation: titleGlow 3s ease-in-out infinite;
-    }
-
-    @@keyframes titleGlow {
-        0%, 100% { filter: drop-shadow(0 0 20px rgba(255, 0, 85, 0.3)); }
-        50% { filter: drop-shadow(0 0 25px rgba(0, 255, 255, 0.3)); }
-    }
-
-    .page-subtitle {
-        text-align: center;
-        color: #00ffcc;
-        font-size: 0.95rem;
-        margin-bottom: 30px;
-        opacity: 0.8;
-    }
-
-    .form-group {
-        margin-bottom: 25px;
-    }
-
-    label {
-        display: block;
-        margin-bottom: 8px;
-        color: #00ffcc;
-        font-weight: 600;
-        font-size: 0.95rem;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-    }
-
-    input, textarea, select {
-        width: 100%;
-        padding: 12px 15px;
-        border: 2px solid rgba(255, 0, 85, 0.3);
-        border-radius: 10px;
-        background: rgba(255, 255, 255, 0.05);
-        color: #fff;
-        font-size: 1rem;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        transition: all 0.3s ease;
-    }
-
-    input:focus, textarea:focus, select:focus {
-        outline: none;
-        border-color: #ff0055;
-        background: rgba(255, 0, 85, 0.08);
-        box-shadow: 0 0 15px rgba(255, 0, 85, 0.4);
-    }
-
-    textarea {
-        min-height: 100px;
-        resize: vertical;
-    }
-
-    .form-row {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 20px;
-    }
-
-    .form-row .form-group {
-        margin-bottom: 0;
-    }
-
-    .button-group {
-        display: flex;
-        gap: 15px;
-        margin-top: 30px;
-    }
-
-    .btn {
-        flex: 1;
-        padding: 12px 20px;
-        border: none;
-        border-radius: 10px;
-        font-weight: 700;
-        font-size: 1rem;
-        cursor: pointer;
-        transition: all 0.3s cubic-bezier(0.23, 1, 0.320, 1);
-        text-transform: uppercase;
-        letter-spacing: 1px;
-    }
-
-    .btn-create {
-        background: linear-gradient(135deg, #ff0055 0%, #ff4477 100%);
-        color: #fff;
-        box-shadow: 0 0 20px rgba(255, 0, 85, 0.4);
-    }
-
-    .btn-create:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 10px 30px rgba(255, 0, 85, 0.6);
-    }
-
-    .btn-cancel {
-        background: transparent;
-        color: #00ffcc;
-        border: 2px solid #00ffcc;
-    }
-
-    .btn-cancel:hover {
-        background: rgba(0, 255, 204, 0.1);
-        box-shadow: 0 0 15px rgba(0, 255, 204, 0.4);
-    }
-
-    .validation-errors {
-        color: #ff6b9d;
-        font-size: 0.85rem;
-        margin-top: 5px;
-    }
-</style>
-
-<div class="create-booking-wrapper">
-    <div class="form-container">
-        <h1 class="page-title">Create Booking</h1>
-        <p class="page-subtitle">Assign a worker to handle a task</p>
-
-        <form asp-action="CreateBooking" method="post">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-
-            <div class="form-group">
-                <label asp-for="WorkerId">Select Worker</label>
-                <select asp-for="WorkerId" class="form-control" required>
-                    <option value="">-- Choose a Worker --</option>
-                    @if (ViewBag.Workers != null)
-                    {
-                        @foreach (var worker in ViewBag.Workers)
+                <div class="mb-3">
+                    <label asp-for="WorkerId" class="form-label">Select Worker</label>
+                    <select asp-for="WorkerId" class="form-select" required>
+                        <option value="">Choose a Worker</option>
+                        @if (ViewBag.Workers != null)
                         {
-                            <option value="@worker.WorkerId">@worker.FirstName @worker.LastName (@worker.Skill)</option>
+                            @foreach (var worker in ViewBag.Workers)
+                            {
+                                <option value="@worker.WorkerId">@worker.FirstName @worker.LastName (@worker.Skill)</option>
+                            }
                         }
-                    }
-                </select>
-                <span asp-validation-for="WorkerId" class="validation-errors"></span>
-            </div>
-
-            <div class="form-group">
-                <label asp-for="TaskDescription">Task Description</label>
-                <textarea asp-for="TaskDescription" class="form-control" placeholder="Describe the task to be performed..." required></textarea>
-                <span asp-validation-for="TaskDescription" class="validation-errors"></span>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label asp-for="BookingDate">Booking Date & Time</label>
-                    <input asp-for="BookingDate" type="datetime-local" class="form-control" required />
-                    <span asp-validation-for="BookingDate" class="validation-errors"></span>
+                    </select>
+                    <span asp-validation-for="WorkerId" class="text-danger"></span>
                 </div>
 
-                <div class="form-group">
-                    <label asp-for="TotalWage">Wage Amount (₹)</label>
-                    <input asp-for="TotalWage" type="number" step="0.01" min="0" class="form-control" required />
-                    <span asp-validation-for="TotalWage" class="validation-errors"></span>
+                <div class="mb-3">
+                    <label asp-for="TaskDescription" class="form-label">Task Description</label>
+                    <textarea asp-for="TaskDescription" class="form-control" rows="4" placeholder="Describe the task to be performed..." required></textarea>
+                    <span asp-validation-for="TaskDescription" class="text-danger"></span>
                 </div>
-            </div>
 
-            <div class="button-group">
-                <button type="submit" class="btn btn-create">Create Booking</button>
-                <a href="@Url.Action("Dashboard", "Admin")" class="btn btn-cancel" style="text-decoration: none; display: flex; align-items: center; justify-content: center;">Cancel</a>
-            </div>
-        </form>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label asp-for="BookingDate" class="form-label">Booking Date and Time</label>
+                        <input asp-for="BookingDate" type="datetime-local" class="form-control" required />
+                        <span asp-validation-for="BookingDate" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="TotalWage" class="form-label">Wage Amount (₹)</label>
+                        <input asp-for="TotalWage" type="number" step="0.01" min="0" class="form-control" required />
+                        <span asp-validation-for="TotalWage" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="d-flex flex-wrap gap-2 mt-4">
+                    <button type="submit" class="btn btn-primary flex-fill">Create Booking</button>
+                    <a href="@Url.Action("Dashboard", "Admin")" class="btn btn-secondary flex-fill">Cancel</a>
+                </div>
+            </form>
+        </section>
     </div>
 </div>
 

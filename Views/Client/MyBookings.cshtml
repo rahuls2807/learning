@@ -1,539 +1,194 @@
 @model IEnumerable<WorkerBookingSystem.Models.Booking>
 
 @{
-    ViewData["Title"] = "My Bookings Hub";
+    ViewData["Title"] = "My Bookings";
+    var currentBookings = Model.Where(b => b.Status == WorkerBookingSystem.Models.BookingStatus.Pending ||
+                                           b.Status == WorkerBookingSystem.Models.BookingStatus.Confirmed ||
+                                           b.Status == WorkerBookingSystem.Models.BookingStatus.InProgress).ToList();
+    var historyBookings = Model.Where(b => b.Status == WorkerBookingSystem.Models.BookingStatus.Completed ||
+                                           b.Status == WorkerBookingSystem.Models.BookingStatus.Cancelled).ToList();
+    var amountDue = Model.Sum(b => Math.Max(0, b.TotalWage - b.AmountPaidOnline - b.AmountPaidToWorker));
 }
 
-<style>
-    * {
-        margin: 0;
-        padding: 0;
+<div class="container">
+    <div class="page-header">
+        <div class="section-kicker">Booking hub</div>
+        <div class="d-flex flex-wrap justify-content-between gap-3 align-items-start">
+            <div>
+                <h1>My Bookings</h1>
+                <p class="text-muted mb-0">Track active jobs, dues, worker contact, payment status, and history without hunting through tables.</p>
+            </div>
+            <a href="@Url.Action("BookWorker")" class="btn btn-primary">Book New Worker</a>
+        </div>
+    </div>
+
+    @if (TempData["PaymentMessage"] != null)
+    {
+        <div class="alert alert-success">@TempData["PaymentMessage"]</div>
+    }
+    @if (TempData["BookingMessage"] != null)
+    {
+        <div class="alert alert-success">@TempData["BookingMessage"]</div>
     }
 
-    body {
-        background: linear-gradient(135deg, #0a0e27 0%, #16213e 50%, #1a1a2e 100%);
-        min-height: 100vh;
-        color: #e0e0e0;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
+    <div class="row g-3 mb-3">
+        <div class="col-md-4">
+            <div class="card metric-card">
+                <div class="card-body">
+                    <span class="metric-icon">Active bookings</span>
+                    <span class="metric-value">@currentBookings.Count</span>
+                    <span class="text-muted">Pending, confirmed, or in progress</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card metric-card">
+                <div class="card-body">
+                    <span class="metric-icon">Payment due</span>
+                    <span class="metric-value">₹@amountDue.ToString("F2")</span>
+                    <span class="text-muted">Outstanding across bookings</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card metric-card">
+                <div class="card-body">
+                    <span class="metric-icon">History</span>
+                    <span class="metric-value">@historyBookings.Count</span>
+                    <span class="text-muted">Completed or cancelled jobs</span>
+                </div>
+            </div>
+        </div>
+    </div>
 
-    .bookings-wrapper {
-        background: linear-gradient(135deg, rgba(10, 14, 39, 0.98) 0%, rgba(22, 33, 62, 0.98) 50%, rgba(26, 26, 46, 0.98) 100%);
-        min-height: 100vh;
-        padding: 50px 0;
-        position: relative;
-        overflow: hidden;
-    }
-
-    .bookings-wrapper::before {
-        content: '';
-        position: fixed;
-        top: -50%;
-        right: -50%;
-        width: 200%;
-        height: 200%;
-        background: radial-gradient(circle at 20% 50%, rgba(255, 0, 0, 0.08) 0%, transparent 50%),
-                    radial-gradient(circle at 80% 80%, rgba(0, 255, 200, 0.08) 0%, transparent 50%);
-        pointer-events: none;
-        animation: moveGradient 20s ease infinite;
-        z-index: 0;
-    }
-
-    @@keyframes moveGradient {
-        0% { transform: translate(0, 0); }
-        50% { transform: translate(40px, 40px); }
-        100% { transform: translate(0, 0); }
-    }
-
-    .container {
-        position: relative;
-        z-index: 1;
-        max-width: 1300px;
-    }
-
-    .page-header {
-        text-align: center;
-        margin-bottom: 50px;
-    }
-
-    .page-header h1 {
-        font-size: 3rem;
-        font-weight: 800;
-        background: linear-gradient(135deg, #ff0055 0%, #00ffcc 50%, #ff0055 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        margin-bottom: 15px;
-        animation: titleGlow 3s ease-in-out infinite;
-    }
-
-    @@keyframes titleGlow {
-        0%, 100% { filter: drop-shadow(0 0 20px rgba(255, 0, 85, 0.4)); }
-        50% { filter: drop-shadow(0 0 30px rgba(0, 255, 200, 0.4)); }
-    }
-
-    .page-header p {
-        color: #00ffcc;
-        font-size: 1.1rem;
-        opacity: 0.9;
-    }
-
-    .tabs-container {
-        display: flex;
-        gap: 15px;
-        margin-bottom: 40px;
-        border-bottom: 2px solid rgba(0, 255, 200, 0.2);
-        padding-bottom: 20px;
-        flex-wrap: wrap;
-    }
-
-    .tab-btn {
-        background: linear-gradient(135deg, rgba(255, 0, 0, 0.1) 0%, rgba(0, 255, 200, 0.1) 100%);
-        border: 2px solid rgba(0, 255, 200, 0.3);
-        color: #b0b0b0;
-        padding: 15px 30px;
-        border-radius: 12px;
-        cursor: pointer;
-        transition: all 0.4s cubic-bezier(0.23, 1, 0.320, 1);
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        font-size: 0.95rem;
-    }
-
-    .tab-btn:hover {
-        transform: translateY(-3px);
-        border-color: #ff0055;
-        color: #ff0055;
-        box-shadow: 0 10px 30px rgba(255, 0, 85, 0.2);
-    }
-
-    .tab-btn.active {
-        background: linear-gradient(135deg, #ff0055 0%, #00ffcc 100%);
-        border-color: #ff0055;
-        color: #000;
-        box-shadow: 0 0 30px rgba(255, 0, 85, 0.5);
-    }
-
-    .btn-new-booking {
-        background: linear-gradient(135deg, #ff0055 0%, #00ffcc 100%);
-        border: none;
-        color: #000;
-        font-weight: 700;
-        padding: 15px 35px;
-        border-radius: 12px;
-        text-decoration: none;
-        display: inline-block;
-        transition: all 0.3s ease;
-        box-shadow: 0 0 20px rgba(255, 0, 85, 0.3);
-        margin-bottom: 30px;
-    }
-
-    .btn-new-booking:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 8px 30px rgba(255, 0, 85, 0.5);
-    }
-
-    .alert-custom {
-        background: linear-gradient(135deg, rgba(0, 200, 100, 0.15) 0%, rgba(0, 255, 200, 0.15) 100%);
-        border: 2px solid #00ffcc;
-        border-radius: 12px;
-        padding: 20px;
-        margin-bottom: 30px;
-        color: #00ffcc;
-        font-weight: 600;
-    }
-
-    .bookings-table {
-        position: relative;
-        z-index: 2;
-    }
-
-    .table-wrapper {
-        background: linear-gradient(135deg, rgba(255, 0, 0, 0.05) 0%, rgba(0, 255, 200, 0.05) 100%);
-        border: 2px solid;
-        border-image: linear-gradient(135deg, #ff0055 0%, #00ffcc 100%) 1;
-        backdrop-filter: blur(10px);
-        border-radius: 15px;
-        overflow: hidden;
-        box-shadow: 0 20px 60px rgba(255, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1);
-    }
-
-    .table {
-        width: 100%;
-        margin-bottom: 0;
-        color: #e0e0e0;
-    }
-
-    .table thead {
-        background: linear-gradient(135deg, rgba(255, 0, 85, 0.2) 0%, rgba(0, 255, 200, 0.2) 100%);
-        border-bottom: 2px solid rgba(0, 255, 200, 0.3);
-    }
-
-    .table thead th {
-        color: #00ffcc;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        padding: 20px 15px;
-        border: none;
-        text-shadow: 0 0 10px rgba(0, 255, 200, 0.3);
-    }
-
-    .table tbody tr {
-        border-bottom: 1px solid rgba(0, 255, 200, 0.1);
-        transition: all 0.3s ease;
-    }
-
-    .table tbody tr:hover {
-        background: rgba(0, 255, 200, 0.08);
-        box-shadow: inset 0 0 20px rgba(0, 255, 200, 0.05);
-    }
-
-    .table tbody td {
-        padding: 18px 15px;
-        vertical-align: middle;
-    }
-
-    .badge-custom {
-        display: inline-block;
-        padding: 8px 16px;
-        border-radius: 20px;
-        font-weight: 700;
-        font-size: 0.85rem;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        box-shadow: 0 4px 15px rgba(255, 0, 0, 0.2);
-    }
-
-    .badge-pending {
-        background: linear-gradient(135deg, #ff6b00 0%, #ff9500 100%);
-        color: #000;
-    }
-
-    .badge-confirmed {
-        background: linear-gradient(135deg, #00ccff 0%, #00ffcc 100%);
-        color: #000;
-    }
-
-    .badge-inprogress {
-        background: linear-gradient(135deg, #ff0055 0%, #ff3366 100%);
-        color: #000;
-    }
-
-    .badge-completed {
-        background: linear-gradient(135deg, #00ff88 0%, #00ffcc 100%);
-        color: #000;
-    }
-
-    .badge-cancelled {
-        background: linear-gradient(135deg, #666 0%, #888 100%);
-        color: #000;
-    }
-
-    .action-buttons {
-        display: flex;
-        gap: 8px;
-        flex-wrap: wrap;
-    }
-
-    .btn-sm-custom {
-        background: linear-gradient(135deg, rgba(255, 0, 0, 0.1) 0%, rgba(0, 255, 200, 0.1) 100%);
-        border: 2px solid rgba(0, 255, 200, 0.3);
-        color: #00ffcc;
-        padding: 8px 15px;
-        border-radius: 8px;
-        font-size: 0.85rem;
-        font-weight: 600;
-        text-decoration: none;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        display: inline-block;
-    }
-
-    .btn-sm-custom:hover {
-        background: linear-gradient(135deg, #ff0055 0%, #00ffcc 100%);
-        border-color: #ff0055;
-        color: #000;
-        box-shadow: 0 6px 15px rgba(255, 0, 85, 0.3);
-    }
-
-    .btn-pay {
-        background: linear-gradient(135deg, #ff0055 0%, #ff3366 100%);
-        border-color: #ff0055;
-        color: #000;
-    }
-
-    .btn-pay:hover {
-        box-shadow: 0 6px 15px rgba(255, 0, 85, 0.5);
-    }
-
-    .empty-state {
-        text-align: center;
-        padding: 60px 20px;
-        background: linear-gradient(135deg, rgba(255, 0, 0, 0.05) 0%, rgba(0, 255, 200, 0.05) 100%);
-        border: 2px dashed rgba(0, 255, 200, 0.3);
-        border-radius: 15px;
-        position: relative;
-        z-index: 2;
-    }
-
-    .empty-state h3 {
-        font-size: 2rem;
-        color: #b0b0b0;
-        margin-bottom: 15px;
-    }
-
-    .empty-state p {
-        color: #888;
-        font-size: 1.1rem;
-        margin-bottom: 25px;
-    }
-
-    .money-display {
-        color: #00ffcc;
-        font-weight: 700;
-        text-shadow: 0 0 10px rgba(0, 255, 200, 0.4);
-    }
-
-    .money-display.danger {
-        color: #ff0055;
-        text-shadow: 0 0 10px rgba(255, 0, 85, 0.4);
-    }
-
-    .message-box {
-        background: linear-gradient(135deg, rgba(0, 255, 200, 0.15) 0%, rgba(0, 200, 255, 0.15) 100%);
-        border: 2px solid #00ffcc;
-        border-radius: 12px;
-        padding: 20px;
-        margin-bottom: 30px;
-        color: #00ffcc;
-        font-weight: 600;
-        animation: slideIn 0.5s ease;
-    }
-
-    @@keyframes slideIn {
-        from {
-            opacity: 0;
-            transform: translateY(-20px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-</style>
-
-<div class="bookings-wrapper">
-    <div class="container">
-        <div class="page-header">
-            <h1>📅 MY BOOKINGS HUB</h1>
-            <p>Track Your Current & Historical Bookings</p>
+    @if (Model.Any())
+    {
+        <div class="tabs-container">
+            <button type="button" class="tab-btn active" data-tab-target="current-tab">Active (@currentBookings.Count)</button>
+            <button type="button" class="tab-btn" data-tab-target="history-tab">History (@historyBookings.Count)</button>
         </div>
 
-        @if (TempData["PaymentMessage"] != null)
-        {
-            <div class="message-box">✓ @TempData["PaymentMessage"]</div>
-        }
-        @if (TempData["BookingMessage"] != null)
-        {
-            <div class="message-box">✓ @TempData["BookingMessage"]</div>
-        }
+        <div id="current-tab" class="tab-content">
+            @if (currentBookings.Any())
+            {
+                <div class="row g-3 booking-card-row">
+                    @foreach (var booking in currentBookings)
+                    {
+                        var balance = booking.TotalWage - booking.AmountPaidOnline - booking.AmountPaidToWorker;
+                        var statusClass = $"status-{booking.Status.ToString().ToLowerInvariant()}";
 
-        <a href="@Url.Action("BookWorker")" class="btn-new-booking">+ ⚡ Book New Worker</a>
+                        <div class="col-lg-6">
+                            <div class="card booking-card">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between gap-2 align-items-start">
+                                        <div>
+                                            <h5 class="card-title mb-1">@booking.Worker?.FirstName @booking.Worker?.LastName</h5>
+                                            <span class="text-muted">@booking.BookingDate.ToShortDateString() at @booking.StartTime.ToShortTimeString()</span>
+                                        </div>
+                                        <span class="status-pill @statusClass">@booking.Status</span>
+                                    </div>
+                                    <p class="mt-3 mb-2">@booking.TaskDescription</p>
+                                    <div class="row g-2">
+                                        <div class="col-6">
+                                            <small class="text-muted d-block">Total</small>
+                                            <strong>₹@booking.TotalWage.ToString("F2")</strong>
+                                        </div>
+                                        <div class="col-6">
+                                            <small class="text-muted d-block">Due</small>
+                                            <strong class="@(balance > 0 ? "money-display danger" : "money-display")">₹@Math.Max(0, balance).ToString("F2")</strong>
+                                        </div>
+                                        <div class="col-6">
+                                            <small class="text-muted d-block">Online paid</small>
+                                            <span>₹@booking.AmountPaidOnline.ToString("F2")</span>
+                                        </div>
+                                        <div class="col-6">
+                                            <small class="text-muted d-block">Cash paid</small>
+                                            <span>₹@booking.AmountPaidToWorker.ToString("F2")</span>
+                                        </div>
+                                    </div>
+                                    <div class="text-muted mt-3">
+                                        @booking.Worker?.Email<br />
+                                        @booking.Worker?.PhoneNumber
+                                    </div>
+                                    @if (balance > 0)
+                                    {
+                                        <a asp-controller="Payment" asp-action="Pay" asp-route-bookingId="@booking.BookingId" class="btn btn-primary w-100 mt-3">Pay Balance</a>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="empty-state">
+                    <h3>No active bookings</h3>
+                    <p class="text-muted">Book a worker when you need help and active jobs will appear here.</p>
+                    <a href="@Url.Action("BookWorker")" class="btn btn-primary">Find Workers</a>
+                </div>
+            }
+        </div>
 
-        @if (Model.Any())
-        {
-            var currentBookings = Model.Where(b => b.Status == WorkerBookingSystem.Models.BookingStatus.Pending || 
-                                                     b.Status == WorkerBookingSystem.Models.BookingStatus.Confirmed || 
-                                                     b.Status == WorkerBookingSystem.Models.BookingStatus.InProgress).ToList();
-            var historyBookings = Model.Where(b => b.Status == WorkerBookingSystem.Models.BookingStatus.Completed || 
-                                                    b.Status == WorkerBookingSystem.Models.BookingStatus.Cancelled).ToList();
-
-            <div class="tabs-container">
-                <button type="button" class="tab-btn active" onclick="showTab('current')">
-                    🔴 ACTIVE BOOKINGS (@currentBookings.Count)
-                </button>
-                <button type="button" class="tab-btn" onclick="showTab('history')">
-                    ✅ HISTORY (@historyBookings.Count)
-                </button>
-            </div>
-
-            <!-- Current Bookings Tab -->
-            <div id="current-tab" class="tab-content">
-                @if (currentBookings.Any())
-                {
-                    <div class="table-wrapper">
-                        <table class="table">
-                            <thead>
+        <div id="history-tab" class="tab-content" style="display:none;">
+            @if (historyBookings.Any())
+            {
+                <div class="table-wrapper">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Worker</th>
+                                <th>Date</th>
+                                <th>Task</th>
+                                <th>Total</th>
+                                <th>Paid</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var booking in historyBookings)
+                            {
+                                var paid = booking.AmountPaidOnline + booking.AmountPaidToWorker;
+                                var statusClass = $"status-{booking.Status.ToString().ToLowerInvariant()}";
                                 <tr>
-                                    <th>👤 Worker</th>
-                                    <th>📞 Contact</th>
-                                    <th>📅 Date & Time</th>
-                                    <th>📋 Task</th>
-                                    <th>💰 Amount</th>
-                                    <th>💳 Payment</th>
-                                    <th>🔴 Status</th>
-                                    <th>⚙️ Actions</th>
+                                    <td>@booking.Worker?.FirstName @booking.Worker?.LastName</td>
+                                    <td>@booking.BookingDate.ToShortDateString()</td>
+                                    <td>@booking.TaskDescription</td>
+                                    <td>₹@booking.TotalWage.ToString("F2")</td>
+                                    <td>₹@paid.ToString("F2")</td>
+                                    <td><span class="status-pill @statusClass">@booking.Status</span></td>
                                 </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var booking in currentBookings)
-                                {
-                                    var balance = booking.TotalWage - booking.AmountPaidOnline - booking.AmountPaidToWorker;
-                                    <tr>
-                                        <td>
-                                            <strong>@booking.Worker?.FirstName @booking.Worker?.LastName</strong>
-                                        </td>
-                                        <td>
-                                            📧 @booking.Worker?.Email<br />
-                                            📱 @booking.Worker?.PhoneNumber
-                                        </td>
-                                        <td>
-                                            📅 @booking.BookingDate.ToShortDateString()<br />
-                                            🕐 @booking.StartTime.ToShortTimeString() - @booking.EndTime.ToShortTimeString()
-                                        </td>
-                                        <td>@booking.TaskDescription</td>
-                                        <td>
-                                            <strong class="money-display">₹@booking.TotalWage.ToString("F2")</strong>
-                                        </td>
-                                        <td>
-                                            💳 ₹@booking.AmountPaidOnline.ToString("F2")<br />
-                                            🤝 ₹@booking.AmountPaidToWorker.ToString("F2")<br />
-                                            @if (balance > 0)
-                                            {
-                                                <strong class="money-display danger">Due: ₹@balance.ToString("F2")</strong>
-                                            }
-                                            else
-                                            {
-                                                <strong class="money-display">✓ Paid</strong>
-                                            }
-                                        </td>
-                                        <td>
-                                            @switch (booking.Status)
-                                            {
-                                                case WorkerBookingSystem.Models.BookingStatus.Pending:
-                                                    <span class="badge-custom badge-pending">Pending</span>
-                                                    break;
-                                                case WorkerBookingSystem.Models.BookingStatus.Confirmed:
-                                                    <span class="badge-custom badge-confirmed">Confirmed</span>
-                                                    break;
-                                                case WorkerBookingSystem.Models.BookingStatus.InProgress:
-                                                    <span class="badge-custom badge-inprogress">In Progress</span>
-                                                    break;
-                                            }
-                                        </td>
-                                        <td>
-                                            <div class="action-buttons">
-                                                @if (balance > 0)
-                                                {
-                                                    <a asp-controller="Payment" asp-action="Pay" asp-route-bookingId="@booking.BookingId" class="btn-sm-custom btn-pay">💳 Pay</a>
-                                                }
-                                            </div>
-                                        </td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
-                    </div>
-                }
-                else
-                {
-                    <div class="empty-state">
-                        <h3>🎉 No Active Bookings</h3>
-                        <p>You don't have any active bookings right now</p>
-                        <a href="@Url.Action("BookWorker")" class="btn-new-booking">+ Book a Worker Now</a>
-                    </div>
-                }
-            </div>
-
-            <!-- History Tab -->
-            <div id="history-tab" class="tab-content" style="display:none;">
-                @if (historyBookings.Any())
-                {
-                    <div class="table-wrapper">
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th>👤 Worker</th>
-                                    <th>📞 Contact</th>
-                                    <th>📅 Date</th>
-                                    <th>📋 Task</th>
-                                    <th>💰 Total</th>
-                                    <th>💳 Amount Paid</th>
-                                    <th>✅ Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var booking in historyBookings)
-                                {
-                                    <tr>
-                                        <td>
-                                            <strong>@booking.Worker?.FirstName @booking.Worker?.LastName</strong>
-                                        </td>
-                                        <td>
-                                            📧 @booking.Worker?.Email<br />
-                                            📱 @booking.Worker?.PhoneNumber
-                                        </td>
-                                        <td>📅 @booking.BookingDate.ToShortDateString()</td>
-                                        <td>@booking.TaskDescription</td>
-                                        <td>
-                                            <strong class="money-display">₹@booking.TotalWage.ToString("F2")</strong>
-                                        </td>
-                                        <td>
-                                            💳 ₹@booking.AmountPaidOnline.ToString("F2")<br />
-                                            🤝 ₹@booking.AmountPaidToWorker.ToString("F2")
-                                        </td>
-                                        <td>
-                                            @switch (booking.Status)
-                                            {
-                                                case WorkerBookingSystem.Models.BookingStatus.Completed:
-                                                    <span class="badge-custom badge-completed">Completed</span>
-                                                    break;
-                                                case WorkerBookingSystem.Models.BookingStatus.Cancelled:
-                                                    <span class="badge-custom badge-cancelled">Cancelled</span>
-                                                    break;
-                                            }
-                                        </td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
-                    </div>
-                }
-                else
-                {
-                    <div class="empty-state">
-                        <h3>📭 No Booking History</h3>
-                        <p>Your completed and cancelled bookings will appear here</p>
-                    </div>
-                }
-            </div>
-        }
-        else
-        {
-            <div class="empty-state">
-                <h3>🚀 Start Your First Booking</h3>
-                <p>You haven't booked any workers yet. Find and book a skilled worker today!</p>
-                <a href="@Url.Action("BookWorker")" class="btn-new-booking">+ ⚡ Book Your First Worker</a>
-            </div>
-        }
-    </div>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="empty-state">
+                    <h3>No booking history</h3>
+                    <p class="text-muted mb-0">Completed and cancelled bookings will appear here.</p>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="empty-state">
+            <h3>Start your first booking</h3>
+            <p class="text-muted">Find a skilled worker, compare the profile, and book from your phone or desktop.</p>
+            <a href="@Url.Action("BookWorker")" class="btn btn-primary">Find Workers</a>
+        </div>
+    }
 </div>
 
 <script>
-    function showTab(tabName) {
-        // Hide all tabs
-        document.getElementById('current-tab').style.display = 'none';
-        document.getElementById('history-tab').style.display = 'none';
-        
-        // Remove active class from all buttons
-        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-        
-        // Show selected tab
-        document.getElementById(tabName + '-tab').style.display = 'block';
-        
-        // Add active class to clicked button
-        event.target.classList.add('active');
-    }
+    document.querySelectorAll("[data-tab-target]").forEach((button) => {
+        button.addEventListener("click", () => {
+            document.querySelectorAll(".tab-content").forEach((tab) => tab.style.display = "none");
+            document.querySelectorAll(".tab-btn").forEach((tabButton) => tabButton.classList.remove("active"));
+            document.getElementById(button.dataset.tabTarget).style.display = "block";
+            button.classList.add("active");
+        });
+    });
 </script>

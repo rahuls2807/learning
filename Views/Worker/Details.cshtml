@@ -26,6 +26,15 @@
         <div class="flex-grow-1">
             <h2>@workerName</h2>
             <p class="mb-1"><strong>Skill:</strong> @worker.Skill</p>
+            @if (Model.CurrentRate.HasValue)
+            {
+                <p class="mb-1"><strong>Hourly Rate:</strong> ₹@Model.CurrentRate.Value.ToString("F2") / hr</p>
+                <p class="mb-1"><strong>Worker payout after commission:</strong> ₹@(Model.CurrentRate.Value * (ViewBag.WorkerTakePercentage as decimal? ?? 0.90m)).ToString("F2") / hr</p>
+            }
+            else
+            {
+                <p class="mb-1 text-muted">Hourly rate not yet configured for this worker.</p>
+            }
             <p class="mb-1">
                 <strong>Rating:</strong>
                 @if (Model.AverageRating.HasValue)
@@ -52,6 +61,13 @@
             }
         </div>
     </div>
+
+@if (Model.CanBook)
+    {
+        <div class="mb-4">
+            <a class="btn btn-primary" asp-controller="Client" asp-action="CreateBooking" asp-route-workerId="@worker.WorkerId">Book This Worker</a>
+        </div>
+    }
 
     @if (Model.CanReview)
     {

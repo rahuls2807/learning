@@ -51,6 +51,16 @@ namespace WorkerBookingSystem.Data
             context.HourlyRates.AddRange(rates);
             context.SaveChanges();
 
+            if (!context.PlatformSettings.Any())
+            {
+                context.PlatformSettings.Add(new PlatformSetting
+                {
+                    Key = "WorkerProfitCutPercentage",
+                    Value = "10.00"
+                });
+                context.SaveChanges();
+            }
+
             // Sample Availabilities
             var availabilities = new WorkerAvailability[]
             {

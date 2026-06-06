@@ -37,6 +37,8 @@ namespace WorkerBookingSystem.Models.ViewModels
         public Worker Worker { get; set; } = new();
         public bool CanSeeContact { get; set; }
         public bool CanReview { get; set; }
+        public bool CanBook { get; set; }
+        public decimal? CurrentRate { get; set; }
         public double? AverageRating { get; set; }
         public int ReviewCount { get; set; }
         public IReadOnlyList<WorkerReview> Reviews { get; set; } = Array.Empty<WorkerReview>();

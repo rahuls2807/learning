@@ -17,6 +17,7 @@ namespace WorkerBookingSystem.Data
         public DbSet<Booking> Bookings { get; set; }
         public DbSet<HourlyRate> HourlyRates { get; set; }
         public DbSet<Admin> Admins { get; set; }
+        public DbSet<PlatformSetting> PlatformSettings { get; set; }
         public DbSet<WorkerReview> WorkerReviews { get; set; }
         public DbSet<ClientReview> ClientReviews { get; set; }
 
@@ -138,6 +139,24 @@ protected override void OnModelCreating(ModelBuilder modelBuilder)
             // Configure Admin entity
             modelBuilder.Entity<Admin>()
                 .HasKey(a => a.AdminId);
+
+            // Configure PlatformSetting entity
+            modelBuilder.Entity<PlatformSetting>()
+                .HasKey(ps => ps.SettingId);
+
+            modelBuilder.Entity<PlatformSetting>()
+                .HasIndex(ps => ps.Key)
+                .IsUnique();
+
+            modelBuilder.Entity<PlatformSetting>()
+                .Property(ps => ps.Key)
+                .IsRequired()
+                .HasMaxLength(100);
+
+            modelBuilder.Entity<PlatformSetting>()
+                .Property(ps => ps.Value)
+                .IsRequired()
+                .HasMaxLength(500);
 
 // Configure decimal precision for wages
             modelBuilder.Entity<HourlyRate>()

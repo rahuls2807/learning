@@ -1,335 +1,100 @@
-﻿@{
+@{
     ViewData["Title"] = "Indian Worker Mandi";
 }
 
-<style>
-    .hero-section {
-        background: linear-gradient(135deg, rgba(255, 0, 85, 0.1) 0%, rgba(0, 255, 204, 0.08) 100%);
-        border: 3px solid;
-        border-image: linear-gradient(135deg, #ff0055 0%, #00ffcc 100%) 1;
-        color: #e0e0e0;
-        padding: 80px 40px;
-        border-radius: 20px;
-        margin-bottom: 60px;
-        position: relative;
-        overflow: hidden;
-        backdrop-filter: blur(10px);
-        box-shadow: 0 8px 32px rgba(255, 0, 85, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1);
-    }
-
-    .hero-section::before {
-        content: '';
-        position: absolute;
-        top: -50%;
-        right: -50%;
-        width: 200%;
-        height: 200%;
-        background: radial-gradient(circle at 30% 40%, rgba(255, 0, 85, 0.15) 0%, transparent 50%),
-                    radial-gradient(circle at 70% 60%, rgba(0, 255, 204, 0.15) 0%, transparent 50%);
-        animation: heroGradient 8s ease infinite;
-        pointer-events: none;
-    }
-
-    @@keyframes heroGradient {
-        0%, 100% { transform: translate(0, 0) scale(1); }
-        50% { transform: translate(30px, 30px) scale(1.05); }
-    }
-
-    .hero-section h1 {
-        font-size: 3.5rem;
-        font-weight: 800;
-        margin-bottom: 20px;
-        background: linear-gradient(135deg, #ff0055 0%, #00ffcc 50%, #ff00ff 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        animation: titlePulse 3s ease-in-out infinite;
-        position: relative;
-        z-index: 1;
-        text-transform: uppercase;
-        letter-spacing: 3px;
-    }
-
-    @@keyframes titlePulse {
-        0%, 100% { filter: drop-shadow(0 0 20px rgba(255, 0, 85, 0.4)); }
-        50% { filter: drop-shadow(0 0 30px rgba(0, 255, 204, 0.4)); }
-    }
-
-    .hero-section p {
-        font-size: 1.3rem;
-        margin-bottom: 40px;
-        color: #00ffcc;
-        animation: fadeInUp 0.8s ease;
-        position: relative;
-        z-index: 1;
-    }
-
-    @@keyframes fadeInUp {
-        from { opacity: 0; transform: translateY(20px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-
-    .btn-group {
-        position: relative;
-        z-index: 1;
-    }
-
-    .hero-btn {
-        background: linear-gradient(135deg, #ff0055 0%, #ff4477 100%);
-        border: 2px solid #ff0055;
-        color: #fff;
-        padding: 15px 30px;
-        font-weight: 700;
-        border-radius: 12px;
-        font-size: 1rem;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        transition: all 0.4s cubic-bezier(0.23, 1, 0.320, 1);
-        box-shadow: 0 0 20px rgba(255, 0, 85, 0.3);
-        cursor: pointer;
-        display: inline-block;
-        text-decoration: none;
-    }
-
-    .hero-btn:hover {
-        transform: translateY(-5px) scale(1.05);
-        box-shadow: 0 15px 40px rgba(255, 0, 85, 0.6);
-        background: linear-gradient(135deg, #ff4477 0%, #ff0055 100%);
-    }
-
-    .hero-btn-secondary {
-        background: transparent;
-        border: 2px solid #00ffcc;
-        color: #00ffcc;
-    }
-
-    .hero-btn-secondary:hover {
-        background: rgba(0, 255, 204, 0.1);
-        box-shadow: 0 0 20px rgba(0, 255, 204, 0.5);
-        color: #ff0055;
-        border-color: #ff0055;
-    }
-
-    .feature-card {
-        background: linear-gradient(135deg, rgba(255, 0, 85, 0.05) 0%, rgba(0, 255, 204, 0.05) 100%);
-        border: 2px solid rgba(255, 0, 85, 0.2);
-        border-radius: 15px;
-        transition: all 0.4s cubic-bezier(0.23, 1, 0.320, 1);
-        position: relative;
-        overflow: hidden;
-        backdrop-filter: blur(10px);
-        box-shadow: 0 8px 24px rgba(255, 0, 85, 0.1);
-    }
-
-    .feature-card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(255, 0, 85, 0.1), transparent);
-        transition: left 0.6s ease;
-    }
-
-    .feature-card:hover {
-        transform: translateY(-10px);
-        border-color: #ff0055;
-        box-shadow: 0 15px 40px rgba(255, 0, 85, 0.3), 0 0 20px rgba(0, 255, 204, 0.2);
-    }
-
-    .feature-card:hover::before {
-        left: 100%;
-    }
-
-    .feature-card .card-body {
-        position: relative;
-        z-index: 1;
-        color: #e0e0e0;
-    }
-
-    .feature-card h5 {
-        font-weight: 700;
-        color: #ff0055;
-        font-size: 1.5rem;
-        margin-bottom: 15px;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-    }
-
-    .feature-card p {
-        color: #00ffcc;
-        margin-bottom: 20px;
-    }
-
-    .feature-card ul li {
-        color: #e0e0e0;
-        margin-bottom: 8px;
-        transition: all 0.3s ease;
-    }
-
-    .feature-card ul li:hover {
-        color: #ff0055;
-        transform: translateX(5px);
-    }
-
-    .how-it-works {
-        background: linear-gradient(135deg, rgba(255, 0, 85, 0.08) 0%, rgba(0, 255, 204, 0.08) 100%);
-        border: 2px solid;
-        border-image: linear-gradient(135deg, #ff00ff 0%, #ff0055 100%) 1;
-        border-radius: 15px;
-        padding: 40px;
-        backdrop-filter: blur(10px);
-        box-shadow: 0 8px 32px rgba(255, 0, 85, 0.1);
-        position: relative;
-        overflow: hidden;
-    }
-
-    .how-it-works::before {
-        content: '';
-        position: absolute;
-        top: -50%;
-        right: -50%;
-        width: 200%;
-        height: 200%;
-        background: radial-gradient(circle at 80% 20%, rgba(255, 0, 0, 0.1) 0%, transparent 50%),
-                    radial-gradient(circle at 20% 80%, rgba(0, 255, 255, 0.1) 0%, transparent 50%);
-        animation: workflowGradient 15s ease infinite;
-        pointer-events: none;
-    }
-
-    @@keyframes workflowGradient {
-        0% { transform: rotate(0deg); }
-        50% { transform: rotate(180deg); }
-        100% { transform: rotate(360deg); }
-    }
-
-    .how-it-works h4 {
-        position: relative;
-        z-index: 1;
-        font-size: 2rem;
-        font-weight: 800;
-        background: linear-gradient(135deg, #ff0055 0%, #00ffcc 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        margin-bottom: 20px;
-        text-transform: uppercase;
-        letter-spacing: 2px;
-    }
-
-    .how-it-works p {
-        position: relative;
-        z-index: 1;
-        color: #e0e0e0;
-        font-size: 1.1rem;
-        line-height: 1.8;
-    }
-
-    .how-it-works strong {
-        color: #ff0055;
-        font-weight: 700;
-    }
-
-    /* Floating Animation */
-    @@keyframes float {
-        0%, 100% { transform: translateY(0px); }
-        50% { transform: translateY(-10px); }
-    }
-
-    .floating {
-        animation: float 3s ease-in-out infinite;
-    }
-
-    /* Glow Animation */
-    @@keyframes glow-pulse {
-        0%, 100% { box-shadow: 0 0 5px rgba(255, 0, 85, 0.5); }
-        50% { box-shadow: 0 0 20px rgba(0, 255, 204, 0.5); }
-    }
-
-    .feature-card {
-        animation: glow-pulse 3s ease-in-out infinite;
-    }
-</style>
-
-<div class="hero-section floating">
-    <h1>⚡ INDIAN WORKER MANDI ⚡</h1>
-    <p>Connect skilled workers with clients • Efficient task management • Automatic wage calculation</p>
-    <div class="btn-group d-flex gap-3 flex-wrap">
+<section class="hero-section">
+    <div class="eyebrow mb-2">Trusted local services, booked fast</div>
+    <h1>Book skilled workers with clear prices, ratings, and payment tracking.</h1>
+    <p class="mt-3 mb-4">
+        A simpler marketplace for clients, workers, and admins: search by skill, compare profiles,
+        manage jobs, and keep every booking visible from phone or desktop.
+    </p>
+    <div class="hero-badge-row mb-4">
+        <span class="hero-badge">Verified profiles</span>
+        <span class="hero-badge">Live booking status</span>
+        <span class="hero-badge">UPI and cash records</span>
+        <span class="hero-badge">Ratings and reviews</span>
+    </div>
+    <div class="quick-action-row">
         @if (!User.IsInRole("Client") && User.Identity?.IsAuthenticated != true)
         {
-            <a class="hero-btn" href="@Url.Action("Create", "Worker")">👷 Register as Worker</a>
+            <a class="btn btn-primary" href="@Url.Action("Create", "Worker")">Register as Worker</a>
         }
-        <a class="hero-btn" href="@Url.Action("Register", "Client")">👤 Register as Client</a>
-        <a class="hero-btn hero-btn-secondary" href="@Url.Action("BookWorker", "Client")">🔍 Book a Worker</a>
+        <a class="btn btn-primary" href="@Url.Action("BookWorker", "Client")">Find Workers</a>
+        <a class="btn btn-secondary" href="@Url.Action("Register", "Client")">Register as Client</a>
+        <a class="btn btn-secondary" href="@Url.Action("Install", "Mobile")">Install Phone App</a>
     </div>
-</div>
+</section>
 
-<div class="row mt-5">
-    <div class="col-md-4 mb-4">
-        <div class="card feature-card h-100">
-            <div class="card-body text-center">
-                <h5 class="card-title">👷 FOR WORKERS</h5>
-                <p class="card-text">Create your professional profile, set your availability, and get booked for jobs. Earn based on hourly rates.</p>
-                <ul class="list-unstyled text-start">
-                    <li>✓ Register and manage profile</li>
-                    <li>✓ Set availability by day/time</li>
-                    <li>✓ View bookings & earnings</li>
-                    <li>✓ Track income</li>
-                </ul>
-                <a href="@Url.Action("Index", "Worker")" class="btn btn-primary mt-3">View All Workers</a>
+<section class="market-panel mt-4">
+    <div class="row g-3 align-items-center">
+        <div class="col-lg-4">
+            <div class="section-kicker">Marketplace ideas added</div>
+            <h2 class="section-title">Built for quick decisions</h2>
+            <p class="text-muted mb-lg-0">Inspired by modern food and service marketplaces: fewer steps, stronger trust signals, and thumb-friendly actions.</p>
+        </div>
+        <div class="col-lg-8">
+            <div class="trust-row">
+                <span class="trust-pill">Smart skill search</span>
+                <span class="trust-pill">Top worker highlights</span>
+                <span class="trust-pill">Due payment alerts</span>
+                <span class="trust-pill">Mobile bottom navigation</span>
+                <span class="trust-pill">Assistant help</span>
             </div>
         </div>
     </div>
+</section>
 
-    <div class="col-md-4 mb-4">
-        <div class="card feature-card h-100">
-            <div class="card-body text-center">
-                <h5 class="card-title">👔 FOR CLIENTS</h5>
-                <p class="card-text">Find and book skilled workers for your tasks. System automatically calculates total cost.</p>
-                <ul class="list-unstyled text-start">
-                    <li>✓ Browse available workers</li>
-                    <li>✓ Book workers by skill</li>
-                    <li>✓ Auto wage calculation</li>
-                    <li>✓ Track bookings</li>
-                </ul>
-                <a href="@Url.Action("BookWorker", "Client")" class="btn btn-primary mt-3">Book a Worker</a>
+<div class="row g-3 mt-1">
+    <div class="col-md-4">
+        <div class="card feature-card">
+            <div class="card-body">
+                <div class="section-kicker">For clients</div>
+                <h5 class="card-title">Find the right worker faster</h5>
+                <p class="card-text text-muted">Compare rates, completed jobs, ratings, profile details, and skill matches before booking.</p>
+                <a href="@Url.Action("BookWorker", "Client")" class="btn btn-primary w-100">Book a Worker</a>
             </div>
         </div>
     </div>
-
-    @if (User.IsInRole("Admin"))
-    {
-        <div class="col-md-4 mb-4">
-            <div class="card feature-card h-100">
-                <div class="card-body text-center">
-                    <h5 class="card-title">📊 FOR ADMIN</h5>
-                    <p class="card-text">Manage rates, approve bookings, track earnings, and generate detailed reports.</p>
-                    <ul class="list-unstyled text-start">
-                        <li>✓ Set hourly rates</li>
-                        <li>✓ Manage bookings</li>
-                        <li>✓ View dashboard stats</li>
-                        <li>✓ Generate reports</li>
-                    </ul>
-                    <a href="@Url.Action("Dashboard", "Admin")" class="btn btn-primary mt-3">Admin Dashboard</a>
-                </div>
+    <div class="col-md-4">
+        <div class="card feature-card">
+            <div class="card-body">
+                <div class="section-kicker">For workers</div>
+                <h5 class="card-title">Keep jobs and earnings clear</h5>
+                <p class="card-text text-muted">Manage your profile, availability, active jobs, reviews, and payment records in one place.</p>
+                <a href="@Url.Action("Index", "Worker")" class="btn btn-primary w-100">View Workers</a>
             </div>
         </div>
-    }
-</div>
-
-<div class="row mt-5">
-    <div class="col-12">
-        <div class="how-it-works">
-            <h4>🚀 How It Works</h4>
-            <hr style="border-color: rgba(255, 0, 85, 0.3);">
-            <p>
-                <strong>1️⃣ WORKERS</strong> register with their skills and set availability.<br><br>
-                <strong>2️⃣ RATES</strong> are set securely by the business team.<br><br>
-                <strong>3️⃣ CLIENTS</strong> browse available workers and book for tasks.<br><br>
-                <strong>4️⃣ SYSTEM</strong> automatically calculates wages based on time and rates.
-            </p>
+    </div>
+    <div class="col-md-4">
+        <div class="card feature-card">
+            <div class="card-body">
+                <div class="section-kicker">For admins</div>
+                <h5 class="card-title">Control operations simply</h5>
+                <p class="card-text text-muted">Track bookings, rates, payments, outstanding balances, top skills, and platform growth.</p>
+                <a href="@Url.Action("Dashboard", "Admin")" class="btn btn-primary w-100">Open Dashboard</a>
+            </div>
         </div>
     </div>
 </div>
 
+<section class="market-panel mt-4">
+    <div class="row g-3">
+        <div class="col-md-3">
+            <strong>1. Search</strong>
+            <p class="text-muted mb-0">Filter workers by name, skill, rate, and reputation.</p>
+        </div>
+        <div class="col-md-3">
+            <strong>2. Compare</strong>
+            <p class="text-muted mb-0">Review completed jobs, ratings, and profile details.</p>
+        </div>
+        <div class="col-md-3">
+            <strong>3. Book</strong>
+            <p class="text-muted mb-0">Create bookings with clear time, task, and amount tracking.</p>
+        </div>
+        <div class="col-md-3">
+            <strong>4. Track</strong>
+            <p class="text-muted mb-0">See status, payment dues, and history from mobile too.</p>
+        </div>
+    </div>
+</section>

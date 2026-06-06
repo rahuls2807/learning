@@ -1,7 +1,7 @@
 @model WorkerBookingSystem.Models.ViewModels.PaymentViewModel
 
 @{
-    ViewData["Title"] = "Futuristic Secure Payment Portal";
+    ViewData["Title"] = "Secure Payment";
 }
 
 <style>
@@ -384,6 +384,96 @@
     }
 </style>
 
+<style>
+    body {
+        background: var(--page) !important;
+        color: var(--ink) !important;
+    }
+
+    .payment-wrapper {
+        min-height: auto !important;
+        padding: 0 !important;
+        display: block !important;
+        background: transparent !important;
+    }
+
+    .payment-wrapper::before,
+    .payment-card::before {
+        display: none !important;
+    }
+
+    .payment-container {
+        max-width: 760px !important;
+        margin: 0 auto !important;
+    }
+
+    .payment-card,
+    .summary-box,
+    .payment-option,
+    .qr-container,
+    .compliance-notice {
+        background: #ffffff !important;
+        border: 1px solid var(--line) !important;
+        border-radius: var(--radius) !important;
+        box-shadow: var(--shadow) !important;
+        color: var(--ink) !important;
+    }
+
+    .payment-card {
+        padding: clamp(20px, 4vw, 36px) !important;
+    }
+
+    .payment-header h1 {
+        background: none !important;
+        -webkit-text-fill-color: var(--ink) !important;
+        color: var(--ink) !important;
+        font-size: clamp(1.8rem, 4vw, 2.4rem) !important;
+        text-shadow: none !important;
+        animation: none !important;
+    }
+
+    .payment-header p,
+    .summary-item .value,
+    .form-label,
+    .step-header,
+    .form-text,
+    .payment-method-label,
+    .compliance-notice {
+        color: var(--muted) !important;
+        text-shadow: none !important;
+    }
+
+    .summary-item .value.danger,
+    .payment-amount,
+    .step-number {
+        color: var(--brand) !important;
+        background: transparent !important;
+        box-shadow: none !important;
+    }
+
+    .form-control {
+        background: #ffffff !important;
+        border-color: #dedede !important;
+        color: var(--ink) !important;
+    }
+
+    .btn-pay,
+    .btn-verify,
+    .btn-login {
+        background: var(--brand) !important;
+        border-color: var(--brand) !important;
+        color: #ffffff !important;
+        box-shadow: none !important;
+    }
+
+    .btn-cancel,
+    .btn-outline-light {
+        background: #ffffff !important;
+        border: 1px solid #ffd0d4 !important;
+        color: var(--brand) !important;
+    }
+</style>
+
 <div class="payment-wrapper">
     <div class="payment-container">
         <div class="payment-card">
@@ -462,7 +552,7 @@
                         <button type="button" class="btn btn-pay" onclick="startGatewayUpiPayment()">
                             📲 Pay ₹@Model.OnlineAmount.ToString("F2") with UPI
                         </button>
-                        <button type="button" class="btn btn-pay" style="margin-top:12px; background: linear-gradient(135deg, #302b63, #24243e); color:#00ffcc;" onclick="startGatewayCardPayment()">
+                        <button type="button" class="btn btn-pay" style="margin-top:12px;" onclick="startGatewayCardPayment()">
                             💳 Card / Net Banking
                         </button>
                     </div>
@@ -700,7 +790,7 @@
                 contact: '@Model.PhoneNumber'
             },
             theme: {
-                color: '#ff0055'
+                color: '#e23744'
             },
             modal: {
                 ondismiss: function() {
@@ -728,7 +818,7 @@
                 name: '@User.Identity?.Name',
                 contact: '@Model.PhoneNumber'
             },
-            theme: { color: '#ff0055' },
+            theme: { color: '#e23744' },
             modal: { ondismiss: function() { showError('Payment cancelled'); } },
             config: {
                 display: {
@@ -800,4 +890,3 @@
         }
     });
 </script>
-

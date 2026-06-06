@@ -1,21 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Indian Worker Mandi">
-  <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#0f0c29"/>
-      <stop offset="0.55" stop-color="#302b63"/>
-      <stop offset="1" stop-color="#ff0055"/>
-    </linearGradient>
-    <linearGradient id="mark" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#00ffcc"/>
-      <stop offset="1" stop-color="#ffffff"/>
-    </linearGradient>
-  </defs>
-  <rect width="512" height="512" rx="96" fill="url(#bg)"/>
-  <path d="M138 320h236v48H138z" fill="#ff0055"/>
-  <path d="M173 145h166l38 64v70H135v-70z" fill="url(#mark)"/>
-  <path d="M189 191h134l18 32H171z" fill="#0f0c29" opacity=".9"/>
-  <circle cx="188" cy="326" r="37" fill="#00ffcc"/>
-  <circle cx="324" cy="326" r="37" fill="#00ffcc"/>
-  <path d="M246 110h20v72h-20z" fill="#ff0055"/>
-  <path d="M220 136h72v20h-72z" fill="#ff0055"/>
+  <rect width="512" height="512" rx="96" fill="#e23744"/>
+  <circle cx="256" cy="256" r="154" fill="#ffffff"/>
+  <path d="M166 302h180v44H166z" fill="#1c1c1c"/>
+  <path d="M192 172h128l36 62v52H156v-52z" fill="#e23744"/>
+  <path d="M208 214h96l18 28H190z" fill="#ffffff" opacity=".92"/>
+  <circle cx="206" cy="326" r="28" fill="#ffffff"/>
+  <circle cx="306" cy="326" r="28" fill="#ffffff"/>
+  <path d="M247 136h18v62h-18z" fill="#1c1c1c"/>
+  <path d="M225 158h62v18h-62z" fill="#1c1c1c"/>
 </svg>

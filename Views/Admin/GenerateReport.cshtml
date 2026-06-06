@@ -82,7 +82,8 @@
                 <tbody>
                     @foreach (var booking in Model)
                     {
-                        var workerPay = booking.TotalWage * 0.90m;
+                        var workerTake = ViewBag.WorkerTakePercentage as decimal? ?? 0.90m;
+                        var workerPay = booking.TotalWage * workerTake;
                         var profit = booking.TotalWage - workerPay;
                         <tr>
                             <td>@booking.Client?.FirstName @booking.Client?.LastName</td>

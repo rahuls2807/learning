@@ -169,12 +169,19 @@ namespace WorkerBookingSystem.Controllers
             if (worker == null)
                 return NotFound();
 
+            var hourlyRate = await _context.HourlyRates
+                .Where(hr => hr.WorkerId == worker.WorkerId && hr.IsActive)
+                .OrderByDescending(hr => hr.EffectiveDate)
+                .Select(hr => hr.RatePerHour)
+                .FirstOrDefaultAsync();
+
             var clients = await _context.Clients.ToListAsync();
             ViewBag.ClientList = clients;
             ViewBag.Worker = worker;
+            ViewBag.WorkerRate = hourlyRate > 0 ? (decimal?)hourlyRate : null;
             ViewBag.CurrentClientId = await GetCurrentClientId();
 
-            return View();
+            return View(new Booking { WorkerId = worker.WorkerId });
         }
 
         // POST: Client/CreateBooking
@@ -211,16 +218,17 @@ namespace WorkerBookingSystem.Controllers
                     var hourlyRate = await _context.HourlyRates
                         .Where(hr => hr.WorkerId == booking.WorkerId && hr.IsActive)
                         .OrderByDescending(hr => hr.EffectiveDate)
+                        .Select(hr => hr.RatePerHour)
                         .FirstOrDefaultAsync();
 
-                    if (hourlyRate == null)
+                    if (hourlyRate <= 0)
                     {
                         ModelState.AddModelError("", "No active hourly rate for this worker. Contact admin.");
                     }
                     else
                     {
                         var hours = (booking.EndTime - booking.StartTime).TotalHours;
-                        booking.TotalWage = (decimal)hours * hourlyRate.RatePerHour;
+                        booking.TotalWage = Math.Max(0, (decimal)hours * hourlyRate);
 
                         booking.Status = BookingStatus.Pending;
                         booking.CreatedDate = DateTime.Now;
@@ -234,8 +242,18 @@ namespace WorkerBookingSystem.Controllers
             }
 
             var clients = await _context.Clients.ToListAsync();
+            var worker = await _context.Workers.FindAsync(booking.WorkerId);
+            var currentRate = worker != null
+                ? await _context.HourlyRates
+                    .Where(hr => hr.WorkerId == worker.WorkerId && hr.IsActive)
+                    .OrderByDescending(hr => hr.EffectiveDate)
+                    .Select(hr => hr.RatePerHour)
+                    .FirstOrDefaultAsync()
+                : 0m;
+
             ViewBag.ClientList = clients;
-            ViewBag.Worker = await _context.Workers.FindAsync(booking.WorkerId);
+            ViewBag.Worker = worker;
+            ViewBag.WorkerRate = currentRate > 0 ? (decimal?)currentRate : null;
             ViewBag.CurrentClientId = await GetCurrentClientId();
             return View(booking);
         }

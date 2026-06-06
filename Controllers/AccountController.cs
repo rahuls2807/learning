@@ -48,6 +48,9 @@ namespace WorkerBookingSystem.Controllers
             if (result.Succeeded)
             {
                 await _signInManager.SignInAsync(user, model.RememberMe);
+                // Ensure the authentication cookie contains the latest role claims
+                // (some deployments may not populate role claims immediately).
+                await _signInManager.RefreshSignInAsync(user);
 
                 if (!string.IsNullOrWhiteSpace(model.ReturnUrl) && Url.IsLocalUrl(model.ReturnUrl))
                 {

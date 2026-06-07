@@ -48,15 +48,17 @@
                 <div class="row">
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label asp-for="StartTime" class="control-label">Start Time</label>
-                            <input asp-for="StartTime" class="form-control" type="datetime-local" />
+                            <label class="control-label">Start Time</label>
+                            <input id="startTimeInput" class="form-control" type="time" />
+                            <input asp-for="StartTime" type="hidden" />
                             <span asp-validation-for="StartTime" class="text-danger"></span>
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label asp-for="EndTime" class="control-label">End Time</label>
-                            <input asp-for="EndTime" class="form-control" type="datetime-local" />
+                            <label class="control-label">End Time</label>
+                            <input id="endTimeInput" class="form-control" type="time" />
+                            <input asp-for="EndTime" type="hidden" />
                             <span asp-validation-for="EndTime" class="text-danger"></span>
                         </div>
                     </div>
@@ -85,21 +87,48 @@
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
     <script>
         (function () {
-            var startInput = document.querySelector('input[name="StartTime"]');
-            var endInput = document.querySelector('input[name="EndTime"]');
+            var bookingDateInput = document.querySelector('input[name="BookingDate"]');
+            var startTimeInput = document.getElementById('startTimeInput');
+            var endTimeInput = document.getElementById('endTimeInput');
+            var startTimeHidden = document.querySelector('input[name="StartTime"]');
+            var endTimeHidden = document.querySelector('input[name="EndTime"]');
             var totalAmount = document.getElementById('bookingTotalAmount');
             var durationText = document.getElementById('bookingDuration');
             var rate = parseFloat('@((ViewBag.WorkerRate ?? 0m).ToString("F2"))');
 
+            function updateHiddenFields() {
+                if (!bookingDateInput.value || !startTimeInput.value || !endTimeInput.value) {
+                    startTimeHidden.value = '';
+                    endTimeHidden.value = '';
+                    return;
+                }
+
+                // Combine date and time to create datetime strings
+                var bookingDate = bookingDateInput.value; // Format: YYYY-MM-DD
+                var startTime = startTimeInput.value;      // Format: HH:MM
+                var endTime = endTimeInput.value;          // Format: HH:MM
+
+                // Format as ISO datetime: YYYY-MM-DDTHH:MM:00
+                startTimeHidden.value = bookingDate + 'T' + startTime + ':00';
+                endTimeHidden.value = bookingDate + 'T' + endTime + ':00';
+            }
+
             function updateEstimate() {
-                if (!startInput.value || !endInput.value || rate <= 0) {
+                updateHiddenFields();
+
+                if (!bookingDateInput.value || !startTimeInput.value || !endTimeInput.value || rate <= 0) {
                     totalAmount.textContent = '₹0.00';
                     durationText.textContent = '';
                     return;
                 }
 
-                var start = new Date(startInput.value);
-                var end = new Date(endInput.value);
+                var bookingDate = bookingDateInput.value;
+                var startTime = startTimeInput.value;
+                var endTime = endTimeInput.value;
+
+                var start = new Date(bookingDate + 'T' + startTime + ':00');
+                var end = new Date(bookingDate + 'T' + endTime + ':00');
+
                 if (isNaN(start.valueOf()) || isNaN(end.valueOf()) || end <= start) {
                     totalAmount.textContent = 'Enter valid start and end times';
                     durationText.textContent = '';
@@ -118,8 +147,9 @@
                 durationText.textContent = hours.toFixed(2) + ' hours';
             }
 
-            startInput.addEventListener('change', updateEstimate);
-            endInput.addEventListener('change', updateEstimate);
+            bookingDateInput.addEventListener('change', updateEstimate);
+            startTimeInput.addEventListener('change', updateEstimate);
+            endTimeInput.addEventListener('change', updateEstimate);
             updateEstimate();
         })();
     </script>

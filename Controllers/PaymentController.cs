@@ -72,8 +72,15 @@ namespace WorkerBookingSystem.Controllers
                 model.OnlineAmount,
                 $"Booking #{booking.BookingId}");
             model.UpiQrCodeUrl = UpiPaymentHelper.BuildQrCodeUrl(model.UpiPayUri);
+            model.SupportedPaymentMethods = new[]
+            {
+                "UPI Apps (PhonePe, GPay, Paytm)",
+                "Cards / Net Banking / Wallet",
+                "Manual UPI QR"
+            };
+            model.MaxPayoutAmount = Math.Max(0, booking.TotalWage - booking.AmountPaidOnline - booking.AmountPaidToWorker);
 
-            await _auditService.LogPaymentInitiationAsync(bookingId, booking.ClientId.ToString(), booking.TotalWage, "payment-portal", HttpContext);
+            await _auditService.LogPaymentInitiationAsync(bookingId, booking.ClientId?.ToString() ?? "unknown", booking.TotalWage, "payment-portal", HttpContext);
 
             return View(model);
         }
@@ -211,7 +218,7 @@ namespace WorkerBookingSystem.Controllers
 
                 await _auditService.LogPaymentInitiationAsync(
                     model.BookingId,
-                    booking.ClientId.ToString(),
+                    booking.ClientId?.ToString() ?? "unknown",
                     model.Amount,
                     "upi-direct-pending",
                     HttpContext);
@@ -226,6 +233,67 @@ namespace WorkerBookingSystem.Controllers
             {
                 _logger.LogError(ex, "Error submitting UPI payment for booking {BookingId}", model.BookingId);
                 return Json(new { success = false, message = "Could not submit UPI payment. Please try again." });
+            }
+        }
+
+        /// <summary>
+        /// Submit a payout instruction to the worker using UPI, card, or wallet.
+        /// </summary>
+        [HttpPost]
+        [Route("Payment/SubmitPayout")]
+        public async Task<IActionResult> SubmitPayout([FromBody] SubmitPayoutRequestViewModel model)
+        {
+            if (!ModelState.IsValid)
+                return Json(new { success = false, message = "Please complete the payout details before sending money." });
+
+            var booking = await GetClientBooking(model.BookingId);
+            if (booking == null)
+                return Json(new { success = false, message = "Booking not found" });
+
+            var userId = _userManager.GetUserId(User);
+            if (string.IsNullOrWhiteSpace(userId))
+                return Json(new { success = false, message = "Unable to identify user. Please log in again." });
+
+            var remainingToWorker = Math.Max(0, booking.TotalWage - booking.AmountPaidOnline - booking.AmountPaidToWorker);
+            if (model.Amount <= 0 || model.Amount > remainingToWorker)
+                return Json(new { success = false, message = "The payout amount is invalid." });
+
+            try
+            {
+                var (otpValid, otpMessage) = await _otpService.VerifyOtpAsync(userId, model.BookingId, model.OtpCode, _context);
+                if (!otpValid)
+                    return Json(new { success = false, message = otpMessage });
+
+                booking.AmountPaidToWorker += model.Amount;
+                booking.PaymentReference = $"PAYOUT-{model.PayoutMethod.ToUpperInvariant()}-{DateTime.UtcNow:yyyyMMddHHmmss}";
+                UpdatePaymentStatus(booking);
+                await _context.SaveChangesAsync();
+
+                await _auditService.LogPaymentInitiationAsync(
+                    model.BookingId,
+                    booking.ClientId?.ToString() ?? "unknown",
+                    model.Amount,
+                    $"payout-{model.PayoutMethod.ToLowerInvariant()}",
+                    HttpContext);
+
+                await _auditService.LogPaymentCompletionAsync(
+                    model.BookingId,
+                    booking.PaymentReference,
+                    booking.PaymentStatus,
+                    $"Payout sent via {model.PayoutMethod} to {model.RecipientIdentifier}");
+
+                return Json(new
+                {
+                    success = true,
+                    message = $"Worker payout of ₹{model.Amount:F2} sent via {model.PayoutMethod}.",
+                    payoutAmount = model.Amount,
+                    newStatus = booking.PaymentStatus.ToString()
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error sending payout for booking {BookingId}", model.BookingId);
+                return Json(new { success = false, message = "Could not send the payout. Please try again." });
             }
         }
 

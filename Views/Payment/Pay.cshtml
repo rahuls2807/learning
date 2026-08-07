@@ -548,15 +548,18 @@
                 @if (Model.RazorpayConfigured)
                 {
                     <div id="gatewayPanel" class="summary-box">
-                        <p style="margin-bottom:16px;"><strong>Recommended — like Zomato / Zepto</strong><br />Pay with PhonePe, GPay, Paytm, or any UPI app. Payment is confirmed automatically.</p>
-                        <button type="button" class="btn btn-pay" onclick="startGatewayUpiPayment()">
-                            📲 Pay ₹@Model.OnlineAmount.ToString("F2") with UPI
-                        </button>
-                        <button type="button" class="btn btn-pay" style="margin-top:12px;" onclick="startGatewayCardPayment()">
-                            💳 Card / Net Banking
-                        </button>
+                        <p style="margin-bottom:16px;"><strong>Receive money securely through UPI apps and cards</strong><br />Choose the method that fits the customer experience best.</p>
+                        <div class="payment-methods">
+                            <button type="button" class="payment-method-btn active" onclick="startGatewayUpiPayment()">
+                                📱 UPI Apps (PhonePe, GPay, Paytm)
+                            </button>
+                            <button type="button" class="payment-method-btn" onclick="startGatewayCardPayment()">
+                                💳 Cards / Net Banking / Wallet
+                            </button>
+                        </div>
+                        <p class="form-text" style="margin-top:16px;">The gateway will collect the payment using the selected method and confirm it automatically.</p>
                     </div>
-                    <p class="form-text" style="margin:16px 0; text-align:center;">— or pay manually to merchant UPI below —</p>
+                    <p class="form-text" style="margin:16px 0; text-align:center;">— or pay manually to the merchant UPI below —</p>
                 }
                 else
                 {
@@ -589,6 +592,33 @@
                     </label>
                     <button type="button" class="btn btn-pay" onclick="submitDirectUpiPayment()">
                         ✓ Confirm payment — submit for admin verification
+                    </button>
+                </div>
+
+                <div class="summary-box" style="margin-top:24px;">
+                    <div class="step-header" style="margin-bottom:16px;">
+                        <span class="step-number">4</span>
+                        Send payout to worker
+                    </div>
+                    <p class="form-text" style="margin-bottom:16px;">Record a payout to the worker using UPI, card, or wallet details and keep the booking balance accurate.</p>
+                    <div class="form-group">
+                        <label class="form-label">Payout method</label>
+                        <select id="payoutMethod" class="form-control">
+                            <option value="UPI">UPI</option>
+                            <option value="Card">Card</option>
+                            <option value="Wallet">Wallet</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Recipient reference</label>
+                        <input type="text" id="payoutRecipient" class="form-control" placeholder="Worker UPI ID / wallet reference" />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Amount to send</label>
+                        <input type="number" id="payoutAmount" class="form-control" step="0.01" min="0" max="@Model.MaxPayoutAmount" value="@Model.MaxPayoutAmount" />
+                    </div>
+                    <button type="button" class="btn btn-pay" onclick="submitPayout()">
+                        🚀 Send money to worker
                     </button>
                 </div>
             </div>
@@ -726,13 +756,62 @@
         .catch(e => showError('Error: ' + e.message));
     }
 
+    function submitPayout() {
+        const otpCode = document.getElementById('otpCode').value.trim();
+        const payoutMethod = document.getElementById('payoutMethod').value;
+        const payoutRecipient = document.getElementById('payoutRecipient').value.trim();
+        const payoutAmount = parseFloat(document.getElementById('payoutAmount').value || '0');
+
+        if (!otpCode || otpCode.length !== 6) {
+            showError('Complete OTP verification first');
+            return;
+        }
+
+        if (!payoutRecipient) {
+            showError('Add a worker payout reference before sending money');
+            return;
+        }
+
+        if (!payoutAmount || payoutAmount <= 0) {
+            showError('Enter a valid payout amount');
+            return;
+        }
+
+        fetch('/Payment/SubmitPayout', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                bookingId: parseInt(bookingId, 10),
+                amount: payoutAmount,
+                otpCode: otpCode,
+                payoutMethod: payoutMethod,
+                recipientIdentifier: payoutRecipient,
+                notes: 'Worker payout'
+            })
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                showSuccess('✅ ' + data.message);
+                setTimeout(() => window.location.reload(), 1800);
+            } else {
+                showError(data.message || 'Could not send payout');
+            }
+        })
+        .catch(e => showError('Error: ' + e.message));
+    }
+
     function startGatewayUpiPayment() {
         gatewayPaymentMethod = 'upi';
+        document.querySelectorAll('.payment-method-btn').forEach(btn => btn.classList.remove('active'));
+        document.querySelector('.payment-method-btn').classList.add('active');
         openRazorpayCheckout();
     }
 
     function startGatewayCardPayment() {
         gatewayPaymentMethod = 'card';
+        document.querySelectorAll('.payment-method-btn').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.payment-method-btn')[1].classList.add('active');
         openRazorpayCheckout();
     }
 

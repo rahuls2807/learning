@@ -51,6 +51,9 @@ namespace WorkerBookingSystem.Models.ViewModels
         public string UpiQrCodeUrl { get; set; } = string.Empty;
         public bool RazorpayConfigured { get; set; }
         public string? ClientUpiId { get; set; }
+        public string[] SupportedPaymentMethods { get; set; } = Array.Empty<string>();
+        public string[] SupportedPayoutMethods { get; set; } = { "UPI", "Card", "Wallet" };
+        public decimal MaxPayoutAmount { get; set; }
     }
 
     /// <summary>
@@ -135,6 +138,29 @@ namespace WorkerBookingSystem.Models.ViewModels
 
         [MaxLength(50)]
         public string? TransactionReference { get; set; }
+    }
+
+    public class SubmitPayoutRequestViewModel
+    {
+        public int BookingId { get; set; }
+
+        [Range(0.01, 999999)]
+        public decimal Amount { get; set; }
+
+        [Required]
+        [StringLength(6, MinimumLength = 6)]
+        public string OtpCode { get; set; } = string.Empty;
+
+        [Required]
+        [MaxLength(50)]
+        public string PayoutMethod { get; set; } = "UPI";
+
+        [Required]
+        [MaxLength(100)]
+        public string RecipientIdentifier { get; set; } = string.Empty;
+
+        [MaxLength(200)]
+        public string? Notes { get; set; }
     }
 }
 

@@ -68,6 +68,29 @@ namespace WorkerBookingSystem.Models.ViewModels
         [Display(Name = "Resume")]
         public IFormFile? Resume { get; set; }
 
+        [Display(Name = "Preferred Payout Method")]
+        public string PreferredPayoutMethod { get; set; } = "UPI";
+
+        [Display(Name = "UPI ID")]
+        [MaxLength(100)]
+        public string? UpiId { get; set; }
+
+        [Display(Name = "Account Holder Name")]
+        [MaxLength(120)]
+        public string? BankAccountHolderName { get; set; }
+
+        [Display(Name = "Bank Name")]
+        [MaxLength(120)]
+        public string? BankName { get; set; }
+
+        [Display(Name = "Account Number")]
+        [MaxLength(60)]
+        public string? BankAccountNumber { get; set; }
+
+        [Display(Name = "IFSC Code")]
+        [MaxLength(20)]
+        public string? IfscCode { get; set; }
+
         [Required]
         [DataType(DataType.Password)]
         public string Password { get; set; } = string.Empty;
@@ -108,6 +131,29 @@ namespace WorkerBookingSystem.Models.ViewModels
 
         [Display(Name = "Resume")]
         public IFormFile? Resume { get; set; }
+
+        [Display(Name = "Preferred Payout Method")]
+        public string PreferredPayoutMethod { get; set; } = "UPI";
+
+        [Display(Name = "UPI ID")]
+        [MaxLength(100)]
+        public string? UpiId { get; set; }
+
+        [Display(Name = "Account Holder Name")]
+        [MaxLength(120)]
+        public string? BankAccountHolderName { get; set; }
+
+        [Display(Name = "Bank Name")]
+        [MaxLength(120)]
+        public string? BankName { get; set; }
+
+        [Display(Name = "Account Number")]
+        [MaxLength(60)]
+        public string? BankAccountNumber { get; set; }
+
+        [Display(Name = "IFSC Code")]
+        [MaxLength(20)]
+        public string? IfscCode { get; set; }
     }
 
     public class AdminRegisterViewModel

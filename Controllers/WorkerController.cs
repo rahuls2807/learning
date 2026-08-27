@@ -176,6 +176,12 @@ namespace WorkerBookingSystem.Controllers
                         Email = model.Email,
                         PhoneNumber = model.PhoneNumber,
                         Skill = model.Skill,
+                        PreferredPayoutMethod = model.PreferredPayoutMethod,
+                        UpiId = model.UpiId,
+                        BankAccountHolderName = model.BankAccountHolderName,
+                        BankName = model.BankName,
+                        BankAccountNumber = model.BankAccountNumber,
+                        IfscCode = model.IfscCode,
                         ProfileImagePath = await SaveWorkerFile(model.ProfileImage, "images", [".jpg", ".jpeg", ".png", ".webp"]),
                         ResumePath = await SaveWorkerFile(model.Resume, "resumes", [".pdf", ".doc", ".docx"]),
                         UserId = user.Id,
@@ -213,7 +219,13 @@ namespace WorkerBookingSystem.Controllers
                 Skill = worker.Skill ?? string.Empty,
                 IsActive = worker.IsActive,
                 CurrentProfileImagePath = worker.ProfileImagePath,
-                CurrentResumePath = worker.ResumePath
+                CurrentResumePath = worker.ResumePath,
+                PreferredPayoutMethod = worker.PreferredPayoutMethod ?? "UPI",
+                UpiId = worker.UpiId,
+                BankAccountHolderName = worker.BankAccountHolderName,
+                BankName = worker.BankName,
+                BankAccountNumber = worker.BankAccountNumber,
+                IfscCode = worker.IfscCode
             });
         }
 
@@ -238,6 +250,12 @@ namespace WorkerBookingSystem.Controllers
                     existing.Email = model.Email;
                     existing.PhoneNumber = model.PhoneNumber;
                     existing.Skill = model.Skill;
+                    existing.PreferredPayoutMethod = model.PreferredPayoutMethod;
+                    existing.UpiId = model.UpiId;
+                    existing.BankAccountHolderName = model.BankAccountHolderName;
+                    existing.BankName = model.BankName;
+                    existing.BankAccountNumber = model.BankAccountNumber;
+                    existing.IfscCode = model.IfscCode;
                     existing.IsActive = model.IsActive;
                     existing.ProfileImagePath = await SaveWorkerFile(model.ProfileImage, "images", [".jpg", ".jpeg", ".png", ".webp"])
                         ?? existing.ProfileImagePath;

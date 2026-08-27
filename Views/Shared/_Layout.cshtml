@@ -70,6 +70,12 @@
                             <li class="nav-item">
                                 <a class="nav-link" asp-controller="Admin" asp-action="UpiPayments">UPI Payments</a>
                             </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Admin" asp-action="CompanyBankDetails">Bank Details</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Admin" asp-action="Funds">Funds</a>
+                            </li>
                         }
                         <li class="nav-item">
                             <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
@@ -81,6 +87,9 @@
                     <ul class="navbar-nav">
                         @if (User.Identity?.IsAuthenticated == true)
                         {
+                            <li class="nav-item">
+                                <a class="nav-link nav-wallet" asp-controller="Wallet" asp-action="Index">Wallet</a>
+                            </li>
                             <li class="nav-item">
                                 <span class="nav-link nav-user">@User.Identity.Name</span>
                             </li>
@@ -141,6 +150,7 @@
         }
         @if (User.Identity?.IsAuthenticated == true)
         {
+            <a asp-controller="Wallet" asp-action="Index">Wallet</a>
             <form asp-controller="Account" asp-action="Logout" method="post">
                 <button type="submit">Logout</button>
             </form>

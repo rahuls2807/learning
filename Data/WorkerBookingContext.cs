@@ -23,6 +23,7 @@ namespace WorkerBookingSystem.Data
 
         // RBI Compliance Entities
         public DbSet<PaymentAuditLog> PaymentAuditLogs { get; set; }
+        public DbSet<AdminFundTransaction> AdminFundTransactions { get; set; }
         public DbSet<OtpVerification> OtpVerifications { get; set; }
         public DbSet<RazorpayOrder> RazorpayOrders { get; set; }
         public DbSet<UpiPaymentSubmission> UpiPaymentSubmissions { get; set; }
@@ -174,6 +175,35 @@ protected override void OnModelCreating(ModelBuilder modelBuilder)
             modelBuilder.Entity<Booking>()
                 .Property(b => b.AmountPaidToWorker)
                 .HasPrecision(10, 2);
+
+            modelBuilder.Entity<Booking>()
+                .Property(b => b.CompanyFundAdvanceAmount)
+                .HasPrecision(10, 2);
+
+            modelBuilder.Entity<AdminFundTransaction>()
+                .HasKey(aft => aft.AdminFundTransactionId);
+
+            modelBuilder.Entity<AdminFundTransaction>()
+                .HasIndex(aft => new { aft.BookingId, aft.CreatedAt });
+
+            modelBuilder.Entity<AdminFundTransaction>()
+                .HasIndex(aft => aft.TransactionType);
+
+            modelBuilder.Entity<AdminFundTransaction>()
+                .Property(aft => aft.Amount)
+                .HasPrecision(12, 2);
+
+            modelBuilder.Entity<AdminFundTransaction>()
+                .HasOne(aft => aft.Booking)
+                .WithMany()
+                .HasForeignKey(aft => aft.BookingId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<AdminFundTransaction>()
+                .HasOne(aft => aft.AdminUser)
+                .WithMany()
+                .HasForeignKey(aft => aft.AdminUserId)
+                .OnDelete(DeleteBehavior.NoAction);
 
             // Configure PaymentAuditLog entity (RBI Compliance)
             modelBuilder.Entity<PaymentAuditLog>()

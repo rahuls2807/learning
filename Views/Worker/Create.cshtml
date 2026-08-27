@@ -54,6 +54,52 @@
                     <span asp-validation-for="Resume" class="text-danger"></span>
                 </div>
 
+                <section class="market-panel mt-3">
+                    <div class="section-kicker">Payout details</div>
+                    <h3 class="section-title">Where should admin send your pay?</h3>
+
+                    <div class="form-group">
+                        <label asp-for="PreferredPayoutMethod" class="control-label"></label>
+                        <select asp-for="PreferredPayoutMethod" class="form-select">
+                            <option value="UPI">UPI</option>
+                            <option value="BANK">Direct to Bank</option>
+                            <option value="WALLET">Wallet</option>
+                        </select>
+                        <span asp-validation-for="PreferredPayoutMethod" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="UpiId" class="control-label"></label>
+                        <input asp-for="UpiId" class="form-control" placeholder="worker@bank" />
+                        <span asp-validation-for="UpiId" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="BankAccountHolderName" class="control-label"></label>
+                        <input asp-for="BankAccountHolderName" class="form-control" />
+                        <span asp-validation-for="BankAccountHolderName" class="text-danger"></span>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label asp-for="BankName" class="control-label"></label>
+                            <input asp-for="BankName" class="form-control" />
+                            <span asp-validation-for="BankName" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="IfscCode" class="control-label"></label>
+                            <input asp-for="IfscCode" class="form-control" />
+                            <span asp-validation-for="IfscCode" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="BankAccountNumber" class="control-label"></label>
+                        <input asp-for="BankAccountNumber" class="form-control" />
+                        <span asp-validation-for="BankAccountNumber" class="text-danger"></span>
+                    </div>
+                </section>
+
                 <div class="form-group">
                     <label asp-for="Password" class="control-label"></label>
                     <input asp-for="Password" class="form-control" autocomplete="new-password" />

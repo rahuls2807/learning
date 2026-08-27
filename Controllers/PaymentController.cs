@@ -62,10 +62,12 @@ namespace WorkerBookingSystem.Controllers
                 model.ClientUpiId = client.UpiId;
             }
 
-            var merchantVpa = _configuration["Upi:MerchantVpa"] ?? "rsinghrahul402@ybl";
-            var merchantName = _configuration["Upi:MerchantName"] ?? "Indian Worker Mandi";
+            var paymentSettings = await GetCompanyPaymentSettingsAsync();
+            var merchantVpa = paymentSettings.MerchantUpiId;
+            var merchantName = paymentSettings.MerchantName;
             model.MerchantUpiId = merchantVpa;
             model.MerchantName = merchantName;
+            model.PaymentInstructions = paymentSettings.PaymentInstructions;
             model.UpiPayUri = UpiPaymentHelper.BuildUpiPayUri(
                 merchantVpa,
                 merchantName,
@@ -188,7 +190,8 @@ namespace WorkerBookingSystem.Controllers
                 if (!otpValid)
                     return Json(new { success = false, message = otpMessage });
 
-                var merchantVpa = _configuration["Upi:MerchantVpa"] ?? "rsinghrahul402@ybl";
+                var paymentSettings = await GetCompanyPaymentSettingsAsync();
+                var merchantVpa = paymentSettings.MerchantUpiId;
                 var clientUpi = string.IsNullOrWhiteSpace(model.ClientUpiId) ? "not-provided" : model.ClientUpiId.Trim();
                 var transactionRef = string.IsNullOrWhiteSpace(model.TransactionReference)
                     ? $"MANUAL-{model.BookingId}-{DateTime.UtcNow:yyyyMMddHHmmss}"
@@ -497,6 +500,28 @@ namespace WorkerBookingSystem.Controllers
                 BalanceDue = booking.TotalWage - booking.AmountPaidOnline - booking.AmountPaidToWorker,
                 OnlineAmount = booking.TotalWage - booking.AmountPaidOnline - booking.AmountPaidToWorker
             };
+        }
+
+        private async Task<CompanyBankDetailsViewModel> GetCompanyPaymentSettingsAsync()
+        {
+            var settings = await _context.PlatformSettings
+                .AsNoTracking()
+                .Where(ps => ps.Key.StartsWith("Payment:"))
+                .ToDictionaryAsync(ps => ps.Key, ps => ps.Value);
+
+            return new CompanyBankDetailsViewModel
+            {
+                MerchantName = GetSetting(settings, "Payment:MerchantName", _configuration["Upi:MerchantName"] ?? "Indian Worker Mandi"),
+                MerchantUpiId = GetSetting(settings, "Payment:MerchantUpiId", _configuration["Upi:MerchantVpa"] ?? "rsinghrahul402@ybl"),
+                PaymentInstructions = GetSetting(settings, "Payment:Instructions", "Please include booking ID in the payment note and submit the UTR/reference after payment.")
+            };
+        }
+
+        private static string GetSetting(IReadOnlyDictionary<string, string> settings, string key, string fallback)
+        {
+            return settings.TryGetValue(key, out var value) && !string.IsNullOrWhiteSpace(value)
+                ? value
+                : fallback;
         }
 
         private static void UpdatePaymentStatus(Booking booking)

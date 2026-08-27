@@ -1,0 +1,115 @@
+@model WorkerBookingSystem.Models.ViewModels.CompanyBankDetailsViewModel
+@{
+    ViewData["Title"] = "Company Bank Details";
+}
+
+<div class="page-header">
+    <div class="section-kicker">Admin settings</div>
+    <div class="d-flex flex-wrap justify-content-between gap-3 align-items-start">
+        <div>
+            <h1>Company Bank Details</h1>
+            <p class="text-muted mb-0">Update payment destination details used on client payment pages and UPI review screens.</p>
+        </div>
+        <a asp-action="Dashboard" class="btn btn-secondary">Back to Dashboard</a>
+    </div>
+</div>
+
+@if (TempData["BankDetailsMessage"] != null)
+{
+    <div class="alert alert-success">@TempData["BankDetailsMessage"]</div>
+}
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        <section class="market-panel">
+            <form asp-action="CompanyBankDetails" method="post" class="settings-form">
+                @Html.AntiForgeryToken()
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                <div>
+                    <label asp-for="MerchantName" class="form-label"></label>
+                    <input asp-for="MerchantName" class="form-control" />
+                    <span asp-validation-for="MerchantName" class="text-danger"></span>
+                </div>
+
+                <div>
+                    <label asp-for="MerchantUpiId" class="form-label"></label>
+                    <input asp-for="MerchantUpiId" class="form-control" placeholder="example@bank" />
+                    <span asp-validation-for="MerchantUpiId" class="text-danger"></span>
+                </div>
+
+                <div>
+                    <label asp-for="AccountHolderName" class="form-label"></label>
+                    <input asp-for="AccountHolderName" class="form-control" />
+                    <span asp-validation-for="AccountHolderName" class="text-danger"></span>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label asp-for="BankName" class="form-label"></label>
+                        <input asp-for="BankName" class="form-control" />
+                        <span asp-validation-for="BankName" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="Branch" class="form-label"></label>
+                        <input asp-for="Branch" class="form-control" />
+                        <span asp-validation-for="Branch" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-7">
+                        <label asp-for="AccountNumber" class="form-label"></label>
+                        <input asp-for="AccountNumber" class="form-control" />
+                        <span asp-validation-for="AccountNumber" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-5">
+                        <label asp-for="IfscCode" class="form-label"></label>
+                        <input asp-for="IfscCode" class="form-control" />
+                        <span asp-validation-for="IfscCode" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div>
+                    <label asp-for="PaymentInstructions" class="form-label"></label>
+                    <textarea asp-for="PaymentInstructions" class="form-control" rows="4"></textarea>
+                    <span asp-validation-for="PaymentInstructions" class="text-danger"></span>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Save Bank Details</button>
+            </form>
+        </section>
+    </div>
+
+    <div class="col-lg-5">
+        <section class="market-panel bank-preview">
+            <div class="section-kicker">Payment preview</div>
+            <h2 class="section-title">What customers will see</h2>
+            <div class="bank-detail-row">
+                <span>Merchant</span>
+                <strong>@Model.MerchantName</strong>
+            </div>
+            <div class="bank-detail-row">
+                <span>UPI ID</span>
+                <strong>@Model.MerchantUpiId</strong>
+            </div>
+            <div class="bank-detail-row">
+                <span>Account Holder</span>
+                <strong>@(string.IsNullOrWhiteSpace(Model.AccountHolderName) ? "Not set" : Model.AccountHolderName)</strong>
+            </div>
+            <div class="bank-detail-row">
+                <span>Bank</span>
+                <strong>@(string.IsNullOrWhiteSpace(Model.BankName) ? "Not set" : Model.BankName)</strong>
+            </div>
+            <div class="bank-detail-row">
+                <span>Account / IFSC</span>
+                <strong>@(string.IsNullOrWhiteSpace(Model.AccountNumber) ? "Not set" : Model.AccountNumber) / @(string.IsNullOrWhiteSpace(Model.IfscCode) ? "Not set" : Model.IfscCode)</strong>
+            </div>
+            <p class="text-muted mb-0">@Model.PaymentInstructions</p>
+        </section>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -47,6 +47,7 @@ namespace WorkerBookingSystem.Models.ViewModels
 
         public string MerchantUpiId { get; set; } = "rsinghrahul402@ybl";
         public string MerchantName { get; set; } = "Indian Worker Mandi";
+        public string PaymentInstructions { get; set; } = "Please include booking ID in the payment note and submit the UTR/reference after payment.";
         public string UpiPayUri { get; set; } = string.Empty;
         public string UpiQrCodeUrl { get; set; } = string.Empty;
         public bool RazorpayConfigured { get; set; }

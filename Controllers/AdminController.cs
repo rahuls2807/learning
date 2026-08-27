@@ -165,6 +165,127 @@ namespace WorkerBookingSystem.Controllers
             return View(bookings);
         }
 
+        public async Task<IActionResult> Funds()
+        {
+            var bookings = await _context.Bookings
+                .AsNoTracking()
+                .Include(b => b.Client)
+                .Include(b => b.Worker)
+                .OrderByDescending(b => b.BookingDate)
+                .Take(100)
+                .ToListAsync();
+
+            var recentTransactions = await _context.AdminFundTransactions
+                .AsNoTracking()
+                .Include(t => t.Booking)
+                    .ThenInclude(b => b!.Client)
+                .Include(t => t.Booking)
+                    .ThenInclude(b => b!.Worker)
+                .OrderByDescending(t => t.CreatedAt)
+                .Take(30)
+                .ToListAsync();
+
+            var rows = bookings.Select(ToAdminFundRow).ToList();
+
+            return View(new AdminFundsDashboardViewModel
+            {
+                Bookings = rows,
+                RecentTransactions = recentTransactions,
+                TotalClientReceived = bookings.Sum(b => b.AmountPaidOnline),
+                TotalWorkerPaid = bookings.Sum(b => b.AmountPaidToWorker),
+                TotalCompanyAdvanced = bookings.Sum(b => b.CompanyFundAdvanceAmount),
+                TotalClientOutstanding = rows.Sum(r => r.ClientDue),
+                TotalRecoverableFromClient = rows.Sum(r => r.AdvanceRecoverable)
+            });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RecordClientReceipt(RecordClientReceiptViewModel model)
+        {
+            if (!ModelState.IsValid)
+                return RedirectToAction(nameof(Funds));
+
+            var booking = await _context.Bookings.FindAsync(model.BookingId);
+            if (booking == null)
+                return NotFound();
+
+            booking.AmountPaidOnline += model.Amount;
+            booking.PaymentReference = string.IsNullOrWhiteSpace(model.Reference)
+                ? $"CLIENT-{DateTime.UtcNow:yyyyMMddHHmmss}"
+                : model.Reference.Trim();
+            ApplyPaymentStatus(booking);
+
+            await AddFundTransactionAsync(
+                booking.BookingId,
+                AdminFundTransactionTypes.ClientReceipt,
+                AdminFundDirections.In,
+                model.Amount,
+                FundingSources.ClientReceivedFunds,
+                model.Method,
+                model.Reference,
+                model.Notes);
+
+            await _context.SaveChangesAsync();
+            TempData["FundsMessage"] = $"Client receipt of ₹{model.Amount:F2} recorded for booking #{booking.BookingId}.";
+            return RedirectToAction(nameof(Funds));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RecordWorkerPayout(RecordWorkerPayoutViewModel model)
+        {
+            if (!ModelState.IsValid)
+                return RedirectToAction(nameof(Funds));
+
+            var booking = await _context.Bookings.FindAsync(model.BookingId);
+            if (booking == null)
+                return NotFound();
+
+            var workerDue = Math.Max(0, booking.TotalWage - booking.AmountPaidToWorker);
+            if (model.Amount > workerDue)
+            {
+                TempData["FundsMessage"] = $"Payout cannot exceed worker due of ₹{workerDue:F2}.";
+                return RedirectToAction(nameof(Funds));
+            }
+
+            if (model.FundingSource == FundingSources.ClientReceivedFunds)
+            {
+                var availableClientFunds = Math.Max(0, booking.AmountPaidOnline - booking.AmountPaidToWorker);
+                if (model.Amount > availableClientFunds)
+                {
+                    TempData["FundsMessage"] = $"Only ₹{availableClientFunds:F2} is available from received client funds. Use company fund advance for the rest.";
+                    return RedirectToAction(nameof(Funds));
+                }
+            }
+            else if (model.FundingSource == FundingSources.CompanyFundAdvance)
+            {
+                booking.CompanyFundAdvanceAmount += model.Amount;
+            }
+
+            booking.AmountPaidToWorker += model.Amount;
+            booking.WorkerPaidDate = DateTime.UtcNow;
+            booking.WorkerPayoutMethod = model.Method;
+            booking.WorkerPayoutReference = string.IsNullOrWhiteSpace(model.Reference)
+                ? $"PAYOUT-{DateTime.UtcNow:yyyyMMddHHmmss}"
+                : model.Reference.Trim();
+            ApplyPaymentStatus(booking);
+
+            await AddFundTransactionAsync(
+                booking.BookingId,
+                AdminFundTransactionTypes.WorkerPayout,
+                AdminFundDirections.Out,
+                model.Amount,
+                model.FundingSource,
+                model.Method,
+                model.Reference,
+                model.Notes);
+
+            await _context.SaveChangesAsync();
+            TempData["FundsMessage"] = $"Worker payout of ₹{model.Amount:F2} recorded for booking #{booking.BookingId}.";
+            return RedirectToAction(nameof(Funds));
+        }
+
         // POST: Admin/UpdateBookingStatus
         [HttpPost]
         public async Task<IActionResult> UpdateBookingStatus(int bookingId, BookingStatus status)
@@ -217,6 +338,32 @@ namespace WorkerBookingSystem.Controllers
             var profitCut = await GetProfitCutPercentageAsync();
             ViewBag.CurrentProfitCut = profitCut;
             return View(profitCut);
+        }
+
+        public async Task<IActionResult> CompanyBankDetails()
+        {
+            return View(await GetCompanyBankDetailsAsync());
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CompanyBankDetails(CompanyBankDetailsViewModel model)
+        {
+            if (!ModelState.IsValid)
+                return View(model);
+
+            await SaveSettingAsync("Payment:MerchantName", model.MerchantName);
+            await SaveSettingAsync("Payment:MerchantUpiId", model.MerchantUpiId);
+            await SaveSettingAsync("Payment:AccountHolderName", model.AccountHolderName);
+            await SaveSettingAsync("Payment:BankName", model.BankName);
+            await SaveSettingAsync("Payment:AccountNumber", model.AccountNumber);
+            await SaveSettingAsync("Payment:IfscCode", model.IfscCode);
+            await SaveSettingAsync("Payment:Branch", model.Branch);
+            await SaveSettingAsync("Payment:Instructions", model.PaymentInstructions);
+
+            await _context.SaveChangesAsync();
+            TempData["BankDetailsMessage"] = "Company bank details updated successfully.";
+            return RedirectToAction(nameof(CompanyBankDetails));
         }
 
         // POST: Admin/ProfitCut
@@ -341,6 +488,10 @@ namespace WorkerBookingSystem.Controllers
                 .OrderByDescending(u => u.SubmittedAt)
                 .ToListAsync();
 
+            var bankDetails = await GetCompanyBankDetailsAsync();
+            ViewBag.MerchantUpiId = bankDetails.MerchantUpiId;
+            ViewBag.MerchantName = bankDetails.MerchantName;
+
             return View(submissions);
         }
 
@@ -417,6 +568,121 @@ namespace WorkerBookingSystem.Controllers
                 // fall back to the default profit cut instead of crashing the page.
                 return 10.00m;
             }
+        }
+
+        private async Task<CompanyBankDetailsViewModel> GetCompanyBankDetailsAsync()
+        {
+            var settings = await _context.PlatformSettings
+                .AsNoTracking()
+                .Where(ps => ps.Key.StartsWith("Payment:"))
+                .ToDictionaryAsync(ps => ps.Key, ps => ps.Value);
+
+            return new CompanyBankDetailsViewModel
+            {
+                MerchantName = GetSetting(settings, "Payment:MerchantName", "Indian Worker Mandi"),
+                MerchantUpiId = GetSetting(settings, "Payment:MerchantUpiId", "rsinghrahul402@ybl"),
+                AccountHolderName = GetSetting(settings, "Payment:AccountHolderName", string.Empty),
+                BankName = GetSetting(settings, "Payment:BankName", string.Empty),
+                AccountNumber = GetSetting(settings, "Payment:AccountNumber", string.Empty),
+                IfscCode = GetSetting(settings, "Payment:IfscCode", string.Empty),
+                Branch = GetSetting(settings, "Payment:Branch", string.Empty),
+                PaymentInstructions = GetSetting(settings, "Payment:Instructions", "Please include booking ID in the payment note and submit the UTR/reference after payment.")
+            };
+        }
+
+        private async Task SaveSettingAsync(string key, string? value)
+        {
+            var setting = await _context.PlatformSettings.FirstOrDefaultAsync(ps => ps.Key == key);
+            if (setting == null)
+            {
+                setting = new PlatformSetting { Key = key };
+                _context.PlatformSettings.Add(setting);
+            }
+
+            setting.Value = value?.Trim() ?? string.Empty;
+            setting.UpdatedAt = DateTime.UtcNow;
+        }
+
+        private static string GetSetting(IReadOnlyDictionary<string, string> settings, string key, string fallback)
+        {
+            return settings.TryGetValue(key, out var value) && !string.IsNullOrWhiteSpace(value)
+                ? value
+                : fallback;
+        }
+
+        private async Task AddFundTransactionAsync(
+            int bookingId,
+            string transactionType,
+            string direction,
+            decimal amount,
+            string fundingSource,
+            string method,
+            string? reference,
+            string? notes)
+        {
+            var adminUserId = _userManager.GetUserId(User) ?? string.Empty;
+            _context.AdminFundTransactions.Add(new AdminFundTransaction
+            {
+                BookingId = bookingId,
+                TransactionType = transactionType,
+                Direction = direction,
+                Amount = amount,
+                FundingSource = fundingSource,
+                Method = method.Trim(),
+                Reference = reference?.Trim() ?? string.Empty,
+                Notes = notes?.Trim() ?? string.Empty,
+                AdminUserId = adminUserId,
+                CreatedAt = DateTime.UtcNow
+            });
+            await Task.CompletedTask;
+        }
+
+        private static AdminFundBookingRowViewModel ToAdminFundRow(Booking booking)
+        {
+            var clientReceived = booking.AmountPaidOnline;
+            var workerPaid = booking.AmountPaidToWorker;
+            var clientDue = Math.Max(0, booking.TotalWage - clientReceived);
+            var workerDue = Math.Max(0, booking.TotalWage - workerPaid);
+            var advanceRecoverable = Math.Max(0, booking.CompanyFundAdvanceAmount - Math.Max(0, clientReceived - (workerPaid - booking.CompanyFundAdvanceAmount)));
+            var worker = booking.Worker;
+
+            return new AdminFundBookingRowViewModel
+            {
+                BookingId = booking.BookingId,
+                ClientName = booking.Client == null
+                    ? "Walk-in / Admin"
+                    : $"{booking.Client.FirstName} {booking.Client.LastName}".Trim(),
+                WorkerName = worker == null ? "Worker not assigned" : $"{worker.FirstName} {worker.LastName}".Trim(),
+                WorkerSkill = worker?.Skill ?? string.Empty,
+                TotalWage = booking.TotalWage,
+                ClientReceived = clientReceived,
+                WorkerPaid = workerPaid,
+                CompanyAdvanced = booking.CompanyFundAdvanceAmount,
+                ClientDue = clientDue,
+                WorkerDue = workerDue,
+                AdvanceRecoverable = Math.Min(booking.CompanyFundAdvanceAmount, clientDue),
+                PaymentStatus = booking.PaymentStatus.ToString(),
+                BookingStatus = booking.Status.ToString(),
+                WorkerPreferredPayoutMethod = worker?.PreferredPayoutMethod ?? "UPI",
+                WorkerUpiId = worker?.UpiId ?? string.Empty,
+                WorkerBankSummary = BuildWorkerBankSummary(worker)
+            };
+        }
+
+        private static string BuildWorkerBankSummary(Worker? worker)
+        {
+            if (worker == null)
+                return string.Empty;
+
+            var parts = new[]
+            {
+                worker.BankAccountHolderName,
+                worker.BankName,
+                worker.BankAccountNumber,
+                worker.IfscCode
+            }.Where(part => !string.IsNullOrWhiteSpace(part));
+
+            return string.Join(" / ", parts);
         }
 
         private static void ApplyPaymentStatus(Booking booking)

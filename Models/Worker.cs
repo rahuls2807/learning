@@ -14,6 +14,12 @@ namespace WorkerBookingSystem.Models
         public string? Skill { get; set; } // e.g., Plumbing, Electrical, etc.
         public string? ProfileImagePath { get; set; }
         public string? ResumePath { get; set; }
+        public string? PreferredPayoutMethod { get; set; } = "UPI";
+        public string? UpiId { get; set; }
+        public string? BankAccountHolderName { get; set; }
+        public string? BankName { get; set; }
+        public string? BankAccountNumber { get; set; }
+        public string? IfscCode { get; set; }
         public bool IsActive { get; set; } = true;
         public DateTime CreatedDate { get; set; } = DateTime.Now;
 

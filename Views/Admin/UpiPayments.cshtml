@@ -5,7 +5,8 @@
 
 <div class="container mt-5">
     <h2>UPI payment review</h2>
-    <p class="text-muted">Clients pay to <strong>rsinghrahul402@ybl</strong>. Approve after you see the payment in your UPI app. Use the client UPI ID below when you pay the worker.</p>
+    <p class="text-muted">Clients pay to <strong>@ViewBag.MerchantUpiId</strong> for <strong>@ViewBag.MerchantName</strong>. Approve after you see the payment in your UPI app. Use the client UPI ID below when you pay the worker.</p>
+    <p><a asp-action="CompanyBankDetails" class="btn btn-secondary">Update Company Bank Details</a></p>
 
     @if (TempData["PaymentMessage"] != null)
     {

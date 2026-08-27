@@ -12,7 +12,8 @@
     <div class="hero-badge-row mb-4">
         <span class="hero-badge">Verified profiles</span>
         <span class="hero-badge">Live booking status</span>
-        <span class="hero-badge">UPI and cash records</span>
+        <span class="hero-badge">Wallet and fund transfer</span>
+        <span class="hero-badge">Protected payment ledger</span>
         <span class="hero-badge">Ratings and reviews</span>
     </div>
     <div class="quick-action-row">
@@ -21,6 +22,10 @@
             <a class="btn btn-primary" href="@Url.Action("Create", "Worker")">Register as Worker</a>
         }
         <a class="btn btn-primary" href="@Url.Action("BookWorker", "Client")">Find Workers</a>
+        @if (User.Identity?.IsAuthenticated == true)
+        {
+            <a class="btn btn-secondary" href="@Url.Action("Index", "Wallet")">Open Wallet</a>
+        }
         <a class="btn btn-secondary" href="@Url.Action("Register", "Client")">Register as Client</a>
         <a class="btn btn-secondary" href="@Url.Action("Install", "Mobile")">Install Phone App</a>
     </div>
@@ -38,6 +43,8 @@
                 <span class="trust-pill">Smart skill search</span>
                 <span class="trust-pill">Top worker highlights</span>
                 <span class="trust-pill">Due payment alerts</span>
+                <span class="trust-pill">Instant wallet transfers</span>
+                <span class="trust-pill">Fee transparency</span>
                 <span class="trust-pill">Mobile bottom navigation</span>
                 <span class="trust-pill">Assistant help</span>
             </div>

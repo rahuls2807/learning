@@ -13,6 +13,8 @@
             <div class="quick-action-row">
                 <a href="@Url.Action("CreateBooking")" class="btn btn-primary">Create Booking</a>
                 <a href="@Url.Action("UpiPayments")" class="btn btn-secondary">UPI Payments</a>
+                <a href="@Url.Action("CompanyBankDetails")" class="btn btn-secondary">Bank Details</a>
+                <a href="@Url.Action("Funds")" class="btn btn-secondary">Funds</a>
             </div>
         </div>
     </div>
@@ -156,6 +158,24 @@
                         <h5 class="card-title">Profit Cut</h5>
                         <p class="card-text text-muted">Update the platform profit share and worker payout percentage.</p>
                         <a href="@Url.Action("ProfitCut")" class="btn btn-primary w-100">Manage Profit Cut</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="card action-card">
+                    <div class="card-body">
+                        <h5 class="card-title">Company Bank Details</h5>
+                        <p class="card-text text-muted">Update merchant UPI, bank account, IFSC, and payment instructions without code changes.</p>
+                        <a href="@Url.Action("CompanyBankDetails")" class="btn btn-primary w-100">Manage Bank Details</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="card action-card">
+                    <div class="card-body">
+                        <h5 class="card-title">Funds & Payouts</h5>
+                        <p class="card-text text-muted">Record client receipts, pay workers, track company advances, and audit every adjustment.</p>
+                        <a href="@Url.Action("Funds")" class="btn btn-primary w-100">Manage Funds</a>
                     </div>
                 </div>
             </div>

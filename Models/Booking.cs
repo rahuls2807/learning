@@ -22,6 +22,10 @@ namespace WorkerBookingSystem.Models
         public DateTime? PaidDate { get; set; }
         public decimal AmountPaidOnline { get; set; }
         public decimal AmountPaidToWorker { get; set; }
+        public decimal CompanyFundAdvanceAmount { get; set; }
+        public DateTime? WorkerPaidDate { get; set; }
+        public string? WorkerPayoutMethod { get; set; }
+        public string? WorkerPayoutReference { get; set; }
         public string? ClientStatusNote { get; set; }
         public DateTime? LastClientStatusUpdate { get; set; }
         public decimal TotalWage { get; set; } // Calculated based on hourly rate

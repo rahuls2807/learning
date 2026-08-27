@@ -11,6 +11,8 @@
   --success: #267a46;
   --warning: #b35a00;
   --danger: #b42318;
+  --trust: #126b6f;
+  --gold: #8a6500;
   --radius: 8px;
   --shadow: 0 12px 32px rgba(28, 28, 28, 0.08);
 }
@@ -105,6 +107,12 @@ main {
   color: #454545 !important;
   font-weight: 650;
   padding: 8px 12px !important;
+}
+
+.nav-wallet {
+  border: 1px solid #d8ece9;
+  background: #f3fbf9;
+  color: var(--trust) !important;
 }
 
 .nav-link:hover,
@@ -421,6 +429,368 @@ main {
   color: var(--brand);
 }
 
+.wallet-shell {
+  display: grid;
+  gap: 22px;
+}
+
+.wallet-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 360px);
+  gap: 24px;
+  align-items: center;
+  padding: clamp(24px, 5vw, 52px);
+  border: 1px solid #d8ece9;
+  border-radius: var(--radius);
+  background:
+    linear-gradient(135deg, rgba(18, 107, 111, 0.1), rgba(255, 255, 255, 0.92) 48%),
+    linear-gradient(315deg, rgba(226, 55, 68, 0.1), rgba(255, 255, 255, 0.2));
+  box-shadow: var(--shadow);
+}
+
+.wallet-hero h1 {
+  margin: 4px 0 12px;
+  font-size: clamp(2rem, 4vw, 3.35rem);
+  line-height: 1.04;
+  font-weight: 850;
+}
+
+.wallet-hero p {
+  max-width: 680px;
+  color: #454545;
+  font-size: 1.08rem;
+}
+
+.wallet-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.wallet-balance-card {
+  display: grid;
+  gap: 8px;
+  padding: 22px;
+  border: 1px solid #cde5e2;
+  border-radius: var(--radius);
+  background: #ffffff;
+  box-shadow: 0 14px 34px rgba(18, 107, 111, 0.14);
+}
+
+.wallet-balance-card span,
+.wallet-balance-card small,
+.wallet-metrics span,
+.ledger-row span,
+.ledger-row small {
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.wallet-balance-card strong {
+  color: var(--trust);
+  font-size: clamp(2rem, 4vw, 3rem);
+  line-height: 1;
+}
+
+.wallet-trust-strip,
+.quick-amounts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.wallet-trust-strip span,
+.quick-amounts button {
+  min-height: 36px;
+  border: 1px solid #d8ece9;
+  border-radius: 999px;
+  background: #ffffff;
+  color: var(--trust);
+  padding: 8px 12px;
+  font-weight: 800;
+}
+
+.quick-amounts button {
+  cursor: pointer;
+}
+
+.quick-amounts button:hover {
+  background: #f3fbf9;
+}
+
+.wallet-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.wallet-metrics article,
+.wallet-panel {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #ffffff;
+  box-shadow: 0 8px 24px rgba(28, 28, 28, 0.06);
+}
+
+.wallet-metrics article {
+  display: grid;
+  gap: 4px;
+  padding: 16px;
+}
+
+.wallet-metrics strong {
+  color: var(--ink);
+  font-size: 1.45rem;
+  font-weight: 850;
+}
+
+.wallet-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.wallet-panel {
+  padding: 20px;
+}
+
+.wallet-panel-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+
+.wallet-panel-heading h2 {
+  margin: 0;
+  color: var(--ink);
+  font-size: 1.3rem;
+  font-weight: 850;
+}
+
+.wallet-form {
+  display: grid;
+  gap: 12px;
+}
+
+.settings-form {
+  display: grid;
+  gap: 16px;
+}
+
+.bank-preview {
+  position: sticky;
+  top: 92px;
+}
+
+.bank-detail-row {
+  display: grid;
+  gap: 4px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.bank-detail-row:last-of-type {
+  margin-bottom: 14px;
+}
+
+.bank-detail-row span {
+  color: var(--muted);
+  font-weight: 750;
+}
+
+.bank-detail-row strong {
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.wallet-review {
+  display: grid;
+  gap: 3px;
+  padding: 13px;
+  border: 1px solid #f1e0a8;
+  border-radius: var(--radius);
+  background: #fffaf0;
+}
+
+.wallet-review span {
+  color: var(--gold);
+  font-size: 0.78rem;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.wallet-review strong {
+  color: var(--ink);
+}
+
+.wallet-review small {
+  color: #6d5a1d;
+}
+
+.wallet-alert {
+  display: none;
+  padding: 12px 14px;
+  border-radius: var(--radius);
+  font-weight: 800;
+}
+
+.wallet-alert-success,
+.wallet-alert-error {
+  display: block;
+}
+
+.wallet-alert-success {
+  border: 1px solid #bfe3ca;
+  background: #edf8f0;
+  color: var(--success);
+}
+
+.wallet-alert-error {
+  border: 1px solid #ffd0d4;
+  background: #fff3f4;
+  color: var(--danger);
+}
+
+.wallet-ledger {
+  display: grid;
+  gap: 10px;
+}
+
+.ledger-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #fcfcfc;
+}
+
+.ledger-row > div:first-child,
+.ledger-amount {
+  display: grid;
+  gap: 3px;
+}
+
+.ledger-amount {
+  justify-items: end;
+  min-width: 130px;
+  font-weight: 850;
+}
+
+.ledger-amount.credit {
+  color: var(--success);
+}
+
+.ledger-amount.debit {
+  color: var(--brand);
+}
+
+.ledger-amount span {
+  font-size: 0.78rem;
+}
+
+.fund-booking-list {
+  display: grid;
+  gap: 16px;
+}
+
+.fund-booking-card {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #fcfcfc;
+}
+
+.fund-booking-summary,
+.fund-action-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(240px, 0.6fr);
+  gap: 16px;
+}
+
+.fund-booking-summary h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 850;
+}
+
+.fund-amount-stack {
+  display: grid;
+  justify-items: end;
+  gap: 4px;
+}
+
+.fund-amount-stack strong {
+  color: var(--trust);
+  font-size: 1.55rem;
+}
+
+.fund-amount-stack span {
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.fund-status-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.fund-status-grid div {
+  display: grid;
+  gap: 2px;
+  min-height: 72px;
+  padding: 10px;
+  border: 1px solid #e8eeee;
+  border-radius: var(--radius);
+  background: #ffffff;
+}
+
+.fund-status-grid span,
+.worker-payout-details span {
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 750;
+}
+
+.fund-status-grid strong {
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.worker-payout-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  padding: 12px;
+  border: 1px solid #d8ece9;
+  border-radius: var(--radius);
+  background: #f3fbf9;
+}
+
+.worker-payout-details strong {
+  color: var(--trust);
+}
+
+.fund-mini-form {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #ffffff;
+}
+
+.fund-mini-form strong {
+  color: var(--ink);
+}
+
 .empty-state {
   padding: 34px 22px;
   border: 1px dashed #ffd0d4;
@@ -670,8 +1040,39 @@ main {
   }
 
   .hero-section .btn,
-  .quick-action-row .btn {
+  .quick-action-row .btn,
+  .wallet-actions .btn {
     width: 100%;
+  }
+
+  .wallet-hero,
+  .wallet-grid,
+  .wallet-metrics {
+    grid-template-columns: 1fr;
+  }
+
+  .wallet-panel {
+    padding: 16px;
+  }
+
+  .wallet-panel-heading,
+  .ledger-row,
+  .fund-booking-summary,
+  .fund-action-grid {
+    flex-direction: column;
+    grid-template-columns: 1fr;
+  }
+
+  .ledger-amount {
+    justify-items: start;
+  }
+
+  .fund-status-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .fund-amount-stack {
+    justify-items: start;
   }
 
   .table-wrapper table,

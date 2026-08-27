@@ -1,0 +1,253 @@
+@model WorkerBookingSystem.Models.ViewModels.WalletDashboardViewModel
+@{
+    ViewData["Title"] = "Wallet";
+    string Money(decimal value) => $"₹{value:N2}";
+}
+
+<section class="wallet-shell">
+    @Html.AntiForgeryToken()
+    <div class="wallet-hero">
+        <div>
+            <div class="section-kicker">Protected marketplace wallet</div>
+            <h1>Move money with clarity.</h1>
+            <p>Recharge instantly, transfer funds to clients or workers, and review every rupee before it leaves your account.</p>
+            <div class="wallet-actions">
+                <a href="#transferForm" class="btn btn-primary">Send Funds</a>
+                <a href="#rechargeForm" class="btn btn-secondary">Add Money</a>
+            </div>
+        </div>
+        <div class="wallet-balance-card" aria-label="Current wallet balance">
+            <span>Available Balance</span>
+            <strong id="walletBalance">@Money(Model.Wallet.BalanceAmount)</strong>
+            <small>@Model.Wallet.LoyaltyPoints loyalty points earned</small>
+        </div>
+    </div>
+
+    <div class="wallet-trust-strip" aria-label="Wallet trust signals">
+        <span>Zero transfer fee</span>
+        <span>Instant ledger receipt</span>
+        <span>Review before send</span>
+        <span>Protected booking holds</span>
+    </div>
+
+    <div class="wallet-metrics">
+        <article>
+            <span>This Month In</span>
+            <strong>@Money(Model.MonthlyCredits)</strong>
+        </article>
+        <article>
+            <span>This Month Out</span>
+            <strong>@Money(Model.MonthlySpending)</strong>
+        </article>
+        <article>
+            <span>Protected Funds</span>
+            <strong>@Money(Model.ProtectedFunds)</strong>
+        </article>
+        <article>
+            <span>Transfers</span>
+            <strong>@Model.SuccessfulTransfers</strong>
+        </article>
+    </div>
+
+    <div id="walletAlert" class="wallet-alert" role="status" aria-live="polite"></div>
+
+    <div class="wallet-grid">
+        <section class="wallet-panel">
+            <div class="wallet-panel-heading">
+                <div>
+                    <div class="section-kicker">Send money</div>
+                    <h2>Fund Transfer</h2>
+                </div>
+                <span class="status-pill">No fee</span>
+            </div>
+            <form id="transferForm" class="wallet-form">
+                <label class="form-label" for="recipientEmail">Recipient email</label>
+                <input id="recipientEmail" name="recipientEmail" class="form-control" list="walletRecipients" autocomplete="email" required />
+                <datalist id="walletRecipients">
+                    @foreach (var recipient in Model.RecentRecipients)
+                    {
+                        <option value="@recipient.Email">@recipient.DisplayName (@recipient.KycStatus)</option>
+                    }
+                </datalist>
+
+                <label class="form-label" for="transferAmount">Amount</label>
+                <input id="transferAmount" name="amount" class="form-control" type="number" min="1" step="0.01" required />
+
+                <label class="form-label" for="transferNote">Note</label>
+                <input id="transferNote" name="note" class="form-control" maxlength="120" placeholder="Booking advance, refund, salary settlement..." />
+
+                <div class="wallet-review">
+                    <span>Review screen</span>
+                    <strong id="transferPreview">Choose a recipient and amount</strong>
+                    <small>Transfers are recorded immediately with a shared reference ID.</small>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100">Confirm and Send</button>
+            </form>
+        </section>
+
+        <section class="wallet-panel">
+            <div class="wallet-panel-heading">
+                <div>
+                    <div class="section-kicker">Add money</div>
+                    <h2>Recharge Wallet</h2>
+                </div>
+                <span class="status-pill">UPI ready</span>
+            </div>
+            <form id="rechargeForm" class="wallet-form">
+                <label class="form-label" for="rechargeAmount">Amount</label>
+                <input id="rechargeAmount" name="amount" class="form-control" type="number" min="1" step="0.01" required />
+
+                <label class="form-label" for="paymentMethod">Payment method</label>
+                <select id="paymentMethod" name="paymentMethod" class="form-select">
+                    <option value="UPI">UPI</option>
+                    <option value="CARD">Card</option>
+                    <option value="NETBANKING">Net Banking</option>
+                    <option value="CASH">Admin Cash Load</option>
+                </select>
+
+                <div class="quick-amounts" aria-label="Quick recharge amounts">
+                    <button type="button" data-amount="500">₹500</button>
+                    <button type="button" data-amount="1000">₹1,000</button>
+                    <button type="button" data-amount="2500">₹2,500</button>
+                    <button type="button" data-amount="5000">₹5,000</button>
+                </div>
+
+                <div class="wallet-review">
+                    <span>Trust note</span>
+                    <strong>Credits post to your wallet ledger instantly.</strong>
+                    <small>Every recharge shows method, reference, opening balance, and closing balance.</small>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100">Add Money</button>
+            </form>
+        </section>
+    </div>
+
+    <section class="wallet-panel mt-4">
+        <div class="wallet-panel-heading">
+            <div>
+                <div class="section-kicker">Ledger</div>
+                <h2>Recent Transactions</h2>
+            </div>
+            <a class="btn btn-secondary" href="/api/wallet/transactions">API History</a>
+        </div>
+
+        @if (Model.RecentTransactions.Any())
+        {
+            <div class="wallet-ledger">
+                @foreach (var transaction in Model.RecentTransactions)
+                {
+                    var isCredit = transaction.Type == "CREDIT";
+                    <article class="ledger-row">
+                        <div>
+                            <strong>@transaction.Description</strong>
+                            <span>@transaction.TransactionType · @transaction.CreatedAt.ToLocalTime().ToString("dd MMM yyyy, h:mm tt")</span>
+                            @if (!string.IsNullOrWhiteSpace(transaction.GatewayReference))
+                            {
+                                <small>@transaction.GatewayReference</small>
+                            }
+                        </div>
+                        <div class="ledger-amount @(isCredit ? "credit" : "debit")">
+                            @(isCredit ? "+" : "-")@Money(transaction.Amount)
+                            <span>@transaction.Status</span>
+                        </div>
+                    </article>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="empty-state">
+                <h3>No wallet activity yet</h3>
+                <p class="text-muted mb-0">Add money or send a transfer to start your ledger.</p>
+            </div>
+        }
+    </section>
+</section>
+
+@section Scripts {
+    <script>
+        (() => {
+            const alertBox = document.getElementById('walletAlert');
+            const balance = document.getElementById('walletBalance');
+            const transferAmount = document.getElementById('transferAmount');
+            const recipientEmail = document.getElementById('recipientEmail');
+            const preview = document.getElementById('transferPreview');
+            const formatMoney = value => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(value);
+
+            function showAlert(message, success) {
+                alertBox.textContent = message;
+                alertBox.className = `wallet-alert ${success ? 'wallet-alert-success' : 'wallet-alert-error'}`;
+            }
+
+            function updatePreview() {
+                const amount = Number(transferAmount.value || 0);
+                const recipient = recipientEmail.value.trim();
+                preview.textContent = recipient && amount > 0
+                    ? `${formatMoney(amount)} to ${recipient}`
+                    : 'Choose a recipient and amount';
+            }
+
+            async function postJson(url, payload) {
+                const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': token || ''
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                const text = await response.text();
+                const data = text ? JSON.parse(text) : {};
+                if (!response.ok) {
+                    throw new Error(typeof data === 'string' ? data : data.title || data.message || text || 'Request failed');
+                }
+
+                return data;
+            }
+
+            transferAmount.addEventListener('input', updatePreview);
+            recipientEmail.addEventListener('input', updatePreview);
+
+            document.querySelectorAll('.quick-amounts button').forEach(button => {
+                button.addEventListener('click', () => {
+                    document.getElementById('rechargeAmount').value = button.dataset.amount;
+                });
+            });
+
+            document.getElementById('rechargeForm').addEventListener('submit', async event => {
+                event.preventDefault();
+                try {
+                    const amount = Number(document.getElementById('rechargeAmount').value);
+                    const paymentMethod = document.getElementById('paymentMethod').value;
+                    const data = await postJson('/api/wallet/recharge', { amount, paymentMethod });
+                    balance.textContent = formatMoney(data.balance);
+                    showAlert(`Added ${formatMoney(data.amount)}. Reference ${data.reference}.`, true);
+                    event.target.reset();
+                } catch (error) {
+                    showAlert(error.message, false);
+                }
+            });
+
+            document.getElementById('transferForm').addEventListener('submit', async event => {
+                event.preventDefault();
+                try {
+                    const data = await postJson('/api/wallet/transfer', {
+                        recipientEmail: recipientEmail.value,
+                        amount: Number(transferAmount.value),
+                        note: document.getElementById('transferNote').value
+                    });
+                    balance.textContent = formatMoney(data.balance);
+                    showAlert(`Sent ${formatMoney(data.amount)} to ${data.recipient}. Reference ${data.reference}.`, true);
+                    event.target.reset();
+                    updatePreview();
+                } catch (error) {
+                    showAlert(error.message, false);
+                }
+            });
+        })();
+    </script>
+}

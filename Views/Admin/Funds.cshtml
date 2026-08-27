@@ -1,0 +1,183 @@
+@model WorkerBookingSystem.Models.ViewModels.AdminFundsDashboardViewModel
+@{
+    ViewData["Title"] = "Funds & Payouts";
+    string Money(decimal value) => $"₹{value:N2}";
+}
+
+<div class="page-header">
+    <div class="section-kicker">Admin only</div>
+    <div class="d-flex flex-wrap justify-content-between gap-3 align-items-start">
+        <div>
+            <h1>Funds & Payouts</h1>
+            <p class="text-muted mb-0">Manage client receipts, worker payouts, company-fund advances, recovery, and audit history.</p>
+        </div>
+        <a asp-action="Dashboard" class="btn btn-secondary">Back to Dashboard</a>
+    </div>
+</div>
+
+@if (TempData["FundsMessage"] != null)
+{
+    <div class="alert alert-info">@TempData["FundsMessage"]</div>
+}
+
+<div class="wallet-metrics mb-4">
+    <article>
+        <span>Client Received</span>
+        <strong>@Money(Model.TotalClientReceived)</strong>
+    </article>
+    <article>
+        <span>Worker Paid</span>
+        <strong>@Money(Model.TotalWorkerPaid)</strong>
+    </article>
+    <article>
+        <span>Company Advanced</span>
+        <strong>@Money(Model.TotalCompanyAdvanced)</strong>
+    </article>
+    <article>
+        <span>Client Outstanding</span>
+        <strong>@Money(Model.TotalClientOutstanding)</strong>
+    </article>
+</div>
+
+<section class="wallet-panel">
+    <div class="wallet-panel-heading">
+        <div>
+            <div class="section-kicker">Booking ledger</div>
+            <h2>Manage Booking Funds</h2>
+        </div>
+        <span class="status-pill">Recoverable: @Money(Model.TotalRecoverableFromClient)</span>
+    </div>
+
+    @if (!Model.Bookings.Any())
+    {
+        <div class="empty-state">
+            <h3>No bookings yet</h3>
+            <p class="text-muted mb-0">Create a booking before managing funds.</p>
+        </div>
+    }
+    else
+    {
+        <div class="fund-booking-list">
+            @foreach (var booking in Model.Bookings)
+            {
+                <article class="fund-booking-card">
+                    <div class="fund-booking-summary">
+                        <div>
+                            <div class="section-kicker">Booking #@booking.BookingId · @booking.BookingStatus</div>
+                            <h3>@booking.WorkerName</h3>
+                            <p class="text-muted mb-0">@booking.WorkerSkill · Client: @booking.ClientName</p>
+                        </div>
+                        <div class="fund-amount-stack">
+                            <strong>@Money(booking.TotalWage)</strong>
+                            <span>@booking.PaymentStatus</span>
+                        </div>
+                    </div>
+
+                    <div class="fund-status-grid">
+                        <div><span>Received</span><strong>@Money(booking.ClientReceived)</strong></div>
+                        <div><span>Paid Worker</span><strong>@Money(booking.WorkerPaid)</strong></div>
+                        <div><span>Worker Due</span><strong>@Money(booking.WorkerDue)</strong></div>
+                        <div><span>Client Due</span><strong>@Money(booking.ClientDue)</strong></div>
+                        <div><span>Company Advance</span><strong>@Money(booking.CompanyAdvanced)</strong></div>
+                        <div><span>Recoverable</span><strong>@Money(booking.AdvanceRecoverable)</strong></div>
+                    </div>
+
+                    <div class="worker-payout-details">
+                        <strong>Worker payout details</strong>
+                        <span>Preferred: @booking.WorkerPreferredPayoutMethod</span>
+                        @if (!string.IsNullOrWhiteSpace(booking.WorkerUpiId))
+                        {
+                            <span>UPI: @booking.WorkerUpiId</span>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(booking.WorkerBankSummary))
+                        {
+                            <span>Bank: @booking.WorkerBankSummary</span>
+                        }
+                    </div>
+
+                    <div class="fund-action-grid">
+                        <form asp-action="RecordClientReceipt" method="post" class="fund-mini-form">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="BookingId" value="@booking.BookingId" />
+                            <strong>Record client receipt</strong>
+                            <input name="Amount" class="form-control" type="number" min="0.01" step="0.01" max="@booking.ClientDue" placeholder="Amount" required />
+                            <select name="Method" class="form-select">
+                                <option value="UPI">UPI</option>
+                                <option value="CARD">Card</option>
+                                <option value="NETBANKING">Net Banking</option>
+                                <option value="CASH">Cash</option>
+                                <option value="WALLET">Wallet</option>
+                            </select>
+                            <input name="Reference" class="form-control" maxlength="120" placeholder="UTR / reference" />
+                            <input name="Notes" class="form-control" maxlength="500" placeholder="Notes" />
+                            <button type="submit" class="btn btn-primary">Save Receipt</button>
+                        </form>
+
+                        <form asp-action="RecordWorkerPayout" method="post" class="fund-mini-form">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="BookingId" value="@booking.BookingId" />
+                            <strong>Pay worker</strong>
+                            <input name="Amount" class="form-control" type="number" min="0.01" step="0.01" max="@booking.WorkerDue" placeholder="Amount" required />
+                            <select name="FundingSource" class="form-select">
+                                <option value="@WorkerBookingSystem.Models.FundingSources.ClientReceivedFunds">From received client funds</option>
+                                <option value="@WorkerBookingSystem.Models.FundingSources.CompanyFundAdvance">From company fund advance</option>
+                            </select>
+                            <select name="Method" class="form-select">
+                                <option value="@booking.WorkerPreferredPayoutMethod">@booking.WorkerPreferredPayoutMethod</option>
+                                <option value="UPI">UPI</option>
+                                <option value="BANK">Direct to Bank</option>
+                                <option value="WALLET">Wallet</option>
+                                <option value="CASH">Cash</option>
+                            </select>
+                            <input name="Reference" class="form-control" maxlength="120" placeholder="Transfer reference" />
+                            <input name="Notes" class="form-control" maxlength="500" placeholder="Notes" />
+                            <button type="submit" class="btn btn-primary">Record Payout</button>
+                        </form>
+                    </div>
+                </article>
+            }
+        </div>
+    }
+</section>
+
+<section class="wallet-panel mt-4">
+    <div class="wallet-panel-heading">
+        <div>
+            <div class="section-kicker">Audit</div>
+            <h2>Recent Fund Transactions</h2>
+        </div>
+    </div>
+    @if (!Model.RecentTransactions.Any())
+    {
+        <div class="empty-state">
+            <h3>No fund audit activity yet</h3>
+            <p class="text-muted mb-0">Receipts and payouts will appear here.</p>
+        </div>
+    }
+    else
+    {
+        <div class="wallet-ledger">
+            @foreach (var transaction in Model.RecentTransactions)
+            {
+                var isIn = transaction.Direction == WorkerBookingSystem.Models.AdminFundDirections.In;
+                <article class="ledger-row">
+                    <div>
+                        <strong>@transaction.TransactionType · Booking #@transaction.BookingId</strong>
+                        <span>@transaction.FundingSource · @transaction.Method · @transaction.CreatedAt.ToLocalTime().ToString("dd MMM yyyy, h:mm tt")</span>
+                        @if (!string.IsNullOrWhiteSpace(transaction.Reference))
+                        {
+                            <small>@transaction.Reference</small>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(transaction.Notes))
+                        {
+                            <small>@transaction.Notes</small>
+                        }
+                    </div>
+                    <div class="ledger-amount @(isIn ? "credit" : "debit")">
+                        @(isIn ? "+" : "-")@Money(transaction.Amount)
+                    </div>
+                </article>
+            }
+        </div>
+    }
+</section>

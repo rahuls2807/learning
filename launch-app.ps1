@@ -10,14 +10,17 @@ Write-Host "========================================`n" -ForegroundColor Cyan
 Write-Host "Starting the application...`n" -ForegroundColor Green
 Push-Location $appPath
 
-dotnet run
+$env:ASPNETCORE_ENVIRONMENT = "Development"
+
+$launchArgs = @("run", "--launch-profile", "http")
+& dotnet @launchArgs
 $exitCode = $LASTEXITCODE
 
 Pop-Location
 
 if ($exitCode -ne 0) {
     Write-Host "`n[ERROR] Application failed to start!`n" -ForegroundColor Red
-    Read-Host "Press Enter to close"
+    exit $exitCode
 }
 
 exit $exitCode

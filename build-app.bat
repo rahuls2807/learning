@@ -7,13 +7,15 @@ echo   Building Worker Booking System
 echo ========================================
 echo.
 
-echo Stopping any running instances...
-taskkill /F /IM dotnet.exe >nul 2>&1
+echo Stopping any running instance of this app...
+for /f "skip=2 tokens=2" %%P in ('wmic process where "name='dotnet.exe' and commandline like '%%WorkerBookingSystem%%'" get processid 2^>nul') do (
+    taskkill /PID %%P /F >nul 2>&1
+)
 if !errorlevel! equ 0 (
-    echo [OK] Process terminated
+    echo [OK] App instance stopped
     timeout /t 2 /nobreak
 ) else (
-    echo [INFO] No running process found
+    echo [INFO] No matching app instance found
 )
 
 cd /d c:\Users\rsing\source\repos\WorkerBookingSystem
@@ -24,10 +26,10 @@ if exist bin rmdir /s /q bin >nul 2>&1
 if exist obj rmdir /s /q obj >nul 2>&1
 
 echo.
-echo Building the project...
+echo Building the project in Release mode...
 echo.
 
-dotnet build
+dotnet build "WorkerBookingSystem.csproj" -c Release --nologo
 
 if !errorlevel! equ 0 (
     echo.
@@ -37,5 +39,5 @@ if !errorlevel! equ 0 (
     echo.
     echo [ERROR] Build failed with errors!
     echo.
-    pause
+    exit /b 1
 )

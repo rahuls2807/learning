@@ -5,6 +5,7 @@ param(
 $ErrorActionPreference = "Stop"
 
 $ProjectRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
+$ProjectFile = Join-Path $ProjectRoot "WorkerBookingSystem.csproj"
 $OutLog = Join-Path $ProjectRoot "restart-app.out.log"
 $ErrLog = Join-Path $ProjectRoot "restart-app.err.log"
 
@@ -14,17 +15,12 @@ Write-Host "URL:     $Url"
 
 Write-Host "Stopping existing WorkerBookingSystem processes..." -ForegroundColor Yellow
 
-# Kill all WorkerBookingSystem processes
-Get-Process -Name "WorkerBookingSystem" -ErrorAction SilentlyContinue |
-    Stop-Process -Force -ErrorAction SilentlyContinue
-
-# Kill dotnet processes related to this project
 try {
     Get-CimInstance Win32_Process |
         Where-Object {
             $_.Name -eq "dotnet.exe" -and
             $_.CommandLine -and
-            ($_.CommandLine -like "*$ProjectRoot*" -or $_.CommandLine -like "*localhost:5156*")
+            ($_.CommandLine.ToLower().Contains("workerbookingsystem") -or $_.CommandLine.Contains($Url))
         } |
         ForEach-Object {
             Write-Host "Killing process $($_.ProcessId)..." -ForegroundColor DarkYellow
@@ -32,7 +28,7 @@ try {
         }
 }
 catch {
-    Write-Host "Could not inspect dotnet command lines. Continuing after stopping app executable." -ForegroundColor DarkYellow
+    Write-Host "Could not identify project-specific dotnet processes. Continuing safely." -ForegroundColor DarkYellow
 }
 
 Start-Sleep -Seconds 2
@@ -46,7 +42,7 @@ Start-Sleep -Seconds 1
 Push-Location $ProjectRoot
 try {
     Write-Host "Building project..." -ForegroundColor Yellow
-    dotnet build
+    dotnet build $ProjectFile -c Release --nologo
     if ($LASTEXITCODE -ne 0) {
         throw "Build failed with exit code $LASTEXITCODE."
     }
@@ -54,9 +50,11 @@ try {
     if (Test-Path $OutLog) { Remove-Item $OutLog -Force }
     if (Test-Path $ErrLog) { Remove-Item $ErrLog -Force }
 
+    $env:ASPNETCORE_ENVIRONMENT = "Development"
+
     Write-Host "Starting server..." -ForegroundColor Green
     $process = Start-Process -FilePath "dotnet" `
-        -ArgumentList @("run", "--no-build", "--urls", $Url) `
+        -ArgumentList @("run", "--project", $ProjectFile, "--no-build", "--urls", $Url, "--launch-profile", "http") `
         -WorkingDirectory $ProjectRoot `
         -WindowStyle Hidden `
         -RedirectStandardOutput $OutLog `

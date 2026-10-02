@@ -43,7 +43,7 @@
                         <tr>
                             <td>@booking.Client?.FirstName @booking.Client?.LastName</td>
                             <td>@booking.Client?.Email</td>
-                            <td>@booking.Client?.PhoneNumber</td>
+                            <td>@WorkerBookingSystem.Services.IndianPhoneNumber.ToE164(booking.Client?.PhoneNumber)</td>
                             <td>
                                 @booking.Worker?.FirstName @booking.Worker?.LastName
                                 @if (booking.Worker != null)
@@ -52,7 +52,7 @@
                                 }
                             </td>
                             <td>@booking.Worker?.Email</td>
-                            <td>@booking.Worker?.PhoneNumber</td>
+                            <td>@WorkerBookingSystem.Services.IndianPhoneNumber.ToE164(booking.Worker?.PhoneNumber)</td>
                             <td>@booking.BookingDate.ToShortDateString()</td>
                             <td>@booking.StartTime.ToShortTimeString() - @booking.EndTime.ToShortTimeString()</td>
                             <td>@booking.TaskDescription</td>

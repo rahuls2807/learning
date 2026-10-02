@@ -41,7 +41,7 @@
                             <td>#@item.BookingId</td>
                             <td>
                                 @item.Booking?.Client?.FirstName @item.Booking?.Client?.LastName<br />
-                                <small>@item.Booking?.Client?.PhoneNumber</small>
+                                <small>@WorkerBookingSystem.Services.IndianPhoneNumber.ToE164(item.Booking?.Client?.PhoneNumber)</small>
                             </td>
                             <td><strong>@item.ClientUpiId</strong></td>
                             <td>@item.Booking?.Worker?.FirstName @item.Booking?.Worker?.LastName</td>

@@ -139,7 +139,8 @@ namespace WorkerBookingSystem.Controllers
             {
 
                 var existingWorker = await _context.Workers
-                    .FirstOrDefaultAsync(w => w.PhoneNumber == model.PhoneNumber);
+                    .FirstOrDefaultAsync(w => w.PhoneNumber == IndianPhoneNumber.ToE164(model.PhoneNumber)
+                        || w.PhoneNumber == model.PhoneNumber);
 
                 if (existingWorker != null)
                 {
@@ -180,7 +181,7 @@ namespace WorkerBookingSystem.Controllers
                         FirstName = model.FirstName,
                         LastName = model.LastName,
                         Email = model.Email,
-                        PhoneNumber = model.PhoneNumber,
+                        PhoneNumber = IndianPhoneNumber.ToE164(model.PhoneNumber),
                         Skill = model.Skill,
                         PreferredPayoutMethod = model.PreferredPayoutMethod,
                         UpiId = model.UpiId,
@@ -221,7 +222,7 @@ namespace WorkerBookingSystem.Controllers
                 FirstName = worker.FirstName ?? string.Empty,
                 LastName = worker.LastName ?? string.Empty,
                 Email = worker.Email ?? string.Empty,
-                PhoneNumber = worker.PhoneNumber ?? string.Empty,
+                PhoneNumber = IndianPhoneNumber.ToNationalDigits(worker.PhoneNumber),
                 Skill = worker.Skill ?? string.Empty,
                 ProfessionalSummary = worker.ProfessionalSummary,
                 YearsExperience = worker.YearsExperience,
@@ -257,7 +258,7 @@ namespace WorkerBookingSystem.Controllers
                     existing.FirstName = model.FirstName;
                     existing.LastName = model.LastName;
                     existing.Email = model.Email;
-                    existing.PhoneNumber = model.PhoneNumber;
+                    existing.PhoneNumber = IndianPhoneNumber.ToE164(model.PhoneNumber);
                     existing.Skill = model.Skill;
                     existing.ProfessionalSummary = model.ProfessionalSummary?.Trim();
                     existing.YearsExperience = model.YearsExperience;

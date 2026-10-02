@@ -65,7 +65,8 @@ namespace WorkerBookingSystem.Models.ViewModels
         public int BookingId { get; set; }
         
         [Required]
-        [Phone]
+        [StringLength(10, MinimumLength = 10)]
+        [RegularExpression("^[6-9][0-9]{9}$", ErrorMessage = "Enter a valid 10-digit Indian mobile number.")]
         public string PhoneNumber { get; set; } = string.Empty;
     }
 

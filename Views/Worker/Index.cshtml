@@ -58,7 +58,7 @@
                         <tr>
                             <td>@worker.Name</td>
                             <td>@worker.Email</td>
-                            <td>@worker.PhoneNumber</td>
+                            <td>@WorkerBookingSystem.Services.IndianPhoneNumber.ToE164(worker.PhoneNumber)</td>
                             <td>@worker.Skill</td>
                             <td>
                                 @if (worker.DisplayRate.HasValue && worker.DisplayRate.Value > 0)

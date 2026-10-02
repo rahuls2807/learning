@@ -1,11 +1,16 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Indian Worker Mandi">
-  <rect width="512" height="512" rx="112" fill="#087b70"/>
-  <circle cx="256" cy="256" r="166" fill="#fff7df"/>
-  <path d="M150 310h212v35H150z" fill="#16473f"/>
-  <path d="M184 192h137l43 61v48H148v-48z" fill="#087b70"/>
-  <path d="M204 220h101l23 32H181z" fill="#ffffff"/>
-  <circle cx="202" cy="337" r="29" fill="#16473f"/>
-  <circle cx="310" cy="337" r="29" fill="#16473f"/>
-  <path d="M248 139h16v53h-16z" fill="#e0b43a"/>
-  <path d="M230 157h52v16h-52z" fill="#e0b43a"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Indian Worker Mandi: skilled workers beneath a rising sun">
+  <rect width="512" height="512" rx="118" fill="#126b5d"/>
+  <circle cx="256" cy="224" r="143" fill="#f4c84a"/>
+  <path d="M102 292c31-88 105-139 154-139s123 51 154 139" fill="#fff8e6"/>
+  <path d="M110 300h292v104H110z" fill="#126b5d"/>
+  <path d="M122 404c9-52 37-81 77-81s68 29 77 81" fill="#f4c84a"/>
+  <path d="M236 404c8-67 36-103 78-103s70 36 78 103" fill="#fff8e6"/>
+  <path d="M77 404c7-37 27-57 57-57 13 0 24 4 33 13-11 13-18 28-22 44z" fill="#fff8e6"/>
+  <circle cx="199" cy="277" r="34" fill="#126b5d"/>
+  <circle cx="314" cy="265" r="37" fill="#126b5d"/>
+  <circle cx="111" cy="315" r="25" fill="#f4c84a"/>
+  <path d="M162 272c3-22 17-34 37-34s34 12 37 34h-74z" fill="#e49d35"/>
+  <path d="M280 249c7-20 19-30 35-30s28 10 35 30" fill="none" stroke="#f4c84a" stroke-width="13" stroke-linecap="round"/>
+  <path d="M337 284l37 37m-20-41 19-19m-45 60 19-19" fill="none" stroke="#e49d35" stroke-width="10" stroke-linecap="round"/>
+  <path d="M62 433h388" stroke="#f4c84a" stroke-width="15" stroke-linecap="round"/>
 </svg>

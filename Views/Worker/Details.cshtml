@@ -51,7 +51,7 @@
             @if (Model.CanSeeContact)
             {
                 <p class="mb-1"><strong>Email:</strong> @worker.Email</p>
-                <p class="mb-1"><strong>Phone:</strong> @worker.PhoneNumber</p>
+                <p class="mb-1"><strong>Phone:</strong> @WorkerBookingSystem.Services.IndianPhoneNumber.ToE164(worker.PhoneNumber)</p>
                 @if (!string.IsNullOrWhiteSpace(worker.ResumePath))
                 {
                     <p class="mb-0"><a href="@worker.ResumePath" target="_blank" rel="noopener">View Resume</a></p>

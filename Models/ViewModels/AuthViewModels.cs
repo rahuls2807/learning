@@ -71,6 +71,9 @@ namespace WorkerBookingSystem.Models.ViewModels
         public string Email { get; set; } = string.Empty;
 
         [Required]
+        [Display(Name = "Mobile number")]
+        [StringLength(10, MinimumLength = 10, ErrorMessage = "Enter exactly 10 digits after +91.")]
+        [RegularExpression("^[6-9][0-9]{9}$", ErrorMessage = "Enter a valid 10-digit Indian mobile number.")]
         public string PhoneNumber { get; set; } = string.Empty;
 
         [Required]
@@ -99,6 +102,9 @@ namespace WorkerBookingSystem.Models.ViewModels
         public string Email { get; set; } = string.Empty;
 
         [Required]
+        [Display(Name = "Mobile number")]
+        [StringLength(10, MinimumLength = 10, ErrorMessage = "Enter exactly 10 digits after +91.")]
+        [RegularExpression("^[6-9][0-9]{9}$", ErrorMessage = "Enter a valid 10-digit Indian mobile number.")]
         public string PhoneNumber { get; set; } = string.Empty;
 
         [Required]
@@ -158,6 +164,9 @@ namespace WorkerBookingSystem.Models.ViewModels
         public string Email { get; set; } = string.Empty;
 
         [Required]
+        [Display(Name = "Mobile number")]
+        [StringLength(10, MinimumLength = 10, ErrorMessage = "Enter exactly 10 digits after +91.")]
+        [RegularExpression("^[6-9][0-9]{9}$", ErrorMessage = "Enter a valid 10-digit Indian mobile number.")]
         public string PhoneNumber { get; set; } = string.Empty;
 
         [Required]

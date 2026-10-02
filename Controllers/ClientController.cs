@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using WorkerBookingSystem.Data;
 using WorkerBookingSystem.Models;
 using WorkerBookingSystem.Models.ViewModels;
+using WorkerBookingSystem.Services;
 
 namespace WorkerBookingSystem.Controllers
 {
@@ -87,7 +88,7 @@ namespace WorkerBookingSystem.Controllers
                     FirstName = model.FirstName,
                     LastName = model.LastName,
                     Email = model.Email,
-                    PhoneNumber = model.PhoneNumber,
+                    PhoneNumber = IndianPhoneNumber.ToE164(model.PhoneNumber),
                     Address = model.Address,
                     UserId = user.Id
                 };

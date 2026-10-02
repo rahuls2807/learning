@@ -94,6 +94,9 @@ namespace WorkerBookingSystem.Controllers
         [Route("Payment/RequestOtp")]
         public async Task<IActionResult> RequestOtp([FromBody] OtpRequestViewModel model)
         {
+            if (!ModelState.IsValid)
+                return BadRequest(new { success = false, message = "Enter a valid 10-digit Indian mobile number." });
+
             var booking = await GetClientBooking(model.BookingId);
             if (booking == null)
                 return Json(new { success = false, message = "Booking not found" });

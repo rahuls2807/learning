@@ -89,16 +89,13 @@ main {
 }
 
 .brand-mark {
-  display: inline-grid;
-  width: 34px;
-  height: 34px;
-  place-items: center;
+  display: block;
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
   margin-right: 8px;
   border-radius: 50%;
-  background: var(--brand);
-  color: #ffffff;
-  font-size: 0.9rem;
-  font-weight: 800;
+  object-fit: contain;
 }
 
 .nav-link,
@@ -1315,7 +1312,7 @@ main {
 /* Shared Worker Mandi palette across pages outside the community feed. */
 .app-header { border-bottom: 3px solid var(--accent); box-shadow: 0 6px 22px rgba(19,54,47,.07); }
 .navbar-brand { display:flex; flex:0 0 auto; align-items:center; white-space:nowrap; }
-.navbar-brand .brand-mark { flex:0 0 34px; outline:2px solid var(--accent); outline-offset:2px; }
+.navbar-brand .brand-mark { flex:0 0 42px; outline:2px solid var(--accent); outline-offset:2px; }
 .navbar-collapse { min-width:0; }
 .navbar-nav { flex-wrap:wrap; }
 .nav-link,.nav-logout { padding:6px 8px !important; }

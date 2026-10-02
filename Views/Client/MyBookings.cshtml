@@ -108,7 +108,7 @@
                                     </div>
                                     <div class="text-muted mt-3">
                                         @booking.Worker?.Email<br />
-                                        @booking.Worker?.PhoneNumber
+                                        @WorkerBookingSystem.Services.IndianPhoneNumber.ToE164(booking.Worker?.PhoneNumber)
                                     </div>
                                     <div class="d-flex gap-2 mt-3">
                                         <a asp-controller="Chat" asp-action="Booking" asp-route-bookingId="@booking.BookingId" class="btn btn-outline-primary flex-fill">Message worker</a>

@@ -8,7 +8,7 @@ using WorkerBookingSystem.Services;
 
 namespace WorkerBookingSystem.Hubs
 {
-    [Authorize(Roles = "Client,Worker")]
+    [Authorize]
     public class BookingChatHub : Hub
     {
         private const int HistoryLimit = 50;
@@ -24,8 +24,9 @@ namespace WorkerBookingSystem.Hubs
         public async Task<object> JoinBooking(int bookingId)
         {
             var userId = _userManager.GetUserId(Context.User!);
+            var email = Context.User?.Identity?.Name;
             var booking = await GetBookingAsync(bookingId);
-            if (booking == null || !BookingParticipantPolicy.CanAccess(booking, userId))
+            if (booking == null || !BookingParticipantPolicy.CanAccess(booking, userId, email))
             {
                 throw new HubException("You do not have access to this booking conversation.");
             }
@@ -66,13 +67,19 @@ namespace WorkerBookingSystem.Hubs
             }
 
             var senderId = _userManager.GetUserId(Context.User!);
+            var senderEmail = Context.User?.Identity?.Name;
             var booking = await GetBookingAsync(bookingId);
-            if (booking == null || !BookingParticipantPolicy.CanAccess(booking, senderId))
+            if (booking == null || !BookingParticipantPolicy.CanAccess(booking, senderId, senderEmail))
             {
                 throw new HubException("You do not have access to this booking conversation.");
             }
 
-            var receiverId = BookingParticipantPolicy.GetOtherParticipantId(booking, senderId);
+            var recipient = BookingParticipantPolicy.GetOtherParticipant(booking, senderId, senderEmail);
+            var receiverId = recipient.UserId;
+            if (string.IsNullOrWhiteSpace(receiverId) && !string.IsNullOrWhiteSpace(recipient.Email))
+            {
+                receiverId = (await _userManager.FindByEmailAsync(recipient.Email))?.Id;
+            }
             if (string.IsNullOrWhiteSpace(receiverId))
             {
                 throw new HubException("The other booking participant does not have an active account.");

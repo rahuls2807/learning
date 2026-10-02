@@ -9,10 +9,7 @@
             <span class="community-eyebrow">YOUR NETWORK</span>
             <h2>Member messages</h2>
             <p class="text-muted mb-3">Private one-to-one conversations with people in the Worker Mandi community.</p>
-            @if (User.IsInRole("Client") || User.IsInRole("Worker"))
-            {
-                <a asp-controller="Chat" asp-action="Index" class="community-text-link">Open booking conversations ↗</a>
-            }
+            <a asp-controller="Chat" asp-action="Index" class="community-text-link">Open booking conversations ↗</a>
         </section>
     </aside>
     <main class="community-main">

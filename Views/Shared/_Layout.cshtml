@@ -35,6 +35,12 @@
                         <li class="nav-item">
                             <a class="nav-link" asp-controller="Community" asp-action="Index">Community</a>
                         </li>
+                        @if (User.Identity?.IsAuthenticated == true)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="CommunityChat" asp-action="Index">Messages</a>
+                            </li>
+                        }
                         @if (User.IsInRole("Client"))
                         {
                             <li class="nav-item">
@@ -42,9 +48,6 @@
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link" asp-controller="Client" asp-action="BookWorker">Find Workers</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" asp-controller="CommunityChat" asp-action="Index">Messages</a>
                             </li>
                         }
                         @if (User.IsInRole("Worker"))
@@ -54,9 +57,6 @@
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link" asp-controller="Worker" asp-action="Index">Profile</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" asp-controller="CommunityChat" asp-action="Index">Messages</a>
                             </li>
                         }
                         @if (User.IsInRole("Admin"))

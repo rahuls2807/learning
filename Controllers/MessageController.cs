@@ -38,6 +38,7 @@ namespace WorkerBookingSystem.Controllers
         public async Task<IActionResult> GetBookingMessages(int bookingId, [FromQuery] int page = 1)
         {
             var userId = _userManager.GetUserId(User);
+            var email = User.Identity?.Name;
             if (page is < 1 or > 100000)
                 return BadRequest("Page must be between 1 and 100000.");
 
@@ -50,7 +51,7 @@ namespace WorkerBookingSystem.Controllers
                 return NotFound("Booking not found");
 
             // Verify user is part of this booking
-            if (!BookingParticipantPolicy.CanAccess(booking, userId, User.IsInRole("Admin")))
+            if (!BookingParticipantPolicy.CanAccess(booking, userId, email))
                 return Forbid("Not authorized to view these messages");
 
             await _context.Messages
@@ -106,19 +107,15 @@ namespace WorkerBookingSystem.Controllers
             if (booking == null)
                 return NotFound("Booking not found");
 
-            // Determine receiver based on sender role
-            string? receiverId;
-            if (booking.Worker?.UserId == senderId)
-            {
-                receiverId = booking.Client?.UserId;
-            }
-            else if (booking.Client?.UserId == senderId)
-            {
-                receiverId = booking.Worker?.UserId;
-            }
-            else
-            {
+            var senderEmail = User.Identity?.Name;
+            if (!BookingParticipantPolicy.CanAccess(booking, senderId, senderEmail))
                 return Forbid("Not authorized to send messages in this booking");
+
+            var recipient = BookingParticipantPolicy.GetOtherParticipant(booking, senderId, senderEmail);
+            var receiverId = recipient.UserId;
+            if (string.IsNullOrWhiteSpace(receiverId) && !string.IsNullOrWhiteSpace(recipient.Email))
+            {
+                receiverId = (await _userManager.FindByEmailAsync(recipient.Email))?.Id;
             }
 
             if (string.IsNullOrWhiteSpace(receiverId))

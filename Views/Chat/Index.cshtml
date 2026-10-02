@@ -19,11 +19,15 @@
         <div class="empty-state">
             <h3>No booking conversations yet</h3>
             <p class="text-muted">A conversation becomes available when you have a booking.</p>
-            @if (User.IsInRole("Worker"))
+            @if (User.IsInRole("Admin"))
+            {
+                <a class="btn btn-primary" asp-controller="Admin" asp-action="MyBookings">View bookings</a>
+            }
+            else if (User.IsInRole("Worker"))
             {
                 <a class="btn btn-primary" asp-controller="Worker" asp-action="MyBookings">View jobs</a>
             }
-            else
+            else if (User.IsInRole("Client"))
             {
                 <a class="btn btn-primary" asp-controller="Client" asp-action="MyBookings">View bookings</a>
             }

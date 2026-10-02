@@ -33,10 +33,7 @@
             @if (User.Identity?.IsAuthenticated == true)
             {
                 <a asp-controller="CommunityChat" asp-action="Index"><span>Messages</span><strong>↗</strong></a>
-                @if (User.IsInRole("Client") || User.IsInRole("Worker"))
-                {
-                    <a asp-controller="Chat" asp-action="Index"><span>Booking chats</span><strong>↗</strong></a>
-                }
+                <a asp-controller="Chat" asp-action="Index"><span>Booking chats</span><strong>↗</strong></a>
                 <a asp-controller="Support" asp-action="Index"><span>Support desk</span><strong>↗</strong></a>
             }
         </section>

@@ -54,7 +54,7 @@ try {
 
     Write-Host "Starting server..." -ForegroundColor Green
     $process = Start-Process -FilePath "dotnet" `
-        -ArgumentList @("run", "--project", $ProjectFile, "--no-build", "--urls", $Url, "--launch-profile", "http") `
+        -ArgumentList @("run", "--project", $ProjectFile, "--no-build", "-c", "Release", "--urls", $Url, "--launch-profile", "http") `
         -WorkingDirectory $ProjectRoot `
         -WindowStyle Hidden `
         -RedirectStandardOutput $OutLog `

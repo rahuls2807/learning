@@ -38,7 +38,7 @@ if !errorlevel! neq 0 (
     exit /b 1
 )
 
-dotnet run --project "WorkerBookingSystem.csproj" --no-build --launch-profile http --urls http://localhost:5156
+dotnet run --project "WorkerBookingSystem.csproj" --no-build -c Release --launch-profile http --urls http://localhost:5156
 if !errorlevel! neq 0 (
     echo.
     echo [ERROR] Application failed to start!

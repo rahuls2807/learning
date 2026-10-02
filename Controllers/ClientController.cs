@@ -101,10 +101,11 @@ namespace WorkerBookingSystem.Controllers
         }
 
         // GET: Client/BookWorker
-        public async Task<IActionResult> BookWorker(string? search, string? skill, int page = 1, int pageSize = 25)
+        public async Task<IActionResult> BookWorker(string? search, string? skill, string? sort = "recommended", int page = 1, int pageSize = 25)
         {
             page = Math.Max(1, page);
             pageSize = Math.Clamp(pageSize, 10, 100);
+            sort = sort is "rating" or "completed" or "rate-low" or "rate-high" ? sort : "recommended";
 
             var query = _context.Workers.AsNoTracking().Where(w => w.IsActive);
 
@@ -115,17 +116,29 @@ namespace WorkerBookingSystem.Controllers
 
             if (!string.IsNullOrWhiteSpace(search))
             {
-                var term = $"{search.Trim()}%";
+                var term = $"%{search.Trim()}%";
                 query = query.Where(w =>
                     (w.FirstName != null && EF.Functions.Like(w.FirstName, term)) ||
                     (w.LastName != null && EF.Functions.Like(w.LastName, term)) ||
                     (w.Skill != null && EF.Functions.Like(w.Skill, term)));
             }
 
+            query = sort switch
+            {
+                "rating" => query.OrderByDescending(w => w.Reviews.Any() ? w.Reviews.Average(r => r.Rating) : 0)
+                    .ThenByDescending(w => w.Reviews.Count),
+                "completed" => query.OrderByDescending(w => w.Bookings.Count(b => b.Status == BookingStatus.Completed)),
+                "rate-low" => query.OrderBy(w => _context.HourlyRates.Where(r => r.WorkerId == w.WorkerId && r.IsActive)
+                    .OrderByDescending(r => r.EffectiveDate).Select(r => (decimal?)r.RatePerHour).FirstOrDefault()),
+                "rate-high" => query.OrderByDescending(w => _context.HourlyRates.Where(r => r.WorkerId == w.WorkerId && r.IsActive)
+                    .OrderByDescending(r => r.EffectiveDate).Select(r => (decimal?)r.RatePerHour).FirstOrDefault()),
+                _ => query.OrderByDescending(w => w.Reviews.Any() ? w.Reviews.Average(r => r.Rating) : 0)
+                    .ThenByDescending(w => w.Reviews.Count)
+                    .ThenByDescending(w => w.Bookings.Count(b => b.Status == BookingStatus.Completed))
+            };
+
             var totalItems = await query.CountAsync();
             var workers = await query
-                .OrderBy(w => w.FirstName)
-                .ThenBy(w => w.LastName)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .Select(w => new WorkerSearchItemViewModel
@@ -172,7 +185,8 @@ namespace WorkerBookingSystem.Controllers
                 PageSize = pageSize,
                 TotalItems = totalItems,
                 Search = search,
-                Skill = skill
+                Skill = skill,
+                Sort = sort
             });
         }
 

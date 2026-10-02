@@ -1353,6 +1353,28 @@ main {
   .access-denied-actions .btn { flex:1 1 100%; }
 }
 
+.nav-booking-cta {
+  min-height: 38px;
+  margin: 1px 6px;
+  padding-inline: 14px !important;
+  border: 1px solid #d9ad4b;
+  border-radius: 7px;
+  background: #f7edcf;
+  color: #245b4e !important;
+}
+
+.nav-booking-cta:hover,
+.nav-booking-cta:focus-visible {
+  background: #efdca5;
+  color: #17483d !important;
+}
+
+.worker-search-form .form-control,
+.worker-search-form .form-select,
+.worker-search-form .btn {
+  min-height: 44px;
+}
+
 .dropdown-menu { min-width: 210px; padding: 7px; border: 1px solid #dce9e3; border-top: 2px solid var(--accent); border-radius: 8px; box-shadow: 0 14px 34px rgba(19,54,47,.14); }
 .dropdown-item { min-height: 40px; display:flex; align-items:center; border-radius:5px; color:#294a42; font-weight:650; transition:background-color .16s ease,color .16s ease; }
 .dropdown-item:hover,.dropdown-item:focus { background:var(--accent-soft); color:#065e56; }

@@ -10,6 +10,7 @@ namespace WorkerBookingSystem.Models.ViewModels
         public int TotalItems { get; set; }
         public string? Search { get; set; }
         public string? Skill { get; set; }
+        public string Sort { get; set; } = "recommended";
 
         public int TotalPages => Math.Max(1, (int)Math.Ceiling(TotalItems / (double)PageSize));
         public bool HasPreviousPage => Page > 1;

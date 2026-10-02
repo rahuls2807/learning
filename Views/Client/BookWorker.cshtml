@@ -8,13 +8,13 @@
     <div class="page-header">
         <div class="section-kicker">Book trusted help</div>
         <h2>Find a Worker</h2>
-        <p class="text-muted">Search by skill, compare ratings, and book from a cleaner mobile-friendly marketplace.</p>
-        <form method="get" class="row g-2 align-items-end">
-            <div class="col-md-5">
+        <p class="text-muted">Compare local professionals by experience, customer ratings, and price.</p>
+        <form method="get" class="row g-2 align-items-end worker-search-form">
+            <div class="col-12 col-md-6 col-lg-4">
                 <label class="form-label" for="search">Search</label>
-                <input id="search" name="search" value="@Model.Search" class="form-control" placeholder="Try electrician, plumber, cleaner..." />
+                <input id="search" name="search" value="@Model.Search" class="form-control" placeholder="Name or skill, e.g. electrician" />
             </div>
-            <div class="col-md-4">
+            <div class="col-12 col-md-6 col-lg-3">
                 <label class="form-label" for="skill">Skill</label>
                 <select id="skill" name="skill" class="form-select">
                     <option value="">All skills</option>
@@ -24,16 +24,20 @@
                     }
                 </select>
             </div>
-            <div class="col-md-3">
-                <button type="submit" class="btn btn-primary w-100">Search Workers</button>
+            <div class="col-12 col-md-6 col-lg-3">
+                <label class="form-label" for="sort">Sort by</label>
+                <select id="sort" name="sort" class="form-select">
+                    <option value="recommended" selected="@(Model.Sort == "recommended")">Recommended</option>
+                    <option value="rating" selected="@(Model.Sort == "rating")">Top rated</option>
+                    <option value="completed" selected="@(Model.Sort == "completed")">Most experienced</option>
+                    <option value="rate-low" selected="@(Model.Sort == "rate-low")">Price: low to high</option>
+                    <option value="rate-high" selected="@(Model.Sort == "rate-high")">Price: high to low</option>
+                </select>
+            </div>
+            <div class="col-12 col-md-6 col-lg-2">
+                <button type="submit" class="btn btn-primary w-100">Find workers</button>
             </div>
         </form>
-        <div class="filter-chip-row mt-3">
-            <span class="filter-chip">Top rated first</span>
-            <span class="filter-chip">Transparent rates</span>
-            <span class="filter-chip">Profile before booking</span>
-            <span class="filter-chip">Mobile booking ready</span>
-        </div>
         <p class="text-muted mt-3 mb-0">@Model.TotalItems workers found. Showing page @Model.Page of @Model.TotalPages.</p>
     </div>
 
@@ -88,11 +92,11 @@
     <nav aria-label="Worker search pages">
         <ul class="pagination">
             <li class="page-item @(Model.HasPreviousPage ? "" : "disabled")">
-                <a class="page-link" asp-action="BookWorker" asp-route-page="@(Model.Page - 1)" asp-route-search="@Model.Search" asp-route-skill="@Model.Skill">Previous</a>
+                <a class="page-link" asp-action="BookWorker" asp-route-page="@(Model.Page - 1)" asp-route-search="@Model.Search" asp-route-skill="@Model.Skill" asp-route-sort="@Model.Sort">Previous</a>
             </li>
             <li class="page-item disabled"><span class="page-link">@Model.Page / @Model.TotalPages</span></li>
             <li class="page-item @(Model.HasNextPage ? "" : "disabled")">
-                <a class="page-link" asp-action="BookWorker" asp-route-page="@(Model.Page + 1)" asp-route-search="@Model.Search" asp-route-skill="@Model.Skill">Next</a>
+                <a class="page-link" asp-action="BookWorker" asp-route-page="@(Model.Page + 1)" asp-route-search="@Model.Search" asp-route-skill="@Model.Skill" asp-route-sort="@Model.Sort">Next</a>
             </li>
         </ul>
     </nav>

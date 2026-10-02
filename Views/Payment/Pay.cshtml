@@ -485,6 +485,22 @@
                 </div>
             </div>
 
+            <section class="summary-box payment-choice-panel" aria-labelledby="paymentChoiceTitle">
+                <h2 id="paymentChoiceTitle">Choose how to pay</h2>
+                <div class="payment-methods" role="group" aria-label="Payment method">
+                    <button type="button" id="chooseUpiMethod" class="payment-method-btn active" aria-pressed="true" onclick="selectPaymentMethod('upi')">
+                        UPI apps or QR
+                    </button>
+                    @if (Model.RazorpayConfigured)
+                    {
+                        <button type="button" id="chooseCardMethod" class="payment-method-btn" aria-pressed="false" onclick="selectPaymentMethod('card')">
+                            Cards / Net Banking / Wallet
+                        </button>
+                    }
+                </div>
+                <p id="paymentMethodHint" class="form-text mb-0">Pay with any UPI app or scan the merchant QR after phone verification.</p>
+            </section>
+
             <input type="hidden" id="bookingId" value="@Model.BookingId" />
             <input type="hidden" id="amount" value="@Model.OnlineAmount" />
             <input type="hidden" id="merchantUpi" value="@Model.MerchantUpiId" />
@@ -635,6 +651,22 @@
     const razorpayEnabled = @(Model.RazorpayConfigured ? "true" : "false");
     let razorpayOrderId = '';
     let gatewayPaymentMethod = 'upi';
+    let selectedPaymentMethod = 'upi';
+
+    function selectPaymentMethod(method) {
+        selectedPaymentMethod = method === 'card' && razorpayEnabled ? 'card' : 'upi';
+        const upiButton = document.getElementById('chooseUpiMethod');
+        const cardButton = document.getElementById('chooseCardMethod');
+        upiButton.classList.toggle('active', selectedPaymentMethod === 'upi');
+        upiButton.setAttribute('aria-pressed', String(selectedPaymentMethod === 'upi'));
+        if (cardButton) {
+            cardButton.classList.toggle('active', selectedPaymentMethod === 'card');
+            cardButton.setAttribute('aria-pressed', String(selectedPaymentMethod === 'card'));
+        }
+        document.getElementById('paymentMethodHint').textContent = selectedPaymentMethod === 'upi'
+            ? 'Pay with any UPI app or scan the merchant QR after phone verification.'
+            : 'After phone verification, your card or supported online payment method will open securely.';
+    }
 
     function copyMerchantUpi() {
         const vpa = document.getElementById('merchantUpi').value;
@@ -676,7 +708,7 @@
         document.getElementById('step3-payment').style.display = 'block';
         showSuccess(message);
         if (razorpayEnabled) {
-            setTimeout(() => startGatewayUpiPayment(), 400);
+            setTimeout(() => selectedPaymentMethod === 'upi' ? startGatewayUpiPayment() : startGatewayCardPayment(), 400);
         }
     }
 
@@ -789,6 +821,7 @@
     }
 
     function startGatewayUpiPayment() {
+        selectPaymentMethod('upi');
         gatewayPaymentMethod = 'upi';
         document.querySelectorAll('.payment-method-btn').forEach(btn => btn.classList.remove('active'));
         document.querySelector('.payment-method-btn').classList.add('active');
@@ -796,6 +829,7 @@
     }
 
     function startGatewayCardPayment() {
+        selectPaymentMethod('card');
         gatewayPaymentMethod = 'card';
         document.querySelectorAll('.payment-method-btn').forEach(btn => btn.classList.remove('active'));
         document.querySelectorAll('.payment-method-btn')[1].classList.add('active');

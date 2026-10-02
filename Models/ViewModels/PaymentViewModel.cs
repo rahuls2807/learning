@@ -40,7 +40,7 @@ namespace WorkerBookingSystem.Models.ViewModels
         public bool OtpVerified { get; set; } = false;
 
         [Display(Name = "Payment Method")]
-        public string PaymentMethod { get; set; } = "card"; // card, upi, netbanking, wallet
+        public string PaymentMethod { get; set; } = "upi"; // card, upi, netbanking, wallet
 
         // Razorpay key for frontend
         public string? RazorpayKeyId { get; set; }

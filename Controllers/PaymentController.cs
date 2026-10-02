@@ -74,12 +74,7 @@ namespace WorkerBookingSystem.Controllers
                 model.OnlineAmount,
                 $"Booking #{booking.BookingId}");
             model.UpiQrCodeUrl = UpiPaymentHelper.BuildQrCodeUrl(model.UpiPayUri);
-            model.SupportedPaymentMethods = new[]
-            {
-                "UPI Apps (PhonePe, GPay, Paytm)",
-                "Cards / Net Banking / Wallet",
-                "Manual UPI QR"
-            };
+            model.SupportedPaymentMethods = PaymentMethodCatalog.GetAvailable(model.RazorpayConfigured);
             model.MaxPayoutAmount = Math.Max(0, booking.TotalWage - booking.AmountPaidOnline - booking.AmountPaidToWorker);
 
             await _auditService.LogPaymentInitiationAsync(bookingId, booking.ClientId?.ToString() ?? "unknown", booking.TotalWage, "payment-portal", HttpContext);

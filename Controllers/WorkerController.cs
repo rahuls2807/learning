@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using WorkerBookingSystem.Data;
 using WorkerBookingSystem.Models;
 using WorkerBookingSystem.Models.ViewModels;
+using WorkerBookingSystem.Services;
 
 namespace WorkerBookingSystem.Controllers
 {
@@ -315,14 +316,21 @@ namespace WorkerBookingSystem.Controllers
                 CanSeeContact = canSeeContact,
                 CanReview = canReview,
                 CanBook = await GetCurrentClient() != null,
+                CanMessage = WorkerProfileMessagePolicy.CanMessage(
+                    User.Identity?.IsAuthenticated == true,
+                    User.IsInRole("Client"),
+                    _userManager.GetUserId(User),
+                    worker.UserId,
+                    worker.IsActive),
                 BookingIdForReview = bookingIdForReview,
                 CurrentRate = currentRate > 0 ? currentRate : null,
                 AverageRating = reviews.Any() ? reviews.Average(r => r.Rating) : null,
                 ReviewCount = reviews.Count,
+                CompletedJobsCount = await _context.Bookings.CountAsync(booking =>
+                    booking.WorkerId == worker.WorkerId && booking.Status == BookingStatus.Completed),
                 Reviews = reviews
             };
 
-            ViewBag.WorkerTakePercentage = (100m - await GetProfitCutPercentageAsync()) / 100m;
             return View(profileModel);
         }
 

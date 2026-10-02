@@ -28,8 +28,7 @@
             <p class="mb-1"><strong>Skill:</strong> @worker.Skill</p>
             @if (Model.CurrentRate.HasValue)
             {
-                <p class="mb-1"><strong>Hourly Rate:</strong> ₹@Model.CurrentRate.Value.ToString("F2") / hr</p>
-                <p class="mb-1"><strong>Worker payout after commission:</strong> ₹@(Model.CurrentRate.Value * (ViewBag.WorkerTakePercentage as decimal? ?? 0.90m)).ToString("F2") / hr</p>
+                <p class="mb-1"><strong>Hourly Rate:</strong> &#8377;@Model.CurrentRate.Value.ToString("F2") / hr</p>
             }
             else
             {
@@ -46,6 +45,7 @@
                     <span class="text-muted">No ratings yet</span>
                 }
             </p>
+            <p class="mb-1"><strong>Completed jobs:</strong> @Model.CompletedJobsCount</p>
             @if (Model.CanSeeContact)
             {
                 <p class="mb-1"><strong>Email:</strong> @worker.Email</p>
@@ -57,15 +57,26 @@
             }
             else
             {
-                <p class="text-muted mb-0">Email, phone, and resume are available after booking this worker.</p>
+                <p class="text-muted mb-0">Message securely here. Direct contact details are shared only after booking.</p>
             }
         </div>
     </div>
 
-@if (Model.CanBook)
+    @if (Model.CanBook || Model.CanMessage)
     {
-        <div class="mb-4">
-            <a class="btn btn-primary" asp-controller="Client" asp-action="CreateBooking" asp-route-workerId="@worker.WorkerId">Book This Worker</a>
+        <div class="d-flex flex-wrap gap-2 mb-4 worker-profile-actions">
+            @if (Model.CanBook)
+            {
+                <a class="btn btn-primary" asp-controller="Client" asp-action="CreateBooking" asp-route-workerId="@worker.WorkerId">Book This Worker</a>
+            }
+            @if (Model.CanMessage)
+            {
+                <form asp-controller="CommunityChat" asp-action="Start" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="memberUserId" value="@worker.UserId" />
+                    <button class="btn btn-outline-primary" type="submit">Message worker</button>
+                </form>
+            }
         </div>
     }
 

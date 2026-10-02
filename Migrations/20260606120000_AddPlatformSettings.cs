@@ -1,10 +1,14 @@
 using System;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
+using WorkerBookingSystem.Data;
 
 #nullable disable
 
 namespace WorkerBookingSystem.Migrations
 {
+    [DbContext(typeof(WorkerBookingContext))]
+    [Migration("20260606120000_AddPlatformSettings")]
     public partial class AddPlatformSettings : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)

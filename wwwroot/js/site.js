@@ -21,7 +21,7 @@ window.addEventListener("appinstalled", () => {
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("/service-worker.js").catch(() => {
+    navigator.serviceWorker.register("/service-worker.js").then((registration) => registration.update()).catch(() => {
       // The app remains fully usable online if service worker registration is unavailable.
     });
   });

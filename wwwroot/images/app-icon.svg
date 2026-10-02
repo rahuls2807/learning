@@ -1,11 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Indian Worker Mandi">
-  <rect width="512" height="512" rx="96" fill="#e23744"/>
-  <circle cx="256" cy="256" r="154" fill="#ffffff"/>
-  <path d="M166 302h180v44H166z" fill="#1c1c1c"/>
-  <path d="M192 172h128l36 62v52H156v-52z" fill="#e23744"/>
-  <path d="M208 214h96l18 28H190z" fill="#ffffff" opacity=".92"/>
-  <circle cx="206" cy="326" r="28" fill="#ffffff"/>
-  <circle cx="306" cy="326" r="28" fill="#ffffff"/>
-  <path d="M247 136h18v62h-18z" fill="#1c1c1c"/>
-  <path d="M225 158h62v18h-62z" fill="#1c1c1c"/>
+  <rect width="512" height="512" rx="112" fill="#087b70"/>
+  <circle cx="256" cy="256" r="166" fill="#fff7df"/>
+  <path d="M150 310h212v35H150z" fill="#16473f"/>
+  <path d="M184 192h137l43 61v48H148v-48z" fill="#087b70"/>
+  <path d="M204 220h101l23 32H181z" fill="#ffffff"/>
+  <circle cx="202" cy="337" r="29" fill="#16473f"/>
+  <circle cx="310" cy="337" r="29" fill="#16473f"/>
+  <path d="M248 139h16v53h-16z" fill="#e0b43a"/>
+  <path d="M230 157h52v16h-52z" fill="#e0b43a"/>
 </svg>

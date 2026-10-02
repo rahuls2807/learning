@@ -1,16 +1,21 @@
 @{
     ViewData["Title"] = "Access Denied";
+    var detectedRole = User.IsInRole("Admin") ? "Administrator" : User.IsInRole("Worker") ? "Worker" : User.IsInRole("Client") ? "Client" : "No assigned workspace role";
     var landingController = User.IsInRole("Admin") ? "Admin" : User.IsInRole("Worker") ? "Worker" : User.IsInRole("Client") ? "Client" : "Home";
     var landingAction = User.IsInRole("Admin") ? "Dashboard" : User.IsInRole("Worker") ? "MyBookings" : User.IsInRole("Client") ? "MyBookings" : "Index";
 }
 
-<section class="access-denied-page" role="status">
+<section class="access-denied-page" aria-labelledby="accessDeniedTitle">
     <div class="access-denied-icon" aria-hidden="true">!</div>
     <div class="section-kicker">ACCOUNT PERMISSIONS</div>
-    <h1>This page is not available for your account</h1>
-    <p>Your sign-in is valid, but your account role does not have access to this page.</p>
+    <h1 id="accessDeniedTitle">This page is not available for your account</h1>
+    <p>Your account is signed in as <strong>@detectedRole</strong>, which does not have permission to open this page.</p>
     <div class="access-denied-actions">
         <a asp-controller="@landingController" asp-action="@landingAction" class="btn btn-primary">Go to your workspace</a>
         <a asp-controller="Community" asp-action="Index" class="btn btn-outline-primary">Visit community</a>
+        @if (User.Identity?.IsAuthenticated == true)
+        {
+            <a asp-controller="Support" asp-action="Index" class="btn btn-outline-primary">Contact support</a>
+        }
     </div>
 </section>

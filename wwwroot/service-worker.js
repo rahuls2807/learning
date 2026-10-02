@@ -1,7 +1,5 @@
-const CACHE_VERSION = "indian-worker-mandi-v2";
+const CACHE_VERSION = "indian-worker-mandi-v3";
 const APP_SHELL = [
-  "/",
-  "/Mobile/Install",
   "/Mobile/Offline",
   "/manifest.webmanifest",
   "/css/site.css",
@@ -37,13 +35,7 @@ self.addEventListener("fetch", (event) => {
 
   if (request.mode === "navigate") {
     event.respondWith(
-      fetch(request)
-        .then((response) => {
-          const copy = response.clone();
-          caches.open(CACHE_VERSION).then((cache) => cache.put(request, copy));
-          return response;
-        })
-        .catch(() => caches.match(request).then((cached) => cached || caches.match("/Mobile/Offline")))
+      fetch(request).catch(() => caches.match("/Mobile/Offline"))
     );
     return;
   }

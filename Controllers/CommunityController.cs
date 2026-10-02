@@ -95,6 +95,34 @@ namespace WorkerBookingSystem.Controllers
                 .Distinct()
                 .ToList();
             var profiles = await GetProfileNamesAsync(userIds);
+            var currentRole = User.IsInRole("Client") ? "Client" : User.IsInRole("Worker") ? "Worker" : null;
+            var canMessageIds = new HashSet<string>();
+            if (currentUserId != null && currentRole != null)
+            {
+                var authorIds = posts.Select(post => post.AuthorUserId).Distinct().ToList();
+                var authorRoles = await _context.UserRoles
+                    .Join(_context.Roles, membership => membership.RoleId, role => role.Id,
+                        (membership, role) => new { membership.UserId, role.Name })
+                    .Where(membership => authorIds.Contains(membership.UserId)
+                        && (membership.Name == "Client" || membership.Name == "Worker"))
+                    .ToListAsync();
+                var hasBookingIds = (await _context.Bookings.AsNoTracking()
+                    .Where(booking => booking.Status != BookingStatus.Cancelled
+                        && (booking.Client!.UserId == currentUserId || booking.Worker!.UserId == currentUserId))
+                    .Select(booking => booking.Client!.UserId == currentUserId
+                        ? booking.Worker!.UserId
+                        : booking.Client!.UserId)
+                    .ToListAsync()).ToHashSet(StringComparer.Ordinal);
+
+                foreach (var authorId in posts.Select(post => post.AuthorUserId).Distinct())
+                {
+                    var authorRole = authorRoles.FirstOrDefault(membership => membership.UserId == authorId)?.Name;
+                    if (authorId != currentUserId
+                        && CommunityDirectMessagePolicy.CanStart(currentRole, authorRole, hasBookingIds.Contains(authorId)))
+                        canMessageIds.Add(authorId);
+                }
+            }
+
             var cards = posts.Select(post => new CommunityPostCardViewModel
             {
                 Id = post.Id,
@@ -102,6 +130,7 @@ namespace WorkerBookingSystem.Controllers
                 AuthorName = profiles.GetValueOrDefault(post.AuthorUserId) ?? "Community member",
                 AuthorInitials = CommunityProfilePolicy.GetInitials(profiles.GetValueOrDefault(post.AuthorUserId) ?? "Community member"),
                 AuthorRole = "Community member",
+                CanMessageAuthor = canMessageIds.Contains(post.AuthorUserId),
                 Content = post.Content,
                 ImageUrl = post.ImageUrl,
                 CreatedAtUtc = post.CreatedAtUtc,

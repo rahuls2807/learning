@@ -1,5 +1,6 @@
 ﻿<!DOCTYPE html>
-<html lang="en">
+@{ var hindiUi = System.Globalization.CultureInfo.CurrentUICulture.Name.StartsWith("hi", StringComparison.OrdinalIgnoreCase); }
+<html lang="@(hindiUi ? "hi" : "en")">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
@@ -30,39 +31,39 @@
                 <div class="navbar-collapse collapse d-lg-inline-flex justify-content-between">
                     <ul class="navbar-nav flex-grow-1">
                         <li class="nav-item">
-                            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+                            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Index">@(hindiUi ? "घर" : "Home")</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" asp-controller="Community" asp-action="Index">Community</a>
+                            <a class="nav-link" asp-controller="Community" asp-action="Index">@(hindiUi ? "समुदाय" : "Community")</a>
                         </li>
                         @if (User.Identity?.IsAuthenticated == true)
                         {
                             <li class="nav-item">
-                                <a class="nav-link" asp-controller="CommunityChat" asp-action="Index">Messages</a>
+                                <a class="nav-link" asp-controller="CommunityChat" asp-action="Index">@(hindiUi ? "संदेश" : "Messages")</a>
                             </li>
                         }
                         @if (User.IsInRole("Client"))
                         {
                             <li class="nav-item">
-                                <a class="nav-link" asp-controller="Client" asp-action="MyBookings">Bookings</a>
+                                <a class="nav-link" asp-controller="Client" asp-action="MyBookings">@(hindiUi ? "बुकिंग" : "Bookings")</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" asp-controller="Client" asp-action="BookWorker">Find Workers</a>
+                                <a class="nav-link" asp-controller="Client" asp-action="BookWorker">@(hindiUi ? "कामगार खोजें" : "Find Workers")</a>
                             </li>
                         }
                         @if (User.IsInRole("Worker"))
                         {
                             <li class="nav-item">
-                                <a class="nav-link" asp-controller="Worker" asp-action="MyBookings">Jobs</a>
+                                <a class="nav-link" asp-controller="Worker" asp-action="MyBookings">@(hindiUi ? "काम" : "Jobs")</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" asp-controller="Worker" asp-action="Index">Profile</a>
+                                <a class="nav-link" asp-controller="Worker" asp-action="Index">@(hindiUi ? "प्रोफ़ाइल" : "Profile")</a>
                             </li>
                         }
                         @if (User.IsInRole("Admin"))
                         {
                             <li class="nav-item">
-                                <a class="nav-link" asp-controller="Admin" asp-action="Dashboard">Dashboard</a>
+                                <a class="nav-link" asp-controller="Admin" asp-action="Dashboard">@(hindiUi ? "डैशबोर्ड" : "Dashboard")</a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link nav-booking-cta" asp-controller="Admin" asp-action="CreateBooking">Create Booking</a>
@@ -82,6 +83,25 @@
                         </li>
                     </ul>
                     <ul class="navbar-nav">
+                        <li class="nav-item">
+                            <form asp-controller="Account" asp-action="SetLanguage" method="post" class="nav-language-form">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="returnUrl" value="@Context.Request.Path@Context.Request.QueryString" />
+                                <label class="visually-hidden" for="uiLanguage">Language</label>
+                                <select id="uiLanguage" name="culture" class="form-select form-select-sm" aria-label="Language" onchange="this.form.submit()">
+                                    @if (hindiUi)
+                                    {
+                                        <option value="en-IN">English</option>
+                                        <option value="hi-IN" selected>हिन्दी</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="en-IN" selected>English</option>
+                                        <option value="hi-IN">हिन्दी</option>
+                                    }
+                                </select>
+                            </form>
+                        </li>
                         @if (User.Identity?.IsAuthenticated == true)
                         {
                             <li class="nav-item dropdown">

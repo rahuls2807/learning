@@ -26,6 +26,7 @@ namespace WorkerBookingSystem.Models.ViewModels
         public string AuthorUserId { get; set; } = string.Empty;
         public string AuthorName { get; set; } = string.Empty;
         public string AuthorRole { get; set; } = string.Empty;
+        public bool CanMessageAuthor { get; set; }
         public string AuthorInitials { get; set; } = string.Empty;
         public string Content { get; set; } = string.Empty;
         public string? ImageUrl { get; set; }

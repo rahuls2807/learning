@@ -322,13 +322,15 @@ namespace WorkerBookingSystem.Controllers
                 CanEditProfile = User.IsInRole("Worker") && worker.UserId == _userManager.GetUserId(User),
                 CanSeeContact = canSeeContact,
                 CanReview = canReview,
-                CanBook = await GetCurrentClient() != null,
+                CanBook = User.IsInRole("Client") && await GetCurrentClient() != null,
                 CanMessage = WorkerProfileMessagePolicy.CanMessage(
                     User.Identity?.IsAuthenticated == true,
                     User.IsInRole("Client"),
+                    User.IsInRole("Worker"),
                     _userManager.GetUserId(User),
                     worker.UserId,
-                    worker.IsActive),
+                    worker.IsActive,
+                    User.IsInRole("Client") && await HasActiveClientBookingForWorker(id)),
                 BookingIdForReview = bookingIdForReview,
                 CurrentRate = currentRate > 0 ? currentRate : null,
                 AverageRating = reviews.Any() ? reviews.Average(r => r.Rating) : null,
@@ -504,6 +506,17 @@ namespace WorkerBookingSystem.Controllers
             if (client == null) return false;
 
             return await _context.Bookings.AnyAsync(b => b.ClientId == client.ClientId && b.WorkerId == workerId);
+        }
+
+        private async Task<bool> HasActiveClientBookingForWorker(int workerId)
+        {
+            var client = await GetCurrentClient();
+            if (client == null) return false;
+
+            return await _context.Bookings.AnyAsync(booking =>
+                booking.ClientId == client.ClientId
+                && booking.WorkerId == workerId
+                && booking.Status != BookingStatus.Cancelled);
         }
 
         private async Task<int?> GetClientBookingIdForWorker(int workerId)

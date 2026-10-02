@@ -77,6 +77,9 @@ namespace WorkerBookingSystem.Controllers
             if (!await _context.Users.AnyAsync(user => user.Id == memberUserId && user.IsActive && !user.IsBlocked))
                 return NotFound();
 
+            if (!await CommunityDirectMessageAccess.CanMessageAsync(_context, _userManager, currentUserId, memberUserId))
+                return Forbid();
+
             var (userOneId, userTwoId) = CommunityConversationPolicy.OrderPair(currentUserId, memberUserId);
             var conversation = await _context.CommunityConversations
                 .FirstOrDefaultAsync(item => item.UserOneId == userOneId && item.UserTwoId == userTwoId);
@@ -115,12 +118,14 @@ namespace WorkerBookingSystem.Controllers
                 .FirstOrDefaultAsync(item => item.Id == id && (item.UserOneId == currentUserId || item.UserTwoId == currentUserId));
             if (conversation == null || !CommunityConversationPolicy.CanAccess(conversation, currentUserId))
                 return NotFound();
+            var otherUserId = conversation.UserOneId == currentUserId ? conversation.UserTwoId : conversation.UserOneId;
+            if (!await CommunityDirectMessageAccess.CanMessageAsync(_context, _userManager, currentUserId, otherUserId))
+                return Forbid();
 
             await _context.CommunityDirectMessages
                 .Where(message => message.ConversationId == id && message.SenderUserId != currentUserId && message.ReadAtUtc == null)
                 .ExecuteUpdateAsync(update => update.SetProperty(message => message.ReadAtUtc, DateTime.UtcNow));
 
-            var otherUserId = conversation.UserOneId == currentUserId ? conversation.UserTwoId : conversation.UserOneId;
             var names = await GetNamesAsync(new List<string> { otherUserId });
             var otherName = names.GetValueOrDefault(otherUserId) ?? "Community member";
             var messages = await _context.CommunityDirectMessages.AsNoTracking()
@@ -166,6 +171,9 @@ namespace WorkerBookingSystem.Controllers
                 item.Id == model.ConversationId && (item.UserOneId == currentUserId || item.UserTwoId == currentUserId));
             if (conversation == null)
                 return NotFound();
+            var otherUserId = conversation.UserOneId == currentUserId ? conversation.UserTwoId : conversation.UserOneId;
+            if (!await CommunityDirectMessageAccess.CanMessageAsync(_context, _userManager, currentUserId, otherUserId))
+                return Forbid();
 
             var now = DateTime.UtcNow;
             _context.CommunityDirectMessages.Add(new CommunityDirectMessage

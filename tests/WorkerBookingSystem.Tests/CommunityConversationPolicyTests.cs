@@ -24,4 +24,16 @@ public class CommunityConversationPolicyTests
         Assert.False(CommunityConversationPolicy.CanAccess(conversation, "outsider"));
         Assert.False(CommunityConversationPolicy.CanAccess(conversation, null));
     }
+
+    [Theory]
+    [InlineData("Client", "Client", false, true)]
+    [InlineData("Worker", "Worker", false, true)]
+    [InlineData("Client", "Worker", false, false)]
+    [InlineData("Worker", "Client", true, true)]
+    [InlineData("Admin", "Client", true, false)]
+    public void Direct_messages_require_same_role_or_cross_role_booking(
+        string senderRole, string recipientRole, bool hasBooking, bool expected)
+    {
+        Assert.Equal(expected, CommunityDirectMessagePolicy.CanStart(senderRole, recipientRole, hasBooking));
+    }
 }

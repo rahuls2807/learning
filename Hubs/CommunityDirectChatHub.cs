@@ -27,6 +27,9 @@ namespace WorkerBookingSystem.Hubs
                 .FirstOrDefaultAsync(item => item.Id == conversationId);
             if (conversation == null || !CommunityConversationPolicy.CanAccess(conversation, userId))
                 throw new HubException("You do not have access to this conversation.");
+            var otherUserId = conversation.UserOneId == userId ? conversation.UserTwoId : conversation.UserOneId;
+            if (userId == null || !await CommunityDirectMessageAccess.CanMessageAsync(_context, _userManager, userId, otherUserId))
+                throw new HubException("Direct messages between clients and workers require a booking.");
 
             await Groups.AddToGroupAsync(Context.ConnectionId, GroupName(conversationId));
             await _context.CommunityDirectMessages
@@ -45,6 +48,9 @@ namespace WorkerBookingSystem.Hubs
                 .FirstOrDefaultAsync(item => item.Id == conversationId);
             if (conversation == null || !CommunityConversationPolicy.CanAccess(conversation, userId))
                 throw new HubException("You do not have access to this conversation.");
+            var otherUserId = conversation.UserOneId == userId ? conversation.UserTwoId : conversation.UserOneId;
+            if (userId == null || !await CommunityDirectMessageAccess.CanMessageAsync(_context, _userManager, userId, otherUserId))
+                throw new HubException("Direct messages between clients and workers require a booking.");
 
             var sentAt = DateTime.UtcNow;
             var message = new CommunityDirectMessage

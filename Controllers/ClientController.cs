@@ -101,6 +101,7 @@ namespace WorkerBookingSystem.Controllers
         }
 
         // GET: Client/BookWorker
+        [Authorize(Roles = "Client")]
         public async Task<IActionResult> BookWorker(string? search, string? skill, string? sort = "recommended", int page = 1, int pageSize = 25)
         {
             page = Math.Max(1, page);

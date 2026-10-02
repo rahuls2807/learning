@@ -1353,6 +1353,45 @@ main {
   .access-denied-actions .btn { flex:1 1 100%; }
 }
 
+.worker-professional-details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  gap: 18px 28px;
+  margin: 0 0 24px;
+  padding: 20px 24px;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.worker-professional-section h3 {
+  margin-bottom: 8px;
+  color: var(--ink);
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.worker-professional-section p {
+  margin: 0;
+  color: var(--muted);
+  white-space: pre-line;
+}
+
+.worker-certification-list {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--ink);
+}
+
+.worker-certification-list li + li { margin-top: 6px; }
+
+.worker-certification-list span {
+  margin-left: 6px;
+  color: var(--muted);
+  font-size: .82em;
+}
+
 .nav-booking-cta {
   min-height: 38px;
   margin: 1px 6px;

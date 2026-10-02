@@ -12,6 +12,12 @@ namespace WorkerBookingSystem.Models
         [Required]
         public string? PhoneNumber { get; set; }
         public string? Skill { get; set; } // e.g., Plumbing, Electrical, etc.
+        [StringLength(1500)]
+        public string? ProfessionalSummary { get; set; }
+        [Range(0, 60)]
+        public int? YearsExperience { get; set; }
+        [StringLength(2000)]
+        public string? Certifications { get; set; }
         public string? ProfileImagePath { get; set; }
         public string? ResumePath { get; set; }
         public string? PreferredPayoutMethod { get; set; } = "UPI";

@@ -163,6 +163,18 @@ namespace WorkerBookingSystem.Models.ViewModels
         [Required]
         public string Skill { get; set; } = string.Empty;
 
+        [Display(Name = "Professional summary")]
+        [StringLength(1500)]
+        public string? ProfessionalSummary { get; set; }
+
+        [Display(Name = "Years of experience")]
+        [Range(0, 60)]
+        public int? YearsExperience { get; set; }
+
+        [Display(Name = "Certificates and training")]
+        [StringLength(2000)]
+        public string? Certifications { get; set; }
+
         public bool IsActive { get; set; }
 
         public string? CurrentProfileImagePath { get; set; }

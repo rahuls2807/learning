@@ -223,6 +223,9 @@ namespace WorkerBookingSystem.Controllers
                 Email = worker.Email ?? string.Empty,
                 PhoneNumber = worker.PhoneNumber ?? string.Empty,
                 Skill = worker.Skill ?? string.Empty,
+                ProfessionalSummary = worker.ProfessionalSummary,
+                YearsExperience = worker.YearsExperience,
+                Certifications = worker.Certifications,
                 IsActive = worker.IsActive,
                 CurrentProfileImagePath = worker.ProfileImagePath,
                 CurrentResumePath = worker.ResumePath,
@@ -256,6 +259,9 @@ namespace WorkerBookingSystem.Controllers
                     existing.Email = model.Email;
                     existing.PhoneNumber = model.PhoneNumber;
                     existing.Skill = model.Skill;
+                    existing.ProfessionalSummary = model.ProfessionalSummary?.Trim();
+                    existing.YearsExperience = model.YearsExperience;
+                    existing.Certifications = model.Certifications?.Trim();
                     existing.PreferredPayoutMethod = model.PreferredPayoutMethod;
                     existing.UpiId = model.UpiId;
                     existing.BankAccountHolderName = model.BankAccountHolderName;
@@ -313,6 +319,7 @@ namespace WorkerBookingSystem.Controllers
             var profileModel = new WorkerProfileViewModel
             {
                 Worker = worker,
+                CanEditProfile = User.IsInRole("Worker") && worker.UserId == _userManager.GetUserId(User),
                 CanSeeContact = canSeeContact,
                 CanReview = canReview,
                 CanBook = await GetCurrentClient() != null,

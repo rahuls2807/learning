@@ -4,6 +4,8 @@
     ViewData["Title"] = "Worker Profile";
     var worker = Model.Worker;
     var workerName = $"{worker.FirstName} {worker.LastName}".Trim();
+    var certifications = (worker.Certifications ?? string.Empty)
+        .Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 }
 
 <div class="container mt-5">
@@ -62,7 +64,36 @@
         </div>
     </div>
 
-    @if (Model.CanBook || Model.CanMessage)
+    <section class="worker-professional-details" aria-label="Professional details">
+        <div class="worker-professional-section">
+            <h3>About</h3>
+            <p>@(string.IsNullOrWhiteSpace(worker.ProfessionalSummary) ? "No professional summary added yet." : worker.ProfessionalSummary)</p>
+        </div>
+        <div class="worker-professional-section">
+            <h3>Experience</h3>
+            <p>@(worker.YearsExperience.HasValue
+                ? worker.YearsExperience.Value == 0 ? "Starting out" : $"{worker.YearsExperience.Value} years in the trade"
+                : "Experience details not added yet.")</p>
+        </div>
+        <div class="worker-professional-section">
+            <h3>Certificates and training</h3>
+            <ul class="worker-certification-list">
+                @if (certifications.Length == 0)
+                {
+                    <li class="text-muted">No certificates or training listed yet.</li>
+                }
+                else
+                {
+                    @foreach (var certification in certifications)
+                    {
+                        <li>@certification <span>Worker provided</span></li>
+                    }
+                }
+            </ul>
+        </div>
+    </section>
+
+    @if (Model.CanBook || Model.CanMessage || Model.CanEditProfile)
     {
         <div class="d-flex flex-wrap gap-2 mb-4 worker-profile-actions">
             @if (Model.CanBook)
@@ -76,6 +107,10 @@
                     <input type="hidden" name="memberUserId" value="@worker.UserId" />
                     <button class="btn btn-outline-primary" type="submit">Message worker</button>
                 </form>
+            }
+            @if (Model.CanEditProfile)
+            {
+                <a class="btn btn-outline-primary" asp-action="Edit" asp-route-id="@worker.WorkerId">Edit professional profile</a>
             }
         </div>
     }

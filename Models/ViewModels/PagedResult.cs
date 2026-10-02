@@ -40,6 +40,7 @@ namespace WorkerBookingSystem.Models.ViewModels
         public bool CanReview { get; set; }
         public bool CanBook { get; set; }
         public bool CanMessage { get; set; }
+        public bool CanEditProfile { get; set; }
         public decimal? CurrentRate { get; set; }
         public double? AverageRating { get; set; }
         public int ReviewCount { get; set; }

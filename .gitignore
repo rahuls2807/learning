@@ -11,6 +11,15 @@ obj/
 *.user
 *.suo
 *.sln.docstates
+*.config
+Debug/
+Release/
+
+# Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
 
 # NuGet
 *.nupkg
@@ -24,6 +33,13 @@ packages/
 
 # Local restart logs
 restart-app.*.log
+
+# User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
 
 # Rider
 .idea/

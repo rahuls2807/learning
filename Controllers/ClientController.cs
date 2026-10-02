@@ -160,13 +160,14 @@ namespace WorkerBookingSystem.Controllers
         }
 
         // GET: Client/CreateBooking/5
+        [Authorize(Roles = "Client")]
         public async Task<IActionResult> CreateBooking(int? workerId)
         {
             if (workerId == null)
                 return NotFound();
 
             var worker = await _context.Workers.FindAsync(workerId);
-            if (worker == null)
+            if (worker == null || !worker.IsActive)
                 return NotFound();
 
             var hourlyRate = await _context.HourlyRates
@@ -175,45 +176,71 @@ namespace WorkerBookingSystem.Controllers
                 .Select(hr => hr.RatePerHour)
                 .FirstOrDefaultAsync();
 
-            var clients = await _context.Clients.ToListAsync();
-            ViewBag.ClientList = clients;
             ViewBag.Worker = worker;
             ViewBag.WorkerRate = hourlyRate > 0 ? (decimal?)hourlyRate : null;
-            ViewBag.CurrentClientId = await GetCurrentClientId();
 
             return View(new Booking { WorkerId = worker.WorkerId });
         }
 
         // POST: Client/CreateBooking
+        [Authorize(Roles = "Client")]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CreateBooking([Bind("WorkerId,ClientId,BookingDate,StartTime,EndTime,TaskDescription")] Booking booking)
+        public async Task<IActionResult> CreateBooking([Bind("WorkerId,BookingDate,StartTime,EndTime,TaskDescription")] Booking booking)
         {
-            // Custom validation
-            if (booking.ClientId <= 0)
+            var clientId = await GetCurrentClientId();
+            if (clientId == null)
             {
-                ModelState.AddModelError("ClientId", "Please select a valid client.");
+                return Forbid();
             }
+
+            booking.ClientId = clientId;
+            var worker = await _context.Workers
+                .AsNoTracking()
+                .FirstOrDefaultAsync(w => w.WorkerId == booking.WorkerId && w.IsActive);
+            if (worker == null)
+            {
+                return NotFound();
+            }
+
             if (booking.StartTime >= booking.EndTime)
-            {
                 ModelState.AddModelError("EndTime", "End time must be after start time.");
-            }
+
+            if (booking.BookingDate.Date < DateTime.Today || booking.StartTime <= DateTime.Now)
+                ModelState.AddModelError("BookingDate", "Choose a future booking date and time.");
+
+            if (booking.BookingDate.Date != booking.StartTime.Date || booking.StartTime.Date != booking.EndTime.Date)
+                ModelState.AddModelError("EndTime", "A booking must start and end on the selected date.");
+
             if (ModelState.IsValid)
             {
-                var duplicateBooking = await _context.Bookings
-                    .AnyAsync(b => b.WorkerId == booking.WorkerId
-                        && b.ClientId == booking.ClientId
-                        && b.BookingDate == booking.BookingDate
-                        && b.StartTime == booking.StartTime
-                        && b.EndTime == booking.EndTime
-                        && b.TaskDescription == booking.TaskDescription);
+                var overlappingBooking = await _context.Bookings.AnyAsync(b =>
+                    b.WorkerId == booking.WorkerId &&
+                    b.Status != BookingStatus.Cancelled &&
+                    b.StartTime < booking.EndTime &&
+                    b.EndTime > booking.StartTime);
 
-                if (duplicateBooking)
+                if (overlappingBooking)
                 {
-                    ModelState.AddModelError("", "This booking already exists.");
+                    ModelState.AddModelError(string.Empty, "This worker already has a booking during that time. Choose another time.");
                 }
                 else
                 {
+                    var dayAvailability = await _context.WorkerAvailabilities
+                        .AsNoTracking()
+                        .Where(a => a.WorkerId == booking.WorkerId && a.DayOfWeek == booking.StartTime.DayOfWeek)
+                        .ToListAsync();
+
+                    var hasMatchingAvailability = dayAvailability.Any(a =>
+                        a.IsAvailable &&
+                        a.StartTime <= booking.StartTime.TimeOfDay &&
+                        a.EndTime >= booking.EndTime.TimeOfDay);
+
+                    if (dayAvailability.Count > 0 && !hasMatchingAvailability)
+                    {
+                        ModelState.AddModelError(string.Empty, "The selected time is outside this worker's published availability.");
+                    }
+
                     // Calculate wage
                     var hourlyRate = await _context.HourlyRates
                         .Where(hr => hr.WorkerId == booking.WorkerId && hr.IsActive)
@@ -221,14 +248,14 @@ namespace WorkerBookingSystem.Controllers
                         .Select(hr => hr.RatePerHour)
                         .FirstOrDefaultAsync();
 
-                    if (hourlyRate <= 0)
+                    if (ModelState.IsValid && hourlyRate <= 0)
                     {
                         ModelState.AddModelError("", "No active hourly rate for this worker. Contact admin.");
                     }
-                    else
+                    else if (ModelState.IsValid)
                     {
                         var hours = (booking.EndTime - booking.StartTime).TotalHours;
-                        booking.TotalWage = Math.Max(0, (decimal)hours * hourlyRate);
+                        booking.TotalWage = (decimal)hours * hourlyRate;
 
                         booking.Status = BookingStatus.Pending;
                         booking.CreatedDate = DateTime.Now;
@@ -236,32 +263,25 @@ namespace WorkerBookingSystem.Controllers
                         _context.Add(booking);
                         await _context.SaveChangesAsync();
 
-                        return RedirectToAction("MyBookings", new { clientId = booking.ClientId });
+                        return RedirectToAction(nameof(MyBookings));
                     }
                 }
             }
 
-            var clients = await _context.Clients.ToListAsync();
-            var worker = await _context.Workers.FindAsync(booking.WorkerId);
-            var currentRate = worker != null
-                ? await _context.HourlyRates
-                    .Where(hr => hr.WorkerId == worker.WorkerId && hr.IsActive)
-                    .OrderByDescending(hr => hr.EffectiveDate)
-                    .Select(hr => hr.RatePerHour)
-                    .FirstOrDefaultAsync()
-                : 0m;
-
-            ViewBag.ClientList = clients;
             ViewBag.Worker = worker;
-            ViewBag.WorkerRate = currentRate > 0 ? (decimal?)currentRate : null;
-            ViewBag.CurrentClientId = await GetCurrentClientId();
+            ViewBag.WorkerRate = await _context.HourlyRates
+                .Where(hr => hr.WorkerId == worker.WorkerId && hr.IsActive)
+                .OrderByDescending(hr => hr.EffectiveDate)
+                .Select(hr => (decimal?)hr.RatePerHour)
+                .FirstOrDefaultAsync();
             return View(booking);
         }
 
         // GET: Client/MyBookings/5
+        [Authorize(Roles = "Client,Admin")]
         public async Task<IActionResult> MyBookings(int? clientId)
         {
-            clientId ??= await GetCurrentClientId();
+            clientId = User.IsInRole("Admin") ? clientId ?? await GetCurrentClientId() : await GetCurrentClientId();
             if (clientId == null)
                 return NotFound();
 
@@ -275,6 +295,7 @@ namespace WorkerBookingSystem.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Client")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> UpdateBookingStatus(ClientBookingStatusViewModel model)
         {
@@ -296,6 +317,7 @@ namespace WorkerBookingSystem.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Client")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> RecordCashPayment(ClientCashPaymentViewModel model)
         {

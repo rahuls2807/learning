@@ -1308,3 +1308,22 @@ main {
   .community-join-card span { max-width:220px; }
 }
 @media (prefers-reduced-motion:reduce) { .community-shell *,.community-shell *::before,.community-shell *::after { scroll-behavior:auto!important; transition-duration:.01ms!important; } }
+
+.account-choice-panel { max-width:940px; margin-inline:auto; padding:clamp(22px,4vw,40px); }
+.account-choice-heading { max-width:640px; margin:0 auto 22px; }
+.account-choice-heading h1 { margin:7px 0; }
+.account-choice-card { display:flex; height:100%; min-height:270px; flex-direction:column; align-items:flex-start; padding:23px; border:1px solid #e1e9e5; border-radius:16px; background:linear-gradient(150deg,#fbfdfb,#f2f8f4); }
+.account-choice-worker { background:linear-gradient(150deg,#fffdf6,#f9f5e8); border-color:#eee5ce; }
+.account-choice-icon { display:grid; width:48px; height:48px; place-items:center; margin-bottom:16px; border-radius:15px; background:#dcefe5; color:#087b70; font-size:1.6rem; font-weight:900; }
+.account-choice-worker .account-choice-icon { background:#f6e9bd; color:#8a6500; }
+.account-choice-card h2 { margin:5px 0 7px; color:#1d4039; font-size:1.25rem; font-weight:850; }
+.account-choice-card p { flex:1; color:#6c7974; font-size:.92rem; line-height:1.6; }
+.account-choice-card .btn,.account-result-panel .btn { border-radius:999px; background:#087b70!important; border-color:#087b70!important; box-shadow:none; }
+.account-choice-footer { margin-top:22px; color:#73807a; text-align:center; }
+.account-choice-footer a { color:#087b70; font-weight:800; }
+.account-result-panel { padding:clamp(24px,5vw,42px); }
+.account-result-icon { display:grid; width:58px; height:58px; place-items:center; margin:0 auto 14px; border-radius:50%; background:#e8f4ec; color:#087b70; font-size:1.8rem; font-weight:900; }
+.account-result-success { background:#e8f4ec; color:#267a46; }
+.account-result-panel .section-title { margin:6px 0 10px; }
+.account-result-panel p { margin-bottom:20px; line-height:1.6; }
+@media (max-width:767px) { .account-choice-card { min-height:230px; padding:19px; } .account-choice-card .btn { margin-top:14px; } }

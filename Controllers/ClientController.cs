@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using WorkerBookingSystem.Data;
 using WorkerBookingSystem.Models;
@@ -32,16 +33,25 @@ namespace WorkerBookingSystem.Controllers
         }
 
         // GET: Client/Register
+        [AllowAnonymous]
         public IActionResult Register()
         {
+            if (User.Identity?.IsAuthenticated == true)
+                return RedirectToAction("Index", "Home");
+
             return View(new ClientRegisterViewModel());
         }
 
         // POST: Client/Register
         [HttpPost]
+        [AllowAnonymous]
         [ValidateAntiForgeryToken]
+        [EnableRateLimiting("account-registration")]
         public async Task<IActionResult> Register(ClientRegisterViewModel model)
         {
+            if (User.Identity?.IsAuthenticated == true)
+                return Forbid();
+
             if (ModelState.IsValid)
             {
                 var user = new ApplicationUser
@@ -63,7 +73,14 @@ namespace WorkerBookingSystem.Controllers
                     return View(model);
                 }
 
-                await _userManager.AddToRoleAsync(user, "Client");
+                var roleResult = await _userManager.AddToRoleAsync(user, "Client");
+                if (!roleResult.Succeeded)
+                {
+                    await _userManager.DeleteAsync(user);
+                    foreach (var error in roleResult.Errors)
+                        ModelState.AddModelError(string.Empty, error.Description);
+                    return View(model);
+                }
 
                 var client = new Client
                 {

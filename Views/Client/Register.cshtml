@@ -56,7 +56,8 @@
 
                 <div class="form-group mt-3">
                     <button type="submit" class="btn btn-success">Register</button>
-                    <a href="@Url.Action("Index", "Home")" class="btn btn-secondary">Cancel</a>
+                    <a asp-controller="Account" asp-action="Login" class="btn btn-secondary">I already have an account</a>
+                    <a asp-controller="Account" asp-action="Register" class="btn btn-link">Choose another account type</a>
                 </div>
             </form>
         </div>

@@ -1,6 +1,7 @@
 using System.Data.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WorkerBookingSystem.Data;
@@ -116,10 +117,8 @@ namespace WorkerBookingSystem.Controllers
         [AllowAnonymous]
         public IActionResult Create()
         {
-            if (User.Identity?.IsAuthenticated == true && User.IsInRole("Client"))
-            {
-                return Forbid();
-            }
+            if (User.Identity?.IsAuthenticated == true)
+                return RedirectToAction("Index", "Home");
 
             return View(new WorkerRegisterViewModel());
         }
@@ -129,12 +128,11 @@ namespace WorkerBookingSystem.Controllers
         [HttpPost]
         [AllowAnonymous]
         [ValidateAntiForgeryToken]
+        [EnableRateLimiting("account-registration")]
         public async Task<IActionResult> Create(WorkerRegisterViewModel model)
         {
-            if (User.Identity?.IsAuthenticated == true && User.IsInRole("Client"))
-            {
+            if (User.Identity?.IsAuthenticated == true)
                 return Forbid();
-            }
 
             if (ModelState.IsValid)
             {
@@ -167,7 +165,14 @@ namespace WorkerBookingSystem.Controllers
                         return View(model);
                     }
 
-                    await _userManager.AddToRoleAsync(user, "Worker");
+                    var roleResult = await _userManager.AddToRoleAsync(user, "Worker");
+                    if (!roleResult.Succeeded)
+                    {
+                        await _userManager.DeleteAsync(user);
+                        foreach (var error in roleResult.Errors)
+                            ModelState.AddModelError(string.Empty, error.Description);
+                        return View(model);
+                    }
 
                     var worker = new Worker
                     {

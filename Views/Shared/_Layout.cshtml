@@ -103,6 +103,9 @@
                                 <a class="nav-link nav-wallet" asp-controller="Wallet" asp-action="Index">Wallet</a>
                             </li>
                             <li class="nav-item">
+                                <a class="nav-link" asp-controller="Account" asp-action="ChangePassword">Password</a>
+                            </li>
+                            <li class="nav-item">
                                 <span class="nav-link nav-user">@User.Identity.Name</span>
                             </li>
                             <li class="nav-item">
@@ -113,6 +116,9 @@
                         }
                         else
                         {
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Account" asp-action="Register">Create account</a>
+                            </li>
                             <li class="nav-item">
                                 <a class="nav-link" asp-controller="Account" asp-action="Login">Login</a>
                             </li>
@@ -166,6 +172,7 @@
         @if (User.Identity?.IsAuthenticated == true)
         {
             <a asp-controller="Support" asp-action="Index">Support</a>
+            <a asp-controller="Account" asp-action="ChangePassword">Password</a>
             <a asp-controller="Wallet" asp-action="Index">Wallet</a>
             <form asp-controller="Account" asp-action="Logout" method="post">
                 <button type="submit">Logout</button>
@@ -173,6 +180,7 @@
         }
         else
         {
+            <a asp-controller="Account" asp-action="Register">Register</a>
             <a asp-controller="Mobile" asp-action="Install">Install</a>
         }
     </nav>

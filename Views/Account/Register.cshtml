@@ -1,0 +1,36 @@
+@{
+    ViewData["Title"] = "Create your account";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-9">
+        <section class="market-panel account-choice-panel">
+            <div class="account-choice-heading text-center">
+                <div class="section-kicker">Join Worker Mandi</div>
+                <h1 class="section-title">How will you use the marketplace?</h1>
+                <p class="text-muted">Choose the account that fits. You can start here without signing in.</p>
+            </div>
+            <div class="row g-3 mt-2">
+                <div class="col-md-6">
+                    <article class="account-choice-card">
+                        <div class="account-choice-icon" aria-hidden="true">⌂</div>
+                        <div class="section-kicker">I need a service</div>
+                        <h2>Hire a professional</h2>
+                        <p>Create a client account to discover skilled workers, schedule jobs, and keep bookings and payments together.</p>
+                        <a asp-controller="Client" asp-action="Register" class="btn btn-primary w-100">Register as a client</a>
+                    </article>
+                </div>
+                <div class="col-md-6">
+                    <article class="account-choice-card account-choice-worker">
+                        <div class="account-choice-icon" aria-hidden="true">✳</div>
+                        <div class="section-kicker">I offer a service</div>
+                        <h2>Find work and grow</h2>
+                        <p>Create a worker profile, list your skills, set availability, and manage the jobs you accept.</p>
+                        <a asp-controller="Worker" asp-action="Create" class="btn btn-primary w-100">Register as a worker</a>
+                    </article>
+                </div>
+            </div>
+            <div class="account-choice-footer">Already have an account? <a asp-action="Login">Sign in</a></div>
+        </section>
+    </div>
+</div>

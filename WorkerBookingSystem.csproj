@@ -8,6 +8,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="tests/**/*.cs" />
+
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.8" />
 
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.8" />
@@ -20,6 +22,7 @@
 
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.8" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="8.0.8" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.StackExchangeRedis" Version="8.0.8" />
 
     <!-- RBI Compliance - Payment Gateway & OTP -->
     <PackageReference Include="Razorpay" Version="3.0.0" NoWarn="NU1603;NU1701" />

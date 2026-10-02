@@ -4,11 +4,61 @@ using Microsoft.AspNetCore.Identity;
 using WorkerBookingSystem.Models;
 using WorkerBookingSystem.Services;
 using WorkerBookingSystem.Services.Sms;
+using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.HttpOverrides;
+using System.Net;
+using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    foreach (var proxy in builder.Configuration.GetSection("ForwardedHeaders:KnownProxies").Get<string[]>() ?? Array.Empty<string>())
+    {
+        if (IPAddress.TryParse(proxy, out var address))
+        {
+            options.KnownProxies.Add(address);
+        }
+    }
+});
+var signalRBuilder = builder.Services.AddSignalR();
+var signalRRedisConnection = builder.Configuration["SignalR:Redis:ConnectionString"];
+if (!string.IsNullOrWhiteSpace(signalRRedisConnection))
+{
+    signalRBuilder.AddStackExchangeRedis(signalRRedisConnection, options =>
+    {
+        options.Configuration.ChannelPrefix = StackExchange.Redis.RedisChannel.Literal(
+            builder.Configuration["SignalR:Redis:ChannelPrefix"] ?? "WorkerBookingSystem");
+    });
+}
+builder.Services.AddHealthChecks();
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.AddPolicy("message-send", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: httpContext.User.Identity?.Name ?? httpContext.Connection.RemoteIpAddress?.ToString() ?? "anonymous",
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 30,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0,
+                AutoReplenishment = true
+            }));
+    options.AddPolicy("support-write", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: httpContext.User.Identity?.Name ?? httpContext.Connection.RemoteIpAddress?.ToString() ?? "anonymous",
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 10,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0,
+                AutoReplenishment = true
+            }));
+});
 builder.Services.AddHttpClient();
 builder.Services.AddHttpClient("Msg91");
 
@@ -21,8 +71,16 @@ builder.Services.AddScoped<IPaymentAuditService, PaymentAuditService>();
 // Add Entity Framework Core with SQL Server
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
     ?? "Server=(localdb)\\mssqllocaldb;Database=WorkerBookingSystemDb;Trusted_Connection=true;Encrypt=true;";
-builder.Services.AddDbContext<WorkerBookingContext>(options =>
-    options.UseSqlServer(connectionString));
+builder.Services.AddDbContextPool<WorkerBookingContext>(options =>
+    options.UseSqlServer(connectionString), poolSize: 128);
+
+var dataProtection = builder.Services.AddDataProtection()
+    .SetApplicationName("WorkerBookingSystem");
+var dataProtectionKeysPath = builder.Configuration["DataProtection:KeysPath"];
+if (!string.IsNullOrWhiteSpace(dataProtectionKeysPath))
+{
+    dataProtection.PersistKeysToFileSystem(new DirectoryInfo(dataProtectionKeysPath));
+}
 
 // Add Identity
 builder.Services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = false)
@@ -38,9 +96,11 @@ builder.Services.ConfigureApplicationCookie(options =>
 
 var app = builder.Build();
 
-// Create roles and seed admin user
-using (var scope = app.Services.CreateScope())
+// Run schema/identity initialization once in development, or explicitly in a single production instance.
+// Production deployments should run EF migrations as a one-off release step before scaling out.
+if (app.Environment.IsDevelopment() || builder.Configuration.GetValue<bool>("Database:InitializeOnStartup"))
 {
+    using var scope = app.Services.CreateScope();
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
     var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
     var context = scope.ServiceProvider.GetRequiredService<WorkerBookingContext>();
@@ -112,6 +172,7 @@ using (var scope = app.Services.CreateScope())
 }
 
 // Configure the HTTP request pipeline.
+app.UseForwardedHeaders();
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
@@ -125,7 +186,25 @@ app.UseStaticFiles();
 app.UseRouting();
 
 app.UseAuthentication();
+app.UseRateLimiter();
 app.UseAuthorization();
+
+app.MapHealthChecks("/health/live").AllowAnonymous();
+app.MapGet("/health/ready", async (WorkerBookingContext context) =>
+{
+    try
+    {
+        return await context.Database.CanConnectAsync()
+            ? Results.Ok(new { status = "ready" })
+            : Results.StatusCode(StatusCodes.Status503ServiceUnavailable);
+    }
+    catch
+    {
+        return Results.StatusCode(StatusCodes.Status503ServiceUnavailable);
+    }
+}).AllowAnonymous();
+
+app.MapHub<WorkerBookingSystem.Hubs.BookingChatHub>("/hubs/booking-chat");
 
 app.MapControllerRoute(
     name: "default",

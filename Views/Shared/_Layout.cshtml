@@ -40,6 +40,9 @@
                             <li class="nav-item">
                                 <a class="nav-link" asp-controller="Client" asp-action="BookWorker">Find Workers</a>
                             </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Chat" asp-action="Index">Messages</a>
+                            </li>
                         }
                         @if (User.IsInRole("Worker"))
                         {
@@ -48,6 +51,9 @@
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link" asp-controller="Worker" asp-action="Index">Profile</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Chat" asp-action="Index">Messages</a>
                             </li>
                         }
                         @if (User.IsInRole("Admin"))
@@ -87,6 +93,9 @@
                     <ul class="navbar-nav">
                         @if (User.Identity?.IsAuthenticated == true)
                         {
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Support" asp-action="Index">Support</a>
+                            </li>
                             <li class="nav-item">
                                 <a class="nav-link nav-wallet" asp-controller="Wallet" asp-action="Index">Wallet</a>
                             </li>
@@ -132,11 +141,13 @@
         {
             <a asp-controller="Client" asp-action="BookWorker">Find</a>
             <a asp-controller="Client" asp-action="MyBookings">Bookings</a>
+            <a asp-controller="Chat" asp-action="Index">Messages</a>
         }
         else if (User.IsInRole("Worker"))
         {
             <a asp-controller="Worker" asp-action="MyBookings">Jobs</a>
             <a asp-controller="Worker" asp-action="Index">Profile</a>
+            <a asp-controller="Chat" asp-action="Index">Messages</a>
         }
         else if (User.IsInRole("Admin"))
         {
@@ -150,6 +161,7 @@
         }
         @if (User.Identity?.IsAuthenticated == true)
         {
+            <a asp-controller="Support" asp-action="Index">Support</a>
             <a asp-controller="Wallet" asp-action="Index">Wallet</a>
             <form asp-controller="Account" asp-action="Logout" method="post">
                 <button type="submit">Logout</button>

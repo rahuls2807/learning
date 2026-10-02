@@ -110,6 +110,10 @@
                                         @booking.Worker?.Email<br />
                                         @booking.Worker?.PhoneNumber
                                     </div>
+                                    <div class="d-flex gap-2 mt-3">
+                                        <a asp-controller="Chat" asp-action="Booking" asp-route-bookingId="@booking.BookingId" class="btn btn-outline-primary flex-fill">Message worker</a>
+                                        <a asp-controller="Support" asp-action="Create" asp-route-bookingId="@booking.BookingId" class="btn btn-outline-secondary flex-fill">Get help</a>
+                                    </div>
                                     @if (balance > 0)
                                     {
                                         <a asp-controller="Payment" asp-action="Pay" asp-route-bookingId="@booking.BookingId" class="btn btn-primary w-100 mt-3">Pay Balance</a>
@@ -143,6 +147,7 @@
                                 <th>Total</th>
                                 <th>Paid</th>
                                 <th>Status</th>
+                                <th>Help</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -157,6 +162,10 @@
                                     <td>₹@booking.TotalWage.ToString("F2")</td>
                                     <td>₹@paid.ToString("F2")</td>
                                     <td><span class="status-pill @statusClass">@booking.Status</span></td>
+                                    <td class="text-nowrap">
+                                        <a asp-controller="Chat" asp-action="Booking" asp-route-bookingId="@booking.BookingId">Message</a> ·
+                                        <a asp-controller="Support" asp-action="Create" asp-route-bookingId="@booking.BookingId">Support</a>
+                                    </td>
                                 </tr>
                             }
                         </tbody>

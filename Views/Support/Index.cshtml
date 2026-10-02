@@ -1,0 +1,58 @@
+@model IEnumerable<WorkerBookingSystem.Models.SupportTicket>
+@using WorkerBookingSystem.Models
+@{
+    ViewData["Title"] = "Support tickets";
+    var currentPage = (int)ViewBag.Page;
+    var totalPages = (int)ViewBag.TotalPages;
+}
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
+        <div>
+            <div class="section-kicker">Help desk</div>
+            <h1>Support tickets</h1>
+            <p class="text-muted">Raise a booking, payment, account, or safety issue and follow every reply here.</p>
+        </div>
+        <a class="btn btn-primary" asp-action="Create">Raise a ticket</a>
+    </div>
+
+    @if (TempData["SupportMessage"] is string notice)
+    {
+        <div class="alert alert-success">@notice</div>
+    }
+
+    @if (!Model.Any())
+    {
+        <div class="empty-state">
+            <h2>No tickets yet</h2>
+            <p class="text-muted">If something needs attention, create a ticket and our support team can follow up.</p>
+            <a class="btn btn-primary" asp-action="Create">Create support ticket</a>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead><tr><th>Ticket</th><th>Category</th><th>Booking</th><th>Status</th><th>Updated</th><th></th></tr></thead>
+                <tbody>
+                @foreach (var ticket in Model)
+                {
+                    <tr>
+                        <td><strong>#@ticket.Id · @ticket.Subject</strong><div class="small text-muted">@ticket.CreatedByUser?.Email</div></td>
+                        <td>@ticket.Category</td>
+                        <td>@(ticket.BookingId.HasValue ? $"#{ticket.BookingId}" : "General")</td>
+                        <td><span class="badge text-bg-secondary">@ticket.Status</span></td>
+                        <td>@ticket.UpdatedAtUtc.ToLocalTime().ToString("dd MMM yyyy, h:mm tt")</td>
+                        <td><a class="btn btn-sm btn-outline-primary" asp-action="Details" asp-route-id="@ticket.Id">Open</a></td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+        <nav aria-label="Support ticket pages" class="d-flex justify-content-between">
+            <a class="btn btn-outline-secondary @(currentPage <= 1 ? "disabled" : "")" asp-action="Index" asp-route-page="@(currentPage - 1)">Previous</a>
+            <span class="align-self-center">Page @currentPage of @totalPages</span>
+            <a class="btn btn-outline-secondary @(currentPage >= totalPages ? "disabled" : "")" asp-action="Index" asp-route-page="@(currentPage + 1)">Next</a>
+        </nav>
+    }
+</div>

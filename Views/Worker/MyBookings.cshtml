@@ -20,6 +20,7 @@
                         <th>Client Paid You</th>
                         <th>Status</th>
                         <th>Payment</th>
+                        <th>Communication</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -35,6 +36,10 @@
                             <td>$@booking.AmountPaidToWorker.ToString("F2")</td>
                             <td>@booking.Status</td>
                             <td>@booking.PaymentStatus</td>
+                            <td class="text-nowrap">
+                                <a asp-controller="Chat" asp-action="Booking" asp-route-bookingId="@booking.BookingId">Message client</a> ·
+                                <a asp-controller="Support" asp-action="Create" asp-route-bookingId="@booking.BookingId">Get help</a>
+                            </td>
                         </tr>
                     }
                 </tbody>

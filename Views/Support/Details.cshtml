@@ -1,0 +1,68 @@
+@model WorkerBookingSystem.Models.SupportTicket
+@using WorkerBookingSystem.Models
+@{
+    ViewData["Title"] = $"Support ticket #{Model.Id}";
+}
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
+        <div>
+            <div class="section-kicker">Ticket #@Model.Id · @Model.Category · @(Model.BookingId.HasValue ? $"Booking #{Model.BookingId}" : "General")</div>
+            <h1>@Model.Subject</h1>
+            <p class="text-muted">Opened by @Model.CreatedByUser?.Email · @Model.CreatedAtUtc.ToLocalTime().ToString("dd MMM yyyy, h:mm tt")</p>
+        </div>
+        <span class="badge text-bg-secondary fs-6">@Model.Status</span>
+    </div>
+
+    @if (TempData["SupportMessage"] is string notice)
+    {
+        <div class="alert alert-success">@notice</div>
+    }
+
+    @if (User.IsInRole("Admin"))
+    {
+        <form asp-action="UpdateStatus" method="post" class="card card-body mb-4">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="TicketId" value="@Model.Id" />
+            <label class="form-label" for="ticketStatus">Update status</label>
+            <div class="d-flex gap-2">
+                <select id="ticketStatus" name="Status" class="form-select">
+                    @foreach (var status in Enum.GetValues<SupportTicketStatus>())
+                    {
+                        <option value="@status" selected="@(Model.Status == status)">@status</option>
+                    }
+                </select>
+                <button class="btn btn-outline-primary" type="submit">Save</button>
+            </div>
+        </form>
+    }
+
+    <section class="card mb-4">
+        <div class="card-header"><strong>Conversation</strong></div>
+        <div class="card-body">
+            @foreach (var reply in Model.Replies.OrderBy(r => r.CreatedAtUtc))
+            {
+                <article class="border-bottom py-3">
+                    <div class="d-flex justify-content-between gap-2 flex-wrap">
+                        <strong>@(reply.UserId == Model.CreatedByUserId ? "Customer" : "Support team") · @reply.User?.Email</strong>
+                        <time class="text-muted small" datetime="@reply.CreatedAtUtc.ToString("O")">@reply.CreatedAtUtc.ToLocalTime().ToString("dd MMM yyyy, h:mm tt")</time>
+                    </div>
+                    <p class="mb-0 mt-2" style="white-space:pre-wrap">@reply.Message</p>
+                </article>
+            }
+        </div>
+    </section>
+
+    @if (Model.Status != SupportTicketStatus.Closed)
+    {
+        <form asp-action="Reply" method="post" class="card card-body">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="TicketId" value="@Model.Id" />
+            <label class="form-label" for="ticketReply">Add a reply</label>
+            <textarea id="ticketReply" name="Message" class="form-control" rows="4" maxlength="4000" minlength="2" required></textarea>
+            <button class="btn btn-primary mt-3 align-self-start" type="submit">Send reply</button>
+        </form>
+    }
+
+    <a asp-action="Index" class="btn btn-link px-0 mt-3">Back to tickets</a>
+</div>

@@ -33,6 +33,8 @@ namespace WorkerBookingSystem.Data
         public DbSet<WalletTransaction> WalletTransactions { get; set; }
         public DbSet<UserNotification> UserNotifications { get; set; }
         public DbSet<Message> Messages { get; set; }
+        public DbSet<SupportTicket> SupportTickets { get; set; }
+        public DbSet<SupportTicketReply> SupportTicketReplies { get; set; }
         public DbSet<ReferralProgram> ReferralPrograms { get; set; }
         public DbSet<WorkerMetrics> WorkerMetrics { get; set; }
 
@@ -290,6 +292,51 @@ protected override void OnModelCreating(ModelBuilder modelBuilder)
                 .HasOne(m => m.Receiver)
                 .WithMany()
                 .HasForeignKey(m => m.ReceiverId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<Message>()
+                .HasIndex(m => new { m.BookingId, m.SentAt });
+
+            modelBuilder.Entity<Message>()
+                .HasIndex(m => new { m.ReceiverId, m.ReadAt, m.SentAt });
+
+            modelBuilder.Entity<SupportTicket>()
+                .HasIndex(t => new { t.CreatedByUserId, t.UpdatedAtUtc });
+
+            modelBuilder.Entity<SupportTicket>()
+                .HasIndex(t => new { t.Status, t.UpdatedAtUtc });
+
+            modelBuilder.Entity<SupportTicket>()
+                .HasOne(t => t.CreatedByUser)
+                .WithMany()
+                .HasForeignKey(t => t.CreatedByUserId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<SupportTicket>()
+                .HasOne(t => t.AssignedToUser)
+                .WithMany()
+                .HasForeignKey(t => t.AssignedToUserId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<SupportTicket>()
+                .HasOne(t => t.Booking)
+                .WithMany()
+                .HasForeignKey(t => t.BookingId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<SupportTicketReply>()
+                .HasIndex(r => new { r.SupportTicketId, r.CreatedAtUtc });
+
+            modelBuilder.Entity<SupportTicketReply>()
+                .HasOne(r => r.SupportTicket)
+                .WithMany(t => t.Replies)
+                .HasForeignKey(r => r.SupportTicketId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<SupportTicketReply>()
+                .HasOne(r => r.User)
+                .WithMany()
+                .HasForeignKey(r => r.UserId)
                 .OnDelete(DeleteBehavior.NoAction);
 
             modelBuilder.Entity<ReferralProgram>()

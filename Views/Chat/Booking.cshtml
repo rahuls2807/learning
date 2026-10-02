@@ -1,0 +1,114 @@
+@model WorkerBookingSystem.Models.ViewModels.BookingChatViewModel
+@{
+    ViewData["Title"] = "Booking conversation";
+}
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-3">
+        <div>
+            <div class="section-kicker">Booking #@Model.BookingId · @Model.StartTime.ToString("dd MMM yyyy, h:mm tt")</div>
+            <h1 class="h2">@Model.OtherParticipantName</h1>
+            <p class="text-muted mb-0">@Model.TaskDescription</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a class="btn btn-outline-danger" asp-controller="Support" asp-action="Create" asp-route-bookingId="@Model.BookingId">Report an issue</a>
+            <a class="btn btn-outline-secondary" asp-action="Index">All conversations</a>
+        </div>
+    </div>
+
+    <section class="card shadow-sm" aria-label="Booking conversation">
+        <div id="chatStatus" class="card-header text-muted" role="status">Connecting securely…</div>
+        <div id="chatMessages" class="card-body" style="height:min(58vh,560px); overflow-y:auto" aria-live="polite"></div>
+        <form id="chatForm" class="card-footer d-flex gap-2">
+            @Html.AntiForgeryToken()
+            <label class="visually-hidden" for="chatInput">Message</label>
+            <input id="chatInput" class="form-control" maxlength="2000" autocomplete="off" placeholder="Write a message…" required />
+            <button id="sendButton" class="btn btn-primary" type="submit" disabled>Send</button>
+        </form>
+    </section>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/@@microsoft/signalr@8.0.8/dist/browser/signalr.min.js" crossorigin="anonymous"></script>
+    <script>
+        (() => {
+            const bookingId = @Model.BookingId;
+            const currentUserId = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.CurrentUserId));
+            const otherParticipantName = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.OtherParticipantName));
+            const messages = document.getElementById('chatMessages');
+            const status = document.getElementById('chatStatus');
+            const sendButton = document.getElementById('sendButton');
+            const input = document.getElementById('chatInput');
+
+            if (!window.signalR) {
+                status.textContent = 'Chat is unavailable because the SignalR client library did not load.';
+                return;
+            }
+
+            function renderMessage(message) {
+                const row = document.createElement('div');
+                row.className = `d-flex mb-3 ${message.senderId === currentUserId ? 'justify-content-end' : 'justify-content-start'}`;
+                const bubble = document.createElement('div');
+                bubble.className = 'p-3 rounded-3';
+                bubble.style.maxWidth = 'min(82%, 620px)';
+                bubble.style.background = message.senderId === currentUserId ? '#e8f1ff' : '#f1f5f9';
+                const author = document.createElement('strong');
+                author.className = 'd-block small mb-1';
+                author.textContent = message.senderId === currentUserId ? 'You' : (message.senderName || otherParticipantName);
+                const content = document.createElement('div');
+                content.style.whiteSpace = 'pre-wrap';
+                content.textContent = message.content;
+                const time = document.createElement('time');
+                time.className = 'd-block small text-muted mt-2';
+                time.dateTime = message.sentAt;
+                time.textContent = new Date(message.sentAt).toLocaleString();
+                bubble.append(author, content, time);
+                row.appendChild(bubble);
+                messages.appendChild(row);
+                messages.scrollTop = messages.scrollHeight;
+            }
+
+            const connection = new signalR.HubConnectionBuilder()
+                .withUrl('/hubs/booking-chat')
+                .withAutomaticReconnect()
+                .build();
+
+            connection.on('ReceiveMessage', renderMessage);
+            connection.onreconnecting(() => {
+                status.textContent = 'Reconnecting… messages remain stored on the server.';
+                sendButton.disabled = true;
+            });
+            connection.onreconnected(async () => {
+                await join();
+            });
+
+            async function join() {
+                const result = await connection.invoke('JoinBooking', bookingId);
+                messages.replaceChildren();
+                result.messages.forEach(renderMessage);
+                status.textContent = 'Connected · conversation is saved to your booking';
+                sendButton.disabled = false;
+            }
+
+            connection.start()
+                .then(join)
+                .catch(() => { status.textContent = 'Unable to connect. Refresh the page to retry.'; });
+
+            document.getElementById('chatForm').addEventListener('submit', async event => {
+                event.preventDefault();
+                const content = input.value.trim();
+                if (!content || sendButton.disabled) return;
+                sendButton.disabled = true;
+                try {
+                    await connection.invoke('SendMessage', bookingId, content);
+                    input.value = '';
+                    input.focus();
+                } catch {
+                    status.textContent = 'Message was not sent. Check your connection and try again.';
+                } finally {
+                    sendButton.disabled = connection.state !== signalR.HubConnectionState.Connected;
+                }
+            });
+        })();
+    </script>
+}

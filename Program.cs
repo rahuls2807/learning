@@ -58,6 +58,16 @@ builder.Services.AddRateLimiter(options =>
                 QueueLimit = 0,
                 AutoReplenishment = true
             }));
+    options.AddPolicy("community-write", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: httpContext.User.Identity?.Name ?? httpContext.Connection.RemoteIpAddress?.ToString() ?? "anonymous",
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 60,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0,
+                AutoReplenishment = true
+            }));
 });
 builder.Services.AddHttpClient();
 builder.Services.AddHttpClient("Msg91");
@@ -205,6 +215,7 @@ app.MapGet("/health/ready", async (WorkerBookingContext context) =>
 }).AllowAnonymous();
 
 app.MapHub<WorkerBookingSystem.Hubs.BookingChatHub>("/hubs/booking-chat");
+app.MapHub<WorkerBookingSystem.Hubs.CommunityDirectChatHub>("/hubs/community-chat");
 
 app.MapControllerRoute(
     name: "default",

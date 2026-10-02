@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using WorkerBookingSystem.Data;
 
@@ -11,9 +12,11 @@ using WorkerBookingSystem.Data;
 namespace WorkerBookingSystem.Migrations
 {
     [DbContext(typeof(WorkerBookingContext))]
-    partial class WorkerBookingContextModelSnapshot : ModelSnapshot
+    [Migration("20261002123730_AddCommunitySocialFeed")]
+    partial class AddCommunitySocialFeed
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -613,75 +616,6 @@ namespace WorkerBookingSystem.Migrations
                     b.HasIndex("PostId", "CreatedAtUtc");
 
                     b.ToTable("CommunityComments");
-                });
-
-            modelBuilder.Entity("WorkerBookingSystem.Models.CommunityConversation", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedAtUtc")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("LastMessageAtUtc")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("UserOneId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("UserTwoId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("LastMessageAtUtc");
-
-                    b.HasIndex("UserTwoId");
-
-                    b.HasIndex("UserOneId", "UserTwoId")
-                        .IsUnique();
-
-                    b.ToTable("CommunityConversations");
-                });
-
-            modelBuilder.Entity("WorkerBookingSystem.Models.CommunityDirectMessage", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Content")
-                        .IsRequired()
-                        .HasMaxLength(2000)
-                        .HasColumnType("nvarchar(2000)");
-
-                    b.Property<int>("ConversationId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("ReadAtUtc")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("SenderUserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<DateTime>("SentAtUtc")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("SenderUserId");
-
-                    b.HasIndex("ConversationId", "SentAtUtc");
-
-                    b.ToTable("CommunityDirectMessages");
                 });
 
             modelBuilder.Entity("WorkerBookingSystem.Models.CommunityPost", b =>
@@ -1756,44 +1690,6 @@ namespace WorkerBookingSystem.Migrations
                     b.Navigation("Post");
                 });
 
-            modelBuilder.Entity("WorkerBookingSystem.Models.CommunityConversation", b =>
-                {
-                    b.HasOne("WorkerBookingSystem.Models.ApplicationUser", "UserOne")
-                        .WithMany()
-                        .HasForeignKey("UserOneId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.HasOne("WorkerBookingSystem.Models.ApplicationUser", "UserTwo")
-                        .WithMany()
-                        .HasForeignKey("UserTwoId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.Navigation("UserOne");
-
-                    b.Navigation("UserTwo");
-                });
-
-            modelBuilder.Entity("WorkerBookingSystem.Models.CommunityDirectMessage", b =>
-                {
-                    b.HasOne("WorkerBookingSystem.Models.CommunityConversation", "Conversation")
-                        .WithMany("Messages")
-                        .HasForeignKey("ConversationId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("WorkerBookingSystem.Models.ApplicationUser", "Sender")
-                        .WithMany()
-                        .HasForeignKey("SenderUserId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.Navigation("Conversation");
-
-                    b.Navigation("Sender");
-                });
-
             modelBuilder.Entity("WorkerBookingSystem.Models.CommunityPost", b =>
                 {
                     b.HasOne("WorkerBookingSystem.Models.ApplicationUser", "Author")
@@ -2086,11 +1982,6 @@ namespace WorkerBookingSystem.Migrations
             modelBuilder.Entity("WorkerBookingSystem.Models.Client", b =>
                 {
                     b.Navigation("Bookings");
-                });
-
-            modelBuilder.Entity("WorkerBookingSystem.Models.CommunityConversation", b =>
-                {
-                    b.Navigation("Messages");
                 });
 
             modelBuilder.Entity("WorkerBookingSystem.Models.CommunityPost", b =>

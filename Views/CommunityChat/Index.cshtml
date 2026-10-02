@@ -1,0 +1,42 @@
+@model IReadOnlyList<WorkerBookingSystem.Models.ViewModels.CommunityInboxItemViewModel>
+@{
+    ViewData["Title"] = "Community messages";
+}
+
+<div class="community-shell community-chat-shell">
+    <aside class="community-sidebar">
+        <section class="community-rail-card">
+            <span class="community-eyebrow">YOUR NETWORK</span>
+            <h2>Member messages</h2>
+            <p class="text-muted mb-3">Private one-to-one conversations with people in the Worker Mandi community.</p>
+            <a asp-controller="Chat" asp-action="Index" class="community-text-link">Open booking conversations ↗</a>
+        </section>
+    </aside>
+    <main class="community-main">
+        <section class="community-welcome community-chat-welcome">
+            <div><span class="community-eyebrow">DIRECT, PROFESSIONAL, PRIVATE</span><h1>Keep good work<br /><span>moving forward.</span></h1><p>Talk directly with a client or professional you meet in the community.</p></div>
+            <div class="community-welcome-mark" aria-hidden="true">✉</div>
+        </section>
+        <section class="community-inbox-card">
+            <div class="community-inbox-heading"><div><h2>Your conversations</h2><p>Only you and the other member can read these messages.</p></div><a class="btn btn-outline-primary" asp-controller="Community" asp-action="Index">Explore community</a></div>
+            @if (Model.Count == 0)
+            {
+                <div class="community-empty"><div>✉</div><h3>Your inbox is ready</h3><p>Open a community post and choose Message to start a private conversation.</p><a class="btn btn-primary mt-3" asp-controller="Community" asp-action="Index">Explore posts</a></div>
+            }
+            else
+            {
+                <div class="community-inbox-list">
+                    @foreach (var item in Model)
+                    {
+                        <a class="community-inbox-item" asp-action="Conversation" asp-route-id="@item.ConversationId">
+                            <span class="community-avatar">@item.OtherUserInitials</span>
+                            <span class="community-inbox-preview"><strong>@item.OtherUserName</strong><span>@(string.IsNullOrWhiteSpace(item.LastMessage) ? "Conversation started" : item.LastMessage)</span></span>
+                            <span class="community-inbox-meta"><time>@item.LastMessageAtUtc.ToLocalTime().ToString("dd MMM · h:mm tt")</time>@if(item.UnreadCount > 0){<b>@item.UnreadCount</b>}</span>
+                        </a>
+                    }
+                </div>
+            }
+        </section>
+    </main>
+    <aside class="community-right-rail"><section class="community-rail-card"><span class="community-eyebrow">GOOD CONVERSATIONS</span><h2>Make it useful and kind.</h2><ul><li>Keep conversations focused on work and opportunity.</li><li>Never share passwords, OTP codes, or payment credentials.</li><li>Use booking chat for updates about a confirmed job.</li></ul></section></aside>
+</div>

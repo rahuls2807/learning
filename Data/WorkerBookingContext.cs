@@ -35,6 +35,12 @@ namespace WorkerBookingSystem.Data
         public DbSet<Message> Messages { get; set; }
         public DbSet<SupportTicket> SupportTickets { get; set; }
         public DbSet<SupportTicketReply> SupportTicketReplies { get; set; }
+        public DbSet<CommunityPost> CommunityPosts { get; set; }
+        public DbSet<CommunityComment> CommunityComments { get; set; }
+        public DbSet<CommunityReaction> CommunityReactions { get; set; }
+        public DbSet<CommunityShare> CommunityShares { get; set; }
+        public DbSet<CommunityConversation> CommunityConversations { get; set; }
+        public DbSet<CommunityDirectMessage> CommunityDirectMessages { get; set; }
         public DbSet<ReferralProgram> ReferralPrograms { get; set; }
         public DbSet<WorkerMetrics> WorkerMetrics { get; set; }
 
@@ -337,6 +343,99 @@ protected override void OnModelCreating(ModelBuilder modelBuilder)
                 .HasOne(r => r.User)
                 .WithMany()
                 .HasForeignKey(r => r.UserId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<CommunityPost>()
+                .HasIndex(p => new { p.IsHidden, p.CreatedAtUtc });
+
+            modelBuilder.Entity<CommunityPost>()
+                .HasIndex(p => new { p.AuthorUserId, p.CreatedAtUtc });
+
+            modelBuilder.Entity<CommunityPost>()
+                .HasOne(p => p.Author)
+                .WithMany()
+                .HasForeignKey(p => p.AuthorUserId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<CommunityComment>()
+                .HasIndex(c => new { c.PostId, c.CreatedAtUtc });
+
+            modelBuilder.Entity<CommunityComment>()
+                .HasOne(c => c.Post)
+                .WithMany(p => p.Comments)
+                .HasForeignKey(c => c.PostId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<CommunityComment>()
+                .HasOne(c => c.Author)
+                .WithMany()
+                .HasForeignKey(c => c.AuthorUserId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<CommunityReaction>()
+                .HasIndex(r => new { r.PostId, r.UserId })
+                .IsUnique();
+
+            modelBuilder.Entity<CommunityReaction>()
+                .HasOne(r => r.Post)
+                .WithMany(p => p.Reactions)
+                .HasForeignKey(r => r.PostId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<CommunityReaction>()
+                .HasOne(r => r.User)
+                .WithMany()
+                .HasForeignKey(r => r.UserId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<CommunityShare>()
+                .HasIndex(s => new { s.PostId, s.UserId })
+                .IsUnique();
+
+            modelBuilder.Entity<CommunityShare>()
+                .HasOne(s => s.Post)
+                .WithMany(p => p.Shares)
+                .HasForeignKey(s => s.PostId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<CommunityShare>()
+                .HasOne(s => s.User)
+                .WithMany()
+                .HasForeignKey(s => s.UserId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<CommunityConversation>()
+                .HasIndex(conversation => new { conversation.UserOneId, conversation.UserTwoId })
+                .IsUnique();
+
+            modelBuilder.Entity<CommunityConversation>()
+                .HasIndex(conversation => conversation.LastMessageAtUtc);
+
+            modelBuilder.Entity<CommunityConversation>()
+                .HasOne(conversation => conversation.UserOne)
+                .WithMany()
+                .HasForeignKey(conversation => conversation.UserOneId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<CommunityConversation>()
+                .HasOne(conversation => conversation.UserTwo)
+                .WithMany()
+                .HasForeignKey(conversation => conversation.UserTwoId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<CommunityDirectMessage>()
+                .HasIndex(message => new { message.ConversationId, message.SentAtUtc });
+
+            modelBuilder.Entity<CommunityDirectMessage>()
+                .HasOne(message => message.Conversation)
+                .WithMany(conversation => conversation.Messages)
+                .HasForeignKey(message => message.ConversationId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<CommunityDirectMessage>()
+                .HasOne(message => message.Sender)
+                .WithMany()
+                .HasForeignKey(message => message.SenderUserId)
                 .OnDelete(DeleteBehavior.NoAction);
 
             modelBuilder.Entity<ReferralProgram>()

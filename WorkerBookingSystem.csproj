@@ -9,6 +9,8 @@
 
   <ItemGroup>
     <Compile Remove="tests/**/*.cs" />
+    <Content Remove="tests/**" />
+    <None Remove="tests/**" />
 
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.8" />
 

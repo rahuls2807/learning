@@ -32,6 +32,9 @@
                         <li class="nav-item">
                             <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Community" asp-action="Index">Community</a>
+                        </li>
                         @if (User.IsInRole("Client"))
                         {
                             <li class="nav-item">
@@ -41,7 +44,7 @@
                                 <a class="nav-link" asp-controller="Client" asp-action="BookWorker">Find Workers</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" asp-controller="Chat" asp-action="Index">Messages</a>
+                                <a class="nav-link" asp-controller="CommunityChat" asp-action="Index">Messages</a>
                             </li>
                         }
                         @if (User.IsInRole("Worker"))
@@ -53,7 +56,7 @@
                                 <a class="nav-link" asp-controller="Worker" asp-action="Index">Profile</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" asp-controller="Chat" asp-action="Index">Messages</a>
+                                <a class="nav-link" asp-controller="CommunityChat" asp-action="Index">Messages</a>
                             </li>
                         }
                         @if (User.IsInRole("Admin"))
@@ -137,17 +140,18 @@
 
     <nav class="mobile-bottom-nav" aria-label="Mobile quick navigation">
         <a asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+        <a asp-controller="Community" asp-action="Index">Community</a>
         @if (User.IsInRole("Client"))
         {
             <a asp-controller="Client" asp-action="BookWorker">Find</a>
             <a asp-controller="Client" asp-action="MyBookings">Bookings</a>
-            <a asp-controller="Chat" asp-action="Index">Messages</a>
+            <a asp-controller="CommunityChat" asp-action="Index">Messages</a>
         }
         else if (User.IsInRole("Worker"))
         {
             <a asp-controller="Worker" asp-action="MyBookings">Jobs</a>
             <a asp-controller="Worker" asp-action="Index">Profile</a>
-            <a asp-controller="Chat" asp-action="Index">Messages</a>
+            <a asp-controller="CommunityChat" asp-action="Index">Messages</a>
         }
         else if (User.IsInRole("Admin"))
         {

@@ -1,0 +1,121 @@
+@model WorkerBookingSystem.Models.ViewModels.CommunityDirectConversationViewModel
+@{
+    ViewData["Title"] = $"Chat with {Model.OtherUserName}";
+}
+
+<div class="community-shell community-chat-shell">
+    <aside class="community-sidebar"><a class="community-back-link" asp-action="Index">← All community messages</a></aside>
+    <main class="community-main">
+        <section class="community-direct-thread">
+            <header class="community-direct-header">
+                <a class="community-back-link" asp-action="Index">← Inbox</a>
+                <div class="community-direct-person"><span class="community-avatar">@Model.OtherUserInitials</span><div><h1>@Model.OtherUserName</h1><span>Worker Mandi community member · Private conversation</span></div></div>
+            </header>
+            @if (TempData["CommunityChatError"] is string error)
+            {
+                <div class="alert alert-danger m-3">@error</div>
+            }
+            <div class="community-direct-messages" id="directMessages" aria-live="polite">
+                @if (Model.Messages.Count == 0)
+                {
+                    <div class="community-empty"><div>✉</div><h3>Start the conversation</h3><p>A friendly introduction can open the door to a useful connection.</p></div>
+                }
+                @foreach (var message in Model.Messages)
+                {
+                    <article class="community-direct-message @(message.SenderUserId == Model.CurrentUserId ? "is-mine" : "")">
+                        @if (message.SenderUserId != Model.CurrentUserId)
+                        {
+                            <span class="community-avatar community-avatar-small">@Model.OtherUserInitials</span>
+                        }
+                        <div class="community-direct-bubble"><strong>@message.SenderName</strong><p>@message.Content</p><time datetime="@message.SentAtUtc.ToString("O")">@message.SentAtUtc.ToLocalTime().ToString("dd MMM yyyy · h:mm tt")</time></div>
+                    </article>
+                }
+            </div>
+            <form asp-action="Send" method="post" class="community-direct-compose">
+                @Html.AntiForgeryToken()<input type="hidden" name="ConversationId" value="@Model.ConversationId" />
+                <label class="visually-hidden" for="directMessageContent">Write a message</label>
+                <textarea id="directMessageContent" name="Content" class="form-control" maxlength="2000" rows="2" placeholder="Write a message…" required></textarea>
+                <div class="community-direct-compose-footer"><span id="directChatStatus" role="status">Keep private information safe. Up to 2,000 characters.</span><button id="directSendButton" class="btn btn-primary" type="submit">Send message</button></div>
+            </form>
+        </section>
+    </main>
+    <aside class="community-right-rail"><section class="community-rail-card community-rail-highlight"><span class="community-eyebrow">WORKING TOGETHER?</span><h2>Keep job details connected to the booking.</h2><a asp-controller="Chat" asp-action="Index">Booking conversations <span>↗</span></a></section></aside>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/@@microsoft/signalr@8.0.8/dist/browser/signalr.min.js" crossorigin="anonymous"></script>
+    <script>
+        (() => {
+            const messages = document.getElementById('directMessages');
+            if (!messages) return;
+            messages.scrollTop = messages.scrollHeight;
+            if (!window.signalR) return;
+
+            const conversationId = @Model.ConversationId;
+            const currentUserId = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.CurrentUserId));
+            const otherUserName = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.OtherUserName));
+            const form = document.querySelector('.community-direct-compose');
+            const input = document.getElementById('directMessageContent');
+            const sendButton = document.getElementById('directSendButton');
+            const status = document.getElementById('directChatStatus');
+            const connection = new signalR.HubConnectionBuilder()
+                .withUrl('/hubs/community-chat')
+                .withAutomaticReconnect()
+                .build();
+
+            function renderMessage(message) {
+                if (messages.querySelector(`[data-message-id="${message.id}"]`)) return;
+                const row = document.createElement('article');
+                row.className = `community-direct-message ${message.senderUserId === currentUserId ? 'is-mine' : ''}`;
+                row.dataset.messageId = message.id;
+                if (message.senderUserId !== currentUserId) {
+                    const avatar = document.createElement('span');
+                    avatar.className = 'community-avatar community-avatar-small';
+                    avatar.textContent = otherUserName.split(' ').map(part => part[0] || '').slice(0, 2).join('').toUpperCase();
+                    row.appendChild(avatar);
+                }
+                const bubble = document.createElement('div');
+                bubble.className = 'community-direct-bubble';
+                const author = document.createElement('strong');
+                author.textContent = message.senderUserId === currentUserId ? 'You' : (message.senderName || otherUserName);
+                const content = document.createElement('p');
+                content.textContent = message.content;
+                const time = document.createElement('time');
+                time.dateTime = message.sentAtUtc;
+                time.textContent = new Date(message.sentAtUtc).toLocaleString();
+                bubble.append(author, content, time);
+                row.appendChild(bubble);
+                messages.appendChild(row);
+                messages.scrollTop = messages.scrollHeight;
+            }
+
+            connection.on('ReceiveMessage', renderMessage);
+            connection.onreconnecting(() => { status.textContent = 'Reconnecting… messages are saved.'; });
+            connection.onreconnected(async () => {
+                await connection.invoke('JoinConversation', conversationId);
+                status.textContent = 'Live chat connected';
+            });
+            connection.start()
+                .then(() => connection.invoke('JoinConversation', conversationId))
+                .then(() => { status.textContent = 'Live chat connected'; })
+                .catch(() => { status.textContent = 'Live chat is offline. Sending still works with page refresh.'; });
+
+            form.addEventListener('submit', async event => {
+                if (connection.state !== signalR.HubConnectionState.Connected) return;
+                event.preventDefault();
+                const content = input.value.trim();
+                if (!content) return;
+                sendButton.disabled = true;
+                try {
+                    await connection.invoke('SendMessage', conversationId, content);
+                    input.value = '';
+                    input.focus();
+                } catch {
+                    status.textContent = 'Message failed to send. Try again or refresh to use the saved-message flow.';
+                } finally {
+                    sendButton.disabled = false;
+                }
+            });
+        })();
+    </script>
+}

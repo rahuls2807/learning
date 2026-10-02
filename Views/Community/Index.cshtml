@@ -1,0 +1,249 @@
+@model IReadOnlyList<WorkerBookingSystem.Models.ViewModels.CommunityPostCardViewModel>
+@using WorkerBookingSystem.Models
+@using WorkerBookingSystem.Services
+@{
+    ViewData["Title"] = "Community";
+    var currentPage = (int)ViewBag.Page;
+    var totalPages = (int)ViewBag.TotalPages;
+    var currentInitials = CommunityProfilePolicy.GetInitials(User.Identity?.Name?.Split('@')[0] ?? "Member");
+}
+
+<div class="community-shell">
+    <aside class="community-sidebar">
+        <section class="community-profile-card">
+            <div class="community-cover"></div>
+            <div class="community-profile-content">
+                <div class="community-logo">WM</div>
+                <h2>Worker Mandi Community</h2>
+                <p>Skills, opportunity, and trusted work—together.</p>
+                <div class="community-stat"><span>Built for local professionals</span><strong>●</strong></div>
+                <div class="community-stat"><span>Share experience · Find work · Grow</span></div>
+            </div>
+        </section>
+        <section class="community-side-links" aria-label="Community shortcuts">
+            <a asp-controller="Client" asp-action="BookWorker"><span>Discover professionals</span><strong>↗</strong></a>
+            @if (User.IsInRole("Client"))
+            {
+                <a asp-controller="Client" asp-action="MyBookings"><span>My bookings</span><strong>↗</strong></a>
+            }
+            @if (User.IsInRole("Worker"))
+            {
+                <a asp-controller="Worker" asp-action="MyBookings"><span>My jobs</span><strong>↗</strong></a>
+            }
+            @if (User.Identity?.IsAuthenticated == true)
+            {
+                <a asp-controller="CommunityChat" asp-action="Index"><span>Messages</span><strong>↗</strong></a>
+                <a asp-controller="Chat" asp-action="Index"><span>Booking chats</span><strong>↗</strong></a>
+                <a asp-controller="Support" asp-action="Index"><span>Support desk</span><strong>↗</strong></a>
+            }
+        </section>
+        <p class="community-sidebar-note">A respectful space for clients, workers, and local businesses.</p>
+    </aside>
+
+    <main class="community-main">
+        <section class="community-welcome">
+            <div>
+                <span class="community-eyebrow">THE WORKER MANDI NETWORK</span>
+                <h1>Good work grows<br /><span>when we share.</span></h1>
+                <p>Meet the people behind the work. Share a skill, a lesson, or a win from your community.</p>
+            </div>
+            <div class="community-welcome-mark" aria-hidden="true">✳</div>
+        </section>
+
+        @if (TempData["CommunityMessage"] is string successMessage)
+        {
+            <div class="alert alert-success community-alert">@successMessage</div>
+        }
+        @if (TempData["CommunityError"] is string errorMessage)
+        {
+            <div class="alert alert-danger community-alert">@errorMessage</div>
+        }
+        @if (TempData["ShareUrl"] is string shareUrl)
+        {
+            <section class="community-share-result" role="status">
+                <div><strong>Your share link is ready</strong><span>Copy it and send it to your network.</span></div>
+                <input id="communityShareUrl" class="form-control" value="@shareUrl" readonly aria-label="Share link" />
+                <button class="btn btn-primary" type="button" id="copyCommunityShare">Copy link</button>
+            </section>
+        }
+
+        @if (User.Identity?.IsAuthenticated == true)
+        {
+            <section class="community-composer">
+                <div class="community-avatar community-avatar-you">@currentInitials</div>
+                <form asp-action="Create" method="post" class="community-composer-form">
+                    @Html.AntiForgeryToken()
+                    <label class="visually-hidden" for="communityPostContent">Write a post</label>
+                    <textarea id="communityPostContent" name="Content" maxlength="3000" rows="3" placeholder="Share a skill, a work update, or something you learned…" required></textarea>
+                    <div class="community-composer-footer">
+                        <details class="community-image-option">
+                            <summary>＋ Add an image link</summary>
+                            <input name="ImageUrl" type="url" class="form-control" maxlength="1000" placeholder="https://… (optional, HTTPS only)" />
+                        </details>
+                        <span class="community-character-hint">Keep it helpful and respectful</span>
+                        <button class="btn btn-primary" type="submit">Post to community</button>
+                    </div>
+                </form>
+            </section>
+        }
+        else
+        {
+            <section class="community-join-card">
+                <div><strong>Join the conversation</strong><span>Sign in to share updates, celebrate work, and connect.</span></div>
+                <a class="btn btn-primary" asp-controller="Account" asp-action="Login" asp-route-returnUrl="/Community">Sign in</a>
+            </section>
+        }
+
+        <div class="community-feed-heading">
+            <div><span class="community-eyebrow">FROM YOUR COMMUNITY</span><h2>@(ViewBag.IsSharedPost == true ? "Shared post" : "Recent conversations")</h2></div>
+            @if (ViewBag.IsSharedPost != true)
+            {
+                <span class="community-live-label"><i></i> Newest first</span>
+            }
+        </div>
+
+        @if (Model.Count == 0)
+        {
+            <section class="community-empty"><div>✳</div><h3>Start something good</h3><p>No posts yet. Share the first useful tip or work update with your community.</p></section>
+        }
+        else
+        {
+            <div class="community-feed-list">
+                @foreach (var post in Model)
+                {
+                    <article class="community-post" id="post-@post.Id">
+                        <header class="community-post-header">
+                            <div class="community-avatar">@post.AuthorInitials</div>
+                            <div class="community-post-author"><strong>@post.AuthorName</strong><span>@post.AuthorRole · Local professional network</span><time datetime="@post.CreatedAtUtc.ToString("O")">@post.CreatedAtUtc.ToLocalTime().ToString("dd MMM yyyy · h:mm tt")</time></div>
+                            @if (User.Identity?.IsAuthenticated == true && (User.IsInRole("Admin") || post.AuthorUserId == User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value))
+                            {
+                                <form asp-action="HidePost" method="post" class="community-admin-action" onsubmit="return confirm('Hide this post from the community?');">
+                                    @Html.AntiForgeryToken()<input type="hidden" name="postId" value="@post.Id" />
+                                    <button type="submit" class="btn btn-sm btn-outline-secondary" aria-label="Remove post">Remove</button>
+                                </form>
+                            }
+                            else if (User.Identity?.IsAuthenticated == true)
+                            {
+                                <form asp-controller="CommunityChat" asp-action="Start" method="post" class="community-admin-action">
+                                    @Html.AntiForgeryToken()<input type="hidden" name="memberUserId" value="@post.AuthorUserId" />
+                                    <button type="submit" class="btn btn-sm btn-outline-primary">Message</button>
+                                </form>
+                            }
+                        </header>
+                        <div class="community-post-content">@post.Content</div>
+                        @if (!string.IsNullOrWhiteSpace(post.ImageUrl))
+                        {
+                            <a class="community-post-image-link" href="@post.ImageUrl" target="_blank" rel="noopener noreferrer"><img class="community-post-image" src="@post.ImageUrl" alt="Image shared by @post.AuthorName" loading="lazy" referrerpolicy="no-referrer" /></a>
+                        }
+                        <div class="community-post-stats">
+                            <span><span class="community-reaction-dot">✦</span> @post.ReactionCount reactions</span>
+                            <span>@post.CommentCount comments · @post.ShareCount shares</span>
+                        </div>
+                        <div class="community-post-actions">
+                            @if (User.Identity?.IsAuthenticated == true)
+                            {
+                                <form asp-action="React" method="post" class="community-inline-form">
+                                    @Html.AntiForgeryToken()<input type="hidden" name="postId" value="@post.Id" />
+                                    <button type="submit" name="reaction" value="Like" class="community-action-button @(post.MyReaction == CommunityReactionType.Like ? "is-active" : "")">✦ @(post.MyReaction == CommunityReactionType.Like ? "Liked" : "Like")</button>
+                                </form>
+                                <form asp-action="React" method="post" class="community-inline-form">
+                                    @Html.AntiForgeryToken()<input type="hidden" name="postId" value="@post.Id" />
+                                    <button type="submit" name="reaction" value="Helpful" class="community-action-button @(post.MyReaction == CommunityReactionType.Helpful ? "is-active" : "")">◎ Helpful</button>
+                                </form>
+                                <form asp-action="React" method="post" class="community-inline-form">
+                                    @Html.AntiForgeryToken()<input type="hidden" name="postId" value="@post.Id" />
+                                    <button type="submit" name="reaction" value="Celebrate" class="community-action-button @(post.MyReaction == CommunityReactionType.Celebrate ? "is-active" : "")">✧ Celebrate</button>
+                                </form>
+                                <form asp-action="Share" method="post" class="community-inline-form">
+                                    @Html.AntiForgeryToken()<input type="hidden" name="postId" value="@post.Id" />
+                                    <button type="submit" class="community-action-button">↗ Share</button>
+                                </form>
+                            }
+                            else
+                            {
+                                <a class="community-action-button" asp-controller="Account" asp-action="Login" asp-route-returnUrl="/Community">✦ React</a>
+                                <a class="community-action-button" asp-controller="Account" asp-action="Login" asp-route-returnUrl="/Community">↗ Share</a>
+                            }
+                        </div>
+                        @if (post.Comments.Count > 0)
+                        {
+                            <div class="community-comments">
+                                @foreach (var comment in post.Comments)
+                                {
+                                    <div class="community-comment">
+                                        <div class="community-avatar community-avatar-small">@comment.AuthorInitials</div>
+                                        <div class="community-comment-bubble"><strong>@comment.AuthorName</strong><p>@comment.Content</p><time datetime="@comment.CreatedAtUtc.ToString("O")">@comment.CreatedAtUtc.ToLocalTime().ToString("dd MMM · h:mm tt")</time></div>
+                                        @if (User.Identity?.IsAuthenticated == true && (User.IsInRole("Admin") || comment.AuthorUserId == User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value))
+                                        {
+                                            <form asp-action="HideComment" method="post" onsubmit="return confirm('Hide this comment?');">
+                                                @Html.AntiForgeryToken()<input type="hidden" name="commentId" value="@comment.Id" />
+                                                <button type="submit" class="community-hide-comment" aria-label="Hide comment">×</button>
+                                            </form>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        }
+                        @if (User.Identity?.IsAuthenticated == true)
+                        {
+                            <form asp-action="Comment" method="post" class="community-comment-form">
+                                @Html.AntiForgeryToken()<input type="hidden" name="PostId" value="@post.Id" />
+                                <div class="community-avatar community-avatar-small community-avatar-you">@currentInitials</div>
+                                <label class="visually-hidden" for="comment-@post.Id">Write a comment</label>
+                                <input id="comment-@post.Id" name="Content" class="form-control" maxlength="1000" placeholder="Add a thoughtful comment…" required />
+                                <button class="btn btn-primary" type="submit">Comment</button>
+                            </form>
+                        }
+                        else
+                        {
+                            <div class="community-comment-login"><a asp-controller="Account" asp-action="Login" asp-route-returnUrl="/Community">Sign in</a> to add to the conversation.</div>
+                        }
+                    </article>
+                }
+            </div>
+        }
+
+        @if (ViewBag.IsSharedPost != true && totalPages > 1)
+        {
+            <nav class="community-pagination" aria-label="Community feed pages">
+                <a class="btn btn-outline-primary @(currentPage <= 1 ? "disabled" : "")" asp-action="Index" asp-route-page="@(currentPage - 1)">← Newer</a>
+                <span>@currentPage / @totalPages</span>
+                <a class="btn btn-outline-primary @(currentPage >= totalPages ? "disabled" : "")" asp-action="Index" asp-route-page="@(currentPage + 1)">Older →</a>
+            </nav>
+        }
+    </main>
+
+    <aside class="community-right-rail">
+        <section class="community-rail-card">
+            <span class="community-eyebrow">COMMUNITY GUIDELINES</span>
+            <h2>Make the network stronger</h2>
+            <ul><li>Share practical knowledge and real work stories.</li><li>Give credit and celebrate other people’s skills.</li><li>Keep personal details and payment credentials private.</li><li>Be respectful. Admins can moderate hidden content.</li></ul>
+        </section>
+        <section class="community-rail-card community-rail-highlight">
+            <span class="community-eyebrow">YOUR NEXT STEP</span>
+            <h2>Turn a connection into opportunity.</h2>
+            <a asp-controller="Client" asp-action="BookWorker">Explore local professionals <span>↗</span></a>
+        </section>
+        <p class="community-footer-links"><a asp-controller="Home" asp-action="Privacy">Privacy</a> · <a asp-controller="Support" asp-action="Index">Help</a><br />© 2026 Worker Mandi Community</p>
+    </aside>
+</div>
+
+@section Scripts {
+    <script>
+        (() => {
+            const copyButton = document.getElementById('copyCommunityShare');
+            const shareField = document.getElementById('communityShareUrl');
+            if (!copyButton || !shareField) return;
+            copyButton.addEventListener('click', async () => {
+                try {
+                    await navigator.clipboard.writeText(shareField.value);
+                    copyButton.textContent = 'Copied!';
+                } catch {
+                    shareField.select();
+                    document.execCommand('copy');
+                    copyButton.textContent = 'Copied!';
+                }
+            });
+        })();
+    </script>
+}

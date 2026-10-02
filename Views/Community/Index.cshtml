@@ -33,7 +33,10 @@
             @if (User.Identity?.IsAuthenticated == true)
             {
                 <a asp-controller="CommunityChat" asp-action="Index"><span>Messages</span><strong>↗</strong></a>
-                <a asp-controller="Chat" asp-action="Index"><span>Booking chats</span><strong>↗</strong></a>
+                @if (User.IsInRole("Client") || User.IsInRole("Worker"))
+                {
+                    <a asp-controller="Chat" asp-action="Index"><span>Booking chats</span><strong>↗</strong></a>
+                }
                 <a asp-controller="Support" asp-action="Index"><span>Support desk</span><strong>↗</strong></a>
             }
         </section>
@@ -224,7 +227,13 @@
             <h2>Turn a connection into opportunity.</h2>
             <a asp-controller="Client" asp-action="BookWorker">Explore local professionals <span>↗</span></a>
         </section>
-        <p class="community-footer-links"><a asp-controller="Home" asp-action="Privacy">Privacy</a> · <a asp-controller="Support" asp-action="Index">Help</a><br />© 2026 Worker Mandi Community</p>
+        <p class="community-footer-links"><a asp-controller="Home" asp-action="Privacy">Privacy</a>
+            @if (User.Identity?.IsAuthenticated == true)
+            {
+                <span> · </span><a asp-controller="Support" asp-action="Index">Help</a>
+            }
+            <br />© 2026 Worker Mandi Community
+        </p>
     </aside>
 </div>
 

@@ -39,7 +39,14 @@
             </form>
         </section>
     </main>
-    <aside class="community-right-rail"><section class="community-rail-card community-rail-highlight"><span class="community-eyebrow">WORKING TOGETHER?</span><h2>Keep job details connected to the booking.</h2><a asp-controller="Chat" asp-action="Index">Booking conversations <span>↗</span></a></section></aside>
+    @if (User.IsInRole("Client") || User.IsInRole("Worker"))
+    {
+        <aside class="community-right-rail"><section class="community-rail-card community-rail-highlight"><span class="community-eyebrow">WORKING TOGETHER?</span><h2>Keep job details connected to the booking.</h2><a asp-controller="Chat" asp-action="Index">Booking conversations <span>↗</span></a></section></aside>
+    }
+    else
+    {
+        <aside class="community-right-rail"><section class="community-rail-card"><span class="community-eyebrow">YOUR NETWORK</span><h2>Keep the conversation useful and professional.</h2><a asp-controller="CommunityChat" asp-action="Index">Back to messages <span>↗</span></a></section></aside>
+    }
 </div>
 
 @section Scripts {

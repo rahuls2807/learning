@@ -1,21 +1,13 @@
 @echo off
-setlocal enabledelayedexpansion
+setlocal
+cd /d "%~dp0"
 
-echo.
-echo ========================================
-echo   Launching Worker Booking System
-echo ========================================
-echo.
-
-echo Starting the application...
-echo.
-cd /d c:\Users\rsing\source\repos\WorkerBookingSystem
-
-set ASPNETCORE_ENVIRONMENT=Development
-dotnet run --launch-profile http
-if !errorlevel! neq 0 (
+echo Starting Worker Booking System...
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0launch-app.ps1"
+if errorlevel 1 (
     echo.
-    echo [ERROR] Application failed to start!
-    echo.
+    echo The application did not start. Review the error shown above or run status-app.bat.
+    pause
     exit /b 1
 )
+exit /b 0

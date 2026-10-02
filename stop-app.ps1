@@ -3,5 +3,5 @@ param(
 )
 
 $manager = Join-Path $PSScriptRoot "manage-app.ps1"
-& $manager -Action Start -Url $Url
+& $manager -Action Stop -Url $Url
 exit $LASTEXITCODE

@@ -29,7 +29,6 @@
 </div>
 
 @section Scripts {
-    <script src="https://cdn.jsdelivr.net/npm/@@microsoft/signalr@8.0.8/dist/browser/signalr.min.js" crossorigin="anonymous"></script>
     <script>
         (() => {
             const bookingId = @Model.BookingId;
@@ -39,13 +38,16 @@
             const status = document.getElementById('chatStatus');
             const sendButton = document.getElementById('sendButton');
             const input = document.getElementById('chatInput');
-
-            if (!window.signalR) {
-                status.textContent = 'Chat is unavailable because the SignalR client library did not load.';
-                return;
-            }
+            const renderedIds = new Set();
+            let loading = false;
+            let sending = false;
+            let hasLoaded = false;
+            let shouldScroll = true;
 
             function renderMessage(message) {
+                const id = String(message.id);
+                if (renderedIds.has(id)) return;
+                renderedIds.add(id);
                 const row = document.createElement('div');
                 row.className = `d-flex mb-3 ${message.senderId === currentUserId ? 'justify-content-end' : 'justify-content-start'}`;
                 const bubble = document.createElement('div');
@@ -65,50 +67,84 @@
                 bubble.append(author, content, time);
                 row.appendChild(bubble);
                 messages.appendChild(row);
-                messages.scrollTop = messages.scrollHeight;
             }
 
-            const connection = new signalR.HubConnectionBuilder()
-                .withUrl('/hubs/booking-chat')
-                .withAutomaticReconnect()
-                .build();
-
-            connection.on('ReceiveMessage', renderMessage);
-            connection.onreconnecting(() => {
-                status.textContent = 'Reconnecting… messages remain stored on the server.';
-                sendButton.disabled = true;
-            });
-            connection.onreconnected(async () => {
-                await join();
-            });
-
-            async function join() {
-                const result = await connection.invoke('JoinBooking', bookingId);
-                messages.replaceChildren();
-                result.messages.forEach(renderMessage);
-                status.textContent = 'Connected · conversation is saved to your booking';
-                sendButton.disabled = false;
+            function updateSendButton() {
+                sendButton.disabled = sending || !input.value.trim();
             }
 
-            connection.start()
-                .then(join)
-                .catch(() => { status.textContent = 'Unable to connect. Refresh the page to retry.'; });
+            async function loadMessages() {
+                if (loading || document.visibilityState === 'hidden') return;
+                loading = true;
+                try {
+                    const response = await fetch(`/api/message/booking/${bookingId}?page=1`, {
+                        credentials: 'same-origin',
+                        cache: 'no-store',
+                        headers: { 'Accept': 'application/json' }
+                    });
+                    if (!response.ok) throw new Error(`Message history returned ${response.status}`);
+                    const result = await response.json();
+                    const wasNearBottom = messages.scrollHeight - messages.scrollTop - messages.clientHeight < 80;
+                    result.messages.forEach(renderMessage);
+                    if (!hasLoaded || wasNearBottom || shouldScroll) messages.scrollTop = messages.scrollHeight;
+                    hasLoaded = true;
+                    shouldScroll = false;
+                    status.textContent = 'Connected · messages are saved to your booking';
+                } catch {
+                    status.textContent = hasLoaded
+                        ? 'Could not refresh messages. Retrying automatically…'
+                        : 'Messages are temporarily unavailable. You can still try sending; we will keep retrying.';
+                } finally {
+                    loading = false;
+                }
+            }
+
+            input.addEventListener('input', updateSendButton);
+            updateSendButton();
 
             document.getElementById('chatForm').addEventListener('submit', async event => {
                 event.preventDefault();
                 const content = input.value.trim();
-                if (!content || sendButton.disabled) return;
-                sendButton.disabled = true;
+                if (!content || sending) return;
+                sending = true;
+                updateSendButton();
                 try {
-                    await connection.invoke('SendMessage', bookingId, content);
+                    const response = await fetch('/api/message/send', {
+                        method: 'POST',
+                        credentials: 'same-origin',
+                        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                        body: JSON.stringify({ bookingId, content })
+                    });
+                    if (!response.ok) throw new Error(`Message send returned ${response.status}`);
+                    const result = await response.json();
                     input.value = '';
                     input.focus();
+                    shouldScroll = true;
+                    await loadMessages();
+                    if (!renderedIds.has(String(result.messageId))) {
+                        renderMessage({
+                            id: result.messageId,
+                            senderId: currentUserId,
+                            senderName: 'You',
+                            content,
+                            sentAt: result.sentAt
+                        });
+                        messages.scrollTop = messages.scrollHeight;
+                    }
+                    status.textContent = 'Message sent · conversation is saved to your booking';
                 } catch {
                     status.textContent = 'Message was not sent. Check your connection and try again.';
                 } finally {
-                    sendButton.disabled = connection.state !== signalR.HubConnectionState.Connected;
+                    sending = false;
+                    updateSendButton();
                 }
             });
+
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'visible') loadMessages();
+            });
+            loadMessages();
+            window.setInterval(loadMessages, 5000);
         })();
     </script>
 }

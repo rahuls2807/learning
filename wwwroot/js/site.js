@@ -28,6 +28,27 @@ if ("serviceWorker" in navigator) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+  document.querySelectorAll("form[data-enable-submit-when-text]").forEach((form) => {
+    const input = form.querySelector("textarea, input[type='text'], input:not([type])");
+    const submit = form.querySelector("button[type='submit']");
+    if (!input || !submit) return;
+
+    const updateSubmitState = () => {
+      submit.disabled = input.value.trim().length === 0;
+    };
+    input.addEventListener("input", updateSubmitState);
+    updateSubmitState();
+  });
+
+  document.querySelectorAll(".community-post-actions[data-current-reaction]").forEach((actions) => {
+    const currentReaction = actions.dataset.currentReaction;
+    actions.querySelectorAll("button[name='reaction']").forEach((button) => {
+      const isActive = button.value === currentReaction;
+      button.classList.toggle("is-active", isActive);
+      button.setAttribute("aria-pressed", String(isActive));
+    });
+  });
+
   const installButton = document.getElementById("pwaInstallButton");
   if (installButton) {
     installButton.addEventListener("click", async () => {

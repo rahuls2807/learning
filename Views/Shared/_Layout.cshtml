@@ -1,6 +1,15 @@
 ﻿<!DOCTYPE html>
-@{ var hindiUi = System.Globalization.CultureInfo.CurrentUICulture.Name.StartsWith("hi", StringComparison.OrdinalIgnoreCase); }
-<html lang="@(hindiUi ? "hi" : "en")">
+@{
+    var currentLanguage = WorkerBookingSystem.Services.UiLanguageCatalog.GetCurrent(System.Globalization.CultureInfo.CurrentUICulture);
+    var hindiUi = currentLanguage.Culture.StartsWith("hi", StringComparison.OrdinalIgnoreCase);
+    var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
+    var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
+    var workerProfileActive = currentController == "Worker" && currentAction is "Index" or "Details" or "Edit";
+    var workerJobsActive = currentController == "Worker" && currentAction == "MyBookings";
+    var messageActive = currentController is "Chat" or "CommunityChat";
+    var displayName = User.FindFirst("display_name")?.Value ?? User.Identity?.Name?.Split('@')[0] ?? "Account";
+}
+<html lang="@currentLanguage.Culture[..2]">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
@@ -40,7 +49,7 @@
                         @if (User.Identity?.IsAuthenticated == true)
                         {
                             <li class="nav-item">
-                                <a class="nav-link" asp-controller="CommunityChat" asp-action="Index">@(hindiUi ? "संदेश" : "Messages")</a>
+                            <a class="nav-link @(messageActive ? "active" : "")" aria-current="@(messageActive ? "page" : null)" asp-controller="CommunityChat" asp-action="Index">@(hindiUi ? "संदेश" : "Messages")</a>
                             </li>
                         }
                         @if (User.IsInRole("Client"))
@@ -55,10 +64,10 @@
                         @if (User.IsInRole("Worker"))
                         {
                             <li class="nav-item">
-                                <a class="nav-link" asp-controller="Worker" asp-action="MyBookings">@(hindiUi ? "काम" : "Jobs")</a>
+                                <a class="nav-link @(workerJobsActive ? "active" : "")" aria-current="@(workerJobsActive ? "page" : null)" asp-controller="Worker" asp-action="MyBookings">@(hindiUi ? "काम" : "Jobs")</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" asp-controller="Worker" asp-action="Index">@(hindiUi ? "प्रोफ़ाइल" : "Profile")</a>
+                                <a class="nav-link @(workerProfileActive ? "active" : "")" aria-current="@(workerProfileActive ? "page" : null)" asp-controller="Worker" asp-action="Index">@(hindiUi ? "प्रोफ़ाइल" : "Profile")</a>
                             </li>
                         }
                         @if (User.IsInRole("Admin"))
@@ -90,15 +99,9 @@
                                 <input type="hidden" name="returnUrl" value="@Context.Request.Path@Context.Request.QueryString" />
                                 <label class="visually-hidden" for="uiLanguage">Language</label>
                                 <select id="uiLanguage" name="culture" class="form-select form-select-sm" aria-label="Language" onchange="this.form.submit()">
-                                    @if (hindiUi)
+                                    @foreach (var language in WorkerBookingSystem.Services.UiLanguageCatalog.All)
                                     {
-                                        <option value="en-IN">English</option>
-                                        <option value="hi-IN" selected>हिन्दी</option>
-                                    }
-                                    else
-                                    {
-                                        <option value="en-IN" selected>English</option>
-                                        <option value="hi-IN">हिन्दी</option>
+                                        <option value="@language.Culture" selected="@(language.Culture == currentLanguage.Culture)">@language.NativeName</option>
                                     }
                                 </select>
                             </form>
@@ -106,7 +109,7 @@
                         @if (User.Identity?.IsAuthenticated == true)
                         {
                             <li class="nav-item dropdown">
-                                <button class="nav-link dropdown-toggle nav-user" type="button" data-bs-toggle="dropdown" aria-expanded="false">@User.Identity.Name</button>
+                                <button class="nav-link dropdown-toggle nav-user text-truncate" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="@displayName">@displayName</button>
                                 <ul class="dropdown-menu dropdown-menu-end">
                                     <li><a class="dropdown-item" asp-controller="Support" asp-action="Index">Support</a></li>
                                     <li><a class="dropdown-item" asp-controller="Wallet" asp-action="Index">Wallet</a></li>
@@ -160,8 +163,8 @@
         }
         else if (User.IsInRole("Worker"))
         {
-            <a asp-controller="Worker" asp-action="MyBookings">Jobs</a>
-            <a asp-controller="Worker" asp-action="Index">Profile</a>
+            <a class="@(workerJobsActive ? "active" : "")" aria-current="@(workerJobsActive ? "page" : null)" asp-controller="Worker" asp-action="MyBookings">Jobs</a>
+            <a class="@(workerProfileActive ? "active" : "")" aria-current="@(workerProfileActive ? "page" : null)" asp-controller="Worker" asp-action="Index">Profile</a>
         }
         else if (User.IsInRole("Admin"))
         {
@@ -174,7 +177,7 @@
         }
         @if (User.Identity?.IsAuthenticated == true)
         {
-            <a asp-controller="CommunityChat" asp-action="Index">Messages</a>
+            <a class="@(messageActive ? "active" : "")" aria-current="@(messageActive ? "page" : null)" asp-controller="CommunityChat" asp-action="Index">Messages</a>
         }
     </nav>
 

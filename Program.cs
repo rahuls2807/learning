@@ -16,7 +16,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
-var supportedCultures = new[] { new CultureInfo("en-IN"), new CultureInfo("hi-IN") };
+var supportedCultures = UiLanguageCatalog.All.Select(language => new CultureInfo(language.Culture)).ToArray();
 builder.Services.Configure<RequestLocalizationOptions>(options =>
 {
     options.DefaultRequestCulture = new RequestCulture("en-IN");
@@ -127,6 +127,7 @@ if (!string.IsNullOrWhiteSpace(dataProtectionKeysPath))
 builder.Services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = false)
     .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<WorkerBookingContext>();
+builder.Services.AddScoped<IUserClaimsPrincipalFactory<ApplicationUser>, ProfileDisplayNameClaimsPrincipalFactory>();
 
 builder.Services.ConfigureApplicationCookie(options =>
 {

@@ -76,7 +76,7 @@
                             </div>
                             <div class="d-flex gap-2 mt-3">
                                 <a asp-action="CreateBooking" asp-route-workerId="@worker.WorkerId" class="btn btn-primary flex-fill">Book Now</a>
-                                <a asp-controller="Worker" asp-action="Details" asp-route-id="@worker.WorkerId" class="btn btn-outline-primary flex-fill">Profile</a>
+                                <a asp-controller="Worker" asp-action="Details" asp-route-id="@worker.WorkerId" asp-route-returnUrl="@($"{Context.Request.Path}{Context.Request.QueryString}")" class="btn btn-outline-primary flex-fill">Profile</a>
                             </div>
                         </div>
                     </div>

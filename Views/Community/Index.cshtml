@@ -5,7 +5,8 @@
     ViewData["Title"] = "Community";
     var currentPage = (int)ViewBag.Page;
     var totalPages = (int)ViewBag.TotalPages;
-    var currentInitials = CommunityProfilePolicy.GetInitials(User.Identity?.Name?.Split('@')[0] ?? "Member");
+    var currentDisplayName = User.FindFirst("display_name")?.Value ?? (ViewBag.CurrentUserDisplayName as string) ?? User.Identity?.Name?.Split('@')[0] ?? "Member";
+    var currentInitials = CommunityProfilePolicy.GetInitials(currentDisplayName);
 }
 
 <div class="community-shell">
@@ -74,7 +75,7 @@
         {
             <section class="community-composer">
                 <div class="community-avatar community-avatar-you">@currentInitials</div>
-                <form asp-action="Create" method="post" class="community-composer-form">
+                <form asp-action="Create" method="post" class="community-composer-form" data-enable-submit-when-text>
                     @Html.AntiForgeryToken()
                     <label class="visually-hidden" for="communityPostContent">Write a post</label>
                     <textarea id="communityPostContent" name="Content" maxlength="3000" rows="3" placeholder="Share a skill, a work update, or something you learned…" required></textarea>
@@ -84,7 +85,7 @@
                             <input name="ImageUrl" type="url" class="form-control" maxlength="1000" placeholder="https://… (optional, HTTPS only)" />
                         </details>
                         <span class="community-character-hint">Keep it helpful and respectful</span>
-                        <button class="btn btn-primary" type="submit">Post to community</button>
+                        <button class="btn btn-primary" type="submit" disabled>Post to community</button>
                     </div>
                 </form>
             </section>
@@ -120,7 +121,7 @@
                             <div class="community-post-author"><strong>@post.AuthorName</strong><span>@post.AuthorRole · Local professional network</span><time datetime="@post.CreatedAtUtc.ToString("O")">@post.CreatedAtUtc.ToLocalTime().ToString("dd MMM yyyy · h:mm tt")</time></div>
                             @if (User.Identity?.IsAuthenticated == true && (User.IsInRole("Admin") || post.AuthorUserId == User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value))
                             {
-                                <form asp-action="HidePost" method="post" class="community-admin-action" onsubmit="return confirm('Hide this post from the community?');">
+                                <form asp-action="HidePost" method="post" class="community-admin-action" onsubmit="return confirm('Remove this post from the community?');">
                                     @Html.AntiForgeryToken()<input type="hidden" name="postId" value="@post.Id" />
                                     <button type="submit" class="btn btn-sm btn-outline-secondary" aria-label="Remove post">Remove</button>
                                 </form>
@@ -142,7 +143,23 @@
                             <span><span class="community-reaction-dot">✦</span> @post.ReactionCount reactions</span>
                             <span>@post.CommentCount comments · @post.ShareCount shares</span>
                         </div>
-                        <div class="community-post-actions">
+                        <details class="community-reaction-list">
+                            <summary>See who reacted (@post.ReactionCount)</summary>
+                            @if (post.Reactions.Count > 0)
+                            {
+                                <ul>
+                                    @foreach (var reaction in post.Reactions)
+                                    {
+                                        <li><strong>@reaction.UserName</strong> <span>@reaction.Type</span></li>
+                                    }
+                                </ul>
+                            }
+                            else
+                            {
+                                <span class="text-muted">No reactions yet.</span>
+                            }
+                        </details>
+                        <div class="community-post-actions" data-current-reaction="@post.MyReaction">
                             @if (User.Identity?.IsAuthenticated == true)
                             {
                                 <form asp-action="React" method="post" class="community-inline-form">
@@ -178,9 +195,9 @@
                                         <div class="community-comment-bubble"><strong>@comment.AuthorName</strong><p>@comment.Content</p><time datetime="@comment.CreatedAtUtc.ToString("O")">@comment.CreatedAtUtc.ToLocalTime().ToString("dd MMM · h:mm tt")</time></div>
                                         @if (User.Identity?.IsAuthenticated == true && (User.IsInRole("Admin") || comment.AuthorUserId == User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value))
                                         {
-                                            <form asp-action="HideComment" method="post" onsubmit="return confirm('Hide this comment?');">
+                                            <form asp-action="HideComment" method="post" onsubmit="return confirm('Remove this comment from the conversation?');">
                                                 @Html.AntiForgeryToken()<input type="hidden" name="commentId" value="@comment.Id" />
-                                                <button type="submit" class="community-hide-comment" aria-label="Hide comment">×</button>
+                                                <button type="submit" class="community-hide-comment" aria-label="Remove comment">×</button>
                                             </form>
                                         }
                                     </div>
@@ -189,12 +206,12 @@
                         }
                         @if (User.Identity?.IsAuthenticated == true)
                         {
-                            <form asp-action="Comment" method="post" class="community-comment-form">
+                            <form asp-action="Comment" method="post" class="community-comment-form" data-enable-submit-when-text>
                                 @Html.AntiForgeryToken()<input type="hidden" name="PostId" value="@post.Id" />
                                 <div class="community-avatar community-avatar-small community-avatar-you">@currentInitials</div>
                                 <label class="visually-hidden" for="comment-@post.Id">Write a comment</label>
                                 <input id="comment-@post.Id" name="Content" class="form-control" maxlength="1000" placeholder="Add a thoughtful comment…" required />
-                                <button class="btn btn-primary" type="submit">Comment</button>
+                                <button class="btn btn-primary" type="submit" disabled>Comment</button>
                             </form>
                         }
                         else

@@ -35,8 +35,15 @@ namespace WorkerBookingSystem.Models.ViewModels
         public int CommentCount { get; set; }
         public int ShareCount { get; set; }
         public CommunityReactionType? MyReaction { get; set; }
+        public IReadOnlyList<CommunityReactionCardViewModel> Reactions { get; set; } = Array.Empty<CommunityReactionCardViewModel>();
         public IReadOnlyList<CommunityCommentCardViewModel> Comments { get; set; } = Array.Empty<CommunityCommentCardViewModel>();
         public string? ShareId { get; set; }
+    }
+
+    public class CommunityReactionCardViewModel
+    {
+        public string UserName { get; set; } = string.Empty;
+        public CommunityReactionType Type { get; set; }
     }
 
     public class CommunityCommentCardViewModel

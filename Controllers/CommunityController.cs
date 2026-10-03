@@ -72,6 +72,17 @@ namespace WorkerBookingSystem.Controllers
                 .GroupBy(reaction => reaction.PostId)
                 .Select(group => new { PostId = group.Key, Count = group.Count() })
                 .ToDictionaryAsync(group => group.PostId, group => group.Count);
+            var reactions = await _context.CommunityReactions.AsNoTracking()
+                .Where(reaction => postIds.Contains(reaction.PostId))
+                .OrderByDescending(reaction => reaction.CreatedAtUtc)
+                .Select(reaction => new CommunityReactionFeedRow
+                {
+                    PostId = reaction.PostId,
+                    UserId = reaction.UserId,
+                    Type = reaction.Type,
+                    CreatedAtUtc = reaction.CreatedAtUtc
+                })
+                .ToListAsync();
             var commentCounts = await _context.CommunityComments.AsNoTracking()
                 .Where(comment => postIds.Contains(comment.PostId) && !comment.IsHidden)
                 .GroupBy(comment => comment.PostId)
@@ -90,11 +101,13 @@ namespace WorkerBookingSystem.Controllers
 
             var userIds = posts.Select(post => post.AuthorUserId)
                 .Concat(comments.Select(comment => comment.AuthorUserId))
+                .Concat(reactions.Select(reaction => reaction.UserId))
                 .Append(currentUserId ?? string.Empty)
                 .Where(id => !string.IsNullOrWhiteSpace(id))
                 .Distinct()
                 .ToList();
             var profiles = await GetProfileNamesAsync(userIds);
+            ViewBag.CurrentUserDisplayName = currentUserId == null ? null : profiles.GetValueOrDefault(currentUserId);
             var currentRole = User.IsInRole("Client") ? "Client" : User.IsInRole("Worker") ? "Worker" : null;
             var canMessageIds = new HashSet<string>();
             if (currentUserId != null && currentRole != null)
@@ -138,6 +151,12 @@ namespace WorkerBookingSystem.Controllers
                 CommentCount = commentCounts.GetValueOrDefault(post.Id),
                 ShareCount = shareCounts.GetValueOrDefault(post.Id),
                 MyReaction = myReactions.TryGetValue(post.Id, out var myReaction) ? myReaction : null,
+                Reactions = reactions.Where(reaction => reaction.PostId == post.Id)
+                    .Select(reaction => new CommunityReactionCardViewModel
+                    {
+                        UserName = profiles.GetValueOrDefault(reaction.UserId) ?? "Community member",
+                        Type = reaction.Type
+                    }).ToList(),
                 Comments = comments.Where(comment => comment.PostId == post.Id)
                     .OrderBy(comment => comment.CreatedAtUtc)
                     .Select(comment => new CommunityCommentCardViewModel
@@ -391,6 +410,14 @@ namespace WorkerBookingSystem.Controllers
             public int PostId { get; set; }
             public string AuthorUserId { get; set; } = string.Empty;
             public string Content { get; set; } = string.Empty;
+            public DateTime CreatedAtUtc { get; set; }
+        }
+
+        private sealed class CommunityReactionFeedRow
+        {
+            public int PostId { get; set; }
+            public string UserId { get; set; } = string.Empty;
+            public CommunityReactionType Type { get; set; }
             public DateTime CreatedAtUtc { get; set; }
         }
     }

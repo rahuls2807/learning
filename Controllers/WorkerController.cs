@@ -43,7 +43,7 @@ namespace WorkerBookingSystem.Controllers
                         .Select(worker => (int?)worker.WorkerId)
                         .FirstOrDefaultAsync();
                     return workerId.HasValue
-                        ? RedirectToAction(nameof(Details), new { id = workerId.Value })
+                        ? RedirectToAction(nameof(Details), new { id = workerId.Value, returnUrl = Url.Action(nameof(MyBookings)) })
                         : View("ProfileUnavailable");
                 }
 
@@ -282,6 +282,12 @@ namespace WorkerBookingSystem.Controllers
                     existing.ResumePath = await SaveWorkerFile(model.Resume, "resumes", [".pdf", ".doc", ".docx"])
                         ?? existing.ResumePath;
                     await _context.SaveChangesAsync();
+                    if (User.IsInRole("Worker"))
+                    {
+                        var signedInUser = await _userManager.GetUserAsync(User);
+                        if (signedInUser != null)
+                            await _signInManager.RefreshSignInAsync(signedInUser);
+                    }
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -298,7 +304,7 @@ namespace WorkerBookingSystem.Controllers
         }
 
         [AllowAnonymous]
-        public async Task<IActionResult> Details(int id)
+        public async Task<IActionResult> Details(int id, string? returnUrl = null)
         {
             var worker = await _context.Workers
                 .AsNoTracking()
@@ -306,6 +312,16 @@ namespace WorkerBookingSystem.Controllers
                 .FirstOrDefaultAsync(w => w.WorkerId == id);
 
             if (worker == null) return NotFound();
+
+            ViewBag.ReturnUrl = Url.IsLocalUrl(returnUrl)
+                ? returnUrl
+                : User.IsInRole("Worker")
+                    ? Url.Action(nameof(MyBookings), "Worker")
+                    : User.IsInRole("Client")
+                        ? Url.Action("BookWorker", "Client")
+                        : User.IsInRole("Admin")
+                            ? Url.Action("Dashboard", "Admin")
+                            : Url.Action("Index", "Home");
 
             var canSeeContact = User.IsInRole("Admin")
                 || (User.IsInRole("Worker") && worker.UserId == _userManager.GetUserId(User))

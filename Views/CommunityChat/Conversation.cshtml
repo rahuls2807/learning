@@ -71,7 +71,10 @@
                 if (message.senderUserId !== currentUserId) {
                     const avatar = document.createElement('span');
                     avatar.className = 'community-avatar community-avatar-small';
-                    avatar.textContent = otherUserName.split(' ').map(part => part[0] || '').slice(0, 2).join('').toUpperCase();
+                    const nameParts = otherUserName.trim().split(/\s+/).filter(Boolean);
+                    avatar.textContent = nameParts.length > 1
+                        ? `${nameParts[0][0]}${nameParts[nameParts.length - 1][0]}`.toUpperCase()
+                        : (nameParts[0] || 'CM').slice(0, 2).toUpperCase();
                     row.appendChild(avatar);
                 }
                 const bubble = document.createElement('div');

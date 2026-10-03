@@ -335,6 +335,9 @@ namespace WorkerBookingSystem.Controllers
             var booking = await GetCurrentClientBooking(model.BookingId);
             if (booking == null) return NotFound();
 
+            if (model.Status != booking.Status)
+                return BadRequest();
+
             if (!ModelState.IsValid)
             {
                 return RedirectToAction(nameof(MyBookings));
@@ -346,6 +349,30 @@ namespace WorkerBookingSystem.Controllers
             await _context.SaveChangesAsync();
 
             TempData["BookingMessage"] = "Booking status updated.";
+            return RedirectToAction(nameof(MyBookings));
+        }
+
+        [HttpPost]
+        [Authorize(Roles = "Client")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CancelBooking(int bookingId)
+        {
+            var booking = await GetCurrentClientBooking(bookingId);
+            if (booking == null)
+                return NotFound();
+
+            if (!ClientBookingCancellationPolicy.CanCancel(booking))
+            {
+                TempData["BookingError"] = "This booking can no longer be cancelled here. Contact support for help.";
+                return RedirectToAction(nameof(MyBookings));
+            }
+
+            booking.Status = BookingStatus.Cancelled;
+            booking.ClientStatusNote = "Cancelled by client";
+            booking.LastClientStatusUpdate = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+
+            TempData["BookingMessage"] = "Booking cancelled.";
             return RedirectToAction(nameof(MyBookings));
         }
 

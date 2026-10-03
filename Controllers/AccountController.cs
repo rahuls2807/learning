@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using WorkerBookingSystem.Models;
 using WorkerBookingSystem.Models.ViewModels;
+using WorkerBookingSystem.Services;
 using System.Text.Encodings.Web;
 using Microsoft.AspNetCore.Hosting;
 
@@ -18,7 +19,7 @@ namespace WorkerBookingSystem.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult SetLanguage(string culture, string? returnUrl)
         {
-            if (culture is not ("en-IN" or "hi-IN"))
+            if (!UiLanguageCatalog.IsSupported(culture))
                 return BadRequest();
 
             Response.Cookies.Append(

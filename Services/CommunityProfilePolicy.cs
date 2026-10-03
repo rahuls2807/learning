@@ -10,6 +10,8 @@ namespace WorkerBookingSystem.Services
                 return workerName.Trim();
             if (!string.IsNullOrWhiteSpace(clientName))
                 return clientName.Trim();
+            if (!string.IsNullOrWhiteSpace(user?.BioDescription))
+                return user.BioDescription.Trim();
             if (!string.IsNullOrWhiteSpace(user?.Email))
                 return user.Email.Split('@')[0];
             return "Community member";

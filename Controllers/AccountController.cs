@@ -9,6 +9,8 @@ using WorkerBookingSystem.Models.ViewModels;
 using WorkerBookingSystem.Services;
 using System.Text.Encodings.Web;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.EntityFrameworkCore;
+using WorkerBookingSystem.Data;
 
 namespace WorkerBookingSystem.Controllers
 {
@@ -36,6 +38,7 @@ namespace WorkerBookingSystem.Controllers
         private readonly ILogger<AccountController> _logger;
         private readonly IConfiguration _configuration;
         private readonly IWebHostEnvironment _environment;
+        private readonly WorkerBookingContext _context;
 
         public AccountController(
             SignInManager<ApplicationUser> signInManager,
@@ -43,7 +46,8 @@ namespace WorkerBookingSystem.Controllers
             IEmailSender emailSender,
             ILogger<AccountController> logger,
             IConfiguration configuration,
-            IWebHostEnvironment environment)
+            IWebHostEnvironment environment,
+            WorkerBookingContext context)
         {
             _signInManager = signInManager;
             _userManager = userManager;
@@ -51,6 +55,7 @@ namespace WorkerBookingSystem.Controllers
             _logger = logger;
             _configuration = configuration;
             _environment = environment;
+            _context = context;
         }
 
         [AllowAnonymous]
@@ -194,6 +199,183 @@ namespace WorkerBookingSystem.Controllers
             await _signInManager.RefreshSignInAsync(user);
             TempData["AccountMessage"] = "Your password was changed successfully.";
             return RedirectToAction(nameof(ChangePassword));
+        }
+
+        [Authorize]
+        public async Task<IActionResult> Profile()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Challenge();
+
+            var model = new AccountProfileViewModel
+            {
+                FirstName = user.BioDescription.Split(' ', 2, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? string.Empty,
+                LastName = user.BioDescription.Split(' ', 2, StringSplitOptions.RemoveEmptyEntries).Skip(1).FirstOrDefault() ?? string.Empty,
+                Email = user.Email ?? string.Empty,
+                PhoneNumber = IndianPhoneNumber.ToNationalDigits(user.PhoneNumber),
+                Address = user.Address,
+                City = user.City,
+                State = user.State,
+                PinCode = user.PinCode
+            };
+
+            var workerProfile = await _context.Workers.AsNoTracking()
+                .FirstOrDefaultAsync(profile => profile.UserId == user.Id);
+            if (workerProfile != null)
+            {
+                model.FirstName = workerProfile.FirstName ?? model.FirstName;
+                model.LastName = workerProfile.LastName ?? model.LastName;
+                model.PhoneNumber = IndianPhoneNumber.ToNationalDigits(workerProfile.PhoneNumber);
+            }
+            else
+            {
+                var clientProfile = await _context.Clients.AsNoTracking()
+                    .FirstOrDefaultAsync(profile => profile.UserId == user.Id);
+                if (clientProfile != null)
+                {
+                    model.FirstName = clientProfile.FirstName ?? model.FirstName;
+                    model.LastName = clientProfile.LastName ?? model.LastName;
+                    model.PhoneNumber = IndianPhoneNumber.ToNationalDigits(clientProfile.PhoneNumber);
+                    model.Address = clientProfile.Address ?? model.Address;
+                }
+            }
+
+            return View(model);
+        }
+
+        [HttpPost]
+        [Authorize]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Profile(AccountProfileViewModel model)
+        {
+            if (!ModelState.IsValid) return View(model);
+
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Challenge();
+
+            var emailChanged = !string.Equals(user.Email, model.Email.Trim(), StringComparison.OrdinalIgnoreCase);
+            if (emailChanged && await _userManager.FindByEmailAsync(model.Email.Trim()) is not null)
+            {
+                ModelState.AddModelError(nameof(model.Email), "That email address is already associated with an account.");
+                return View(model);
+            }
+
+            var fullName = $"{model.FirstName.Trim()} {model.LastName.Trim()}".Trim();
+            var normalizedPhone = IndianPhoneNumber.ToE164(model.PhoneNumber);
+            user.PhoneNumber = normalizedPhone;
+            user.Address = model.Address.Trim();
+            user.City = model.City.Trim();
+            user.State = model.State.Trim();
+            user.PinCode = model.PinCode.Trim();
+
+            var worker = await _context.Workers.FirstOrDefaultAsync(profile => profile.UserId == user.Id);
+            var client = worker == null
+                ? await _context.Clients.FirstOrDefaultAsync(profile => profile.UserId == user.Id)
+                : null;
+            if (worker != null)
+            {
+                worker.FirstName = model.FirstName.Trim();
+                worker.LastName = model.LastName.Trim();
+                worker.PhoneNumber = normalizedPhone;
+            }
+            if (client != null)
+            {
+                client.FirstName = model.FirstName.Trim();
+                client.LastName = model.LastName.Trim();
+                client.PhoneNumber = normalizedPhone;
+                client.Address = model.Address.Trim();
+            }
+            if (!emailChanged)
+            {
+                if (worker != null) worker.Email = user.Email;
+                if (client != null) client.Email = user.Email;
+            }
+            if (worker == null && client == null)
+                user.BioDescription = fullName;
+
+            var updateResult = await _userManager.UpdateAsync(user);
+            if (!updateResult.Succeeded)
+            {
+                foreach (var error in updateResult.Errors)
+                    ModelState.AddModelError(string.Empty, error.Description);
+                return View(model);
+            }
+            await _context.SaveChangesAsync();
+
+            if (emailChanged)
+            {
+                try
+                {
+                    var token = await _userManager.GenerateChangeEmailTokenAsync(user, model.Email.Trim());
+                    var confirmationUrl = Url.Action(nameof(ConfirmProfileEmail), "Account", new
+                    {
+                        userId = user.Id,
+                        email = model.Email.Trim(),
+                        token
+                    }, Request.Scheme);
+                    if (string.IsNullOrWhiteSpace(confirmationUrl))
+                        throw new InvalidOperationException("Could not create an email confirmation link.");
+
+                    var safeUrl = HtmlEncoder.Default.Encode(confirmationUrl);
+                    await _emailSender.SendEmailAsync(model.Email.Trim(), "Confirm your Worker Mandi email",
+                        $"<p>Confirm this address for your Worker Mandi account:</p><p><a href=\"{safeUrl}\">Confirm email address</a></p>");
+                    TempData["ProfileStatus"] = "Profile saved. Check the new email address to confirm your email change.";
+                }
+                catch (Exception exception)
+                {
+                    _logger.LogError(exception, "Profile email change confirmation could not be sent for user {UserId}.", user.Id);
+                    TempData["ProfileWarning"] = "Your profile was saved, but we could not send the email confirmation. Try changing the email again later.";
+                }
+            }
+            else
+            {
+                TempData["ProfileStatus"] = "Your profile was saved.";
+            }
+
+            await _signInManager.RefreshSignInAsync(user);
+            return RedirectToAction(nameof(Profile));
+        }
+
+        [Authorize]
+        public IActionResult ConfirmProfileEmail(string userId, string email, string token)
+        {
+            if (!string.Equals(userId, _userManager.GetUserId(User), StringComparison.Ordinal))
+                return Forbid();
+            return View(new ConfirmProfileEmailViewModel { UserId = userId, Email = email, Token = token });
+        }
+
+        [HttpPost]
+        [Authorize]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ConfirmProfileEmail(ConfirmProfileEmailViewModel model)
+        {
+            if (!ModelState.IsValid || !string.Equals(model.UserId, _userManager.GetUserId(User), StringComparison.Ordinal))
+                return Forbid();
+
+            var user = await _userManager.FindByIdAsync(model.UserId);
+            if (user == null) return NotFound();
+
+            var emailResult = await _userManager.ChangeEmailAsync(user, model.Email, model.Token);
+            if (!emailResult.Succeeded)
+            {
+                foreach (var error in emailResult.Errors)
+                    ModelState.AddModelError(string.Empty, error.Description);
+                return View("ConfirmProfileEmail", model);
+            }
+
+            var usernameResult = await _userManager.SetUserNameAsync(user, model.Email);
+            if (!usernameResult.Succeeded)
+                _logger.LogWarning("Email changed but username could not be synchronized for user {UserId}.", user.Id);
+
+            var worker = await _context.Workers.FirstOrDefaultAsync(profile => profile.UserId == user.Id);
+            if (worker != null) worker.Email = model.Email;
+            var client = await _context.Clients.FirstOrDefaultAsync(profile => profile.UserId == user.Id);
+            if (client != null) client.Email = model.Email;
+            await _context.SaveChangesAsync();
+
+            await _signInManager.RefreshSignInAsync(user);
+            TempData["ProfileStatus"] = "Your email address was confirmed and updated.";
+            return RedirectToAction(nameof(Profile));
         }
 
         private Uri? GetPasswordResetOrigin()

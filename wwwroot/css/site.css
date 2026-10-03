@@ -1457,4 +1457,9 @@ main {
 .account-result-success { background:#e8f4ec; color:#267a46; }
 .account-result-panel .section-title { margin:6px 0 10px; }
 .account-result-panel p { margin-bottom:20px; line-height:1.6; }
+.account-profile-page { max-width: 920px; }
+.account-profile-form { padding: 22px; border: 1px solid #dce9e3; border-top: 3px solid #d9ad4b; border-radius: 8px; background: #fff; box-shadow: 0 12px 32px rgba(19,54,47,.07); }
+.profile-form-section + .profile-form-section { margin-top: 28px; padding-top: 22px; border-top: 1px solid #e7eeea; }
+.profile-form-section h2 { margin-bottom: 16px; color: #245b4e; }
+@media (max-width: 575px) { .account-profile-form { padding: 16px; } }
 @media (max-width:767px) { .account-choice-card { min-height:230px; padding:19px; } .account-choice-card .btn { margin-top:14px; } }

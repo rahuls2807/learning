@@ -36,7 +36,13 @@ public sealed class ProfileDisplayNameClaimsPrincipalFactory
                 .FirstOrDefaultAsync()
             : null;
 
-        identity.AddClaim(new Claim("display_name", CommunityProfilePolicy.GetDisplayName(user, workerName, clientName)));
+        var roleName = workerName ?? clientName;
+        var displayName = !string.IsNullOrWhiteSpace(roleName)
+            ? roleName
+            : !string.IsNullOrWhiteSpace(user.BioDescription)
+                ? user.BioDescription.Trim()
+                : CommunityProfilePolicy.GetDisplayName(user, workerName, clientName);
+        identity.AddClaim(new Claim("display_name", displayName));
         return identity;
     }
 }

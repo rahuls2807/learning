@@ -6,6 +6,7 @@
     var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
     var workerProfileActive = currentController == "Worker" && currentAction is "Index" or "Details" or "Edit";
     var workerJobsActive = currentController == "Worker" && currentAction == "MyBookings";
+    var accountProfileActive = currentController == "Account" && currentAction is "Profile" or "ConfirmProfileEmail";
     var messageActive = currentController is "Chat" or "CommunityChat";
     var displayName = User.FindFirst("display_name")?.Value ?? User.Identity?.Name?.Split('@')[0] ?? "Account";
 }
@@ -55,6 +56,9 @@
                         @if (User.IsInRole("Client"))
                         {
                             <li class="nav-item">
+                                <a class="nav-link @(accountProfileActive ? "active" : "")" aria-current="@(accountProfileActive ? "page" : null)" asp-controller="Account" asp-action="Profile">@(hindiUi ? "प्रोफ़ाइल" : "Profile")</a>
+                            </li>
+                            <li class="nav-item">
                                 <a class="nav-link" asp-controller="Client" asp-action="MyBookings">@(hindiUi ? "बुकिंग" : "Bookings")</a>
                             </li>
                             <li class="nav-item">
@@ -72,6 +76,9 @@
                         }
                         @if (User.IsInRole("Admin"))
                         {
+                            <li class="nav-item">
+                                <a class="nav-link @(accountProfileActive ? "active" : "")" aria-current="@(accountProfileActive ? "page" : null)" asp-controller="Account" asp-action="Profile">Profile</a>
+                            </li>
                             <li class="nav-item">
                                 <a class="nav-link" asp-controller="Admin" asp-action="Dashboard">@(hindiUi ? "डैशबोर्ड" : "Dashboard")</a>
                             </li>
@@ -111,6 +118,7 @@
                             <li class="nav-item dropdown">
                                 <button class="nav-link dropdown-toggle nav-user text-truncate" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="@displayName">@displayName</button>
                                 <ul class="dropdown-menu dropdown-menu-end">
+                                    <li><a class="dropdown-item" asp-controller="Account" asp-action="Profile">My profile and contact details</a></li>
                                     <li><a class="dropdown-item" asp-controller="Support" asp-action="Index">Support</a></li>
                                     <li><a class="dropdown-item" asp-controller="Wallet" asp-action="Index">Wallet</a></li>
                                     <li><a class="dropdown-item" asp-controller="Account" asp-action="ChangePassword">Change password</a></li>

@@ -58,6 +58,48 @@ namespace WorkerBookingSystem.Models.ViewModels
         public string ConfirmPassword { get; set; } = string.Empty;
     }
 
+    public class AccountProfileViewModel
+    {
+        [Required, StringLength(80)]
+        public string FirstName { get; set; } = string.Empty;
+
+        [Required, StringLength(80)]
+        public string LastName { get; set; } = string.Empty;
+
+        [Required, EmailAddress, StringLength(256)]
+        public string Email { get; set; } = string.Empty;
+
+        [Required, Display(Name = "Mobile number")]
+        [StringLength(10, MinimumLength = 10, ErrorMessage = "Enter exactly 10 digits after +91.")]
+        [RegularExpression("^[6-9][0-9]{9}$", ErrorMessage = "Enter a valid 10-digit Indian mobile number.")]
+        public string PhoneNumber { get; set; } = string.Empty;
+
+        [StringLength(250)]
+        public string Address { get; set; } = string.Empty;
+
+        [StringLength(80)]
+        public string City { get; set; } = string.Empty;
+
+        [StringLength(80)]
+        public string State { get; set; } = string.Empty;
+
+        [Display(Name = "PIN code")]
+        [RegularExpression("^$|^[1-9][0-9]{5}$", ErrorMessage = "Enter a valid 6-digit PIN code.")]
+        public string PinCode { get; set; } = string.Empty;
+    }
+
+    public class ConfirmProfileEmailViewModel
+    {
+        [Required]
+        public string UserId { get; set; } = string.Empty;
+
+        [Required, EmailAddress]
+        public string Email { get; set; } = string.Empty;
+
+        [Required]
+        public string Token { get; set; } = string.Empty;
+    }
+
     public class ClientRegisterViewModel
     {
         [Required]

@@ -21,7 +21,10 @@
             </div>
         </section>
         <section class="community-side-links" aria-label="Community shortcuts">
+            @if (User.IsInRole("Client"))
+            {
             <a asp-controller="Client" asp-action="BookWorker"><span>Discover professionals</span><strong>↗</strong></a>
+            }
             @if (User.IsInRole("Client"))
             {
                 <a asp-controller="Client" asp-action="MyBookings"><span>My bookings</span><strong>↗</strong></a>
@@ -219,11 +222,30 @@
             <h2>Make the network stronger</h2>
             <ul><li>Share practical knowledge and real work stories.</li><li>Give credit and celebrate other people’s skills.</li><li>Keep personal details and payment credentials private.</li><li>Be respectful. Admins can moderate hidden content.</li></ul>
         </section>
+        @if (User.IsInRole("Client"))
+        {
         <section class="community-rail-card community-rail-highlight">
             <span class="community-eyebrow">YOUR NEXT STEP</span>
             <h2>Turn a connection into opportunity.</h2>
             <a asp-controller="Client" asp-action="BookWorker">Explore local professionals <span>↗</span></a>
         </section>
+        }
+        else if (User.IsInRole("Worker"))
+        {
+            <section class="community-rail-card community-rail-highlight">
+                <span class="community-eyebrow">YOUR NEXT STEP</span>
+                <h2>Keep opportunities moving.</h2>
+                <a asp-controller="Worker" asp-action="MyBookings">Review your jobs</a>
+            </section>
+        }
+        else if (User.IsInRole("Admin"))
+        {
+            <section class="community-rail-card community-rail-highlight">
+                <span class="community-eyebrow">OPERATIONS</span>
+                <h2>Keep the marketplace running smoothly.</h2>
+                <a asp-controller="Admin" asp-action="Dashboard">Open dashboard</a>
+            </section>
+        }
         <p class="community-footer-links"><a asp-controller="Home" asp-action="Privacy">Privacy</a>
             @if (User.Identity?.IsAuthenticated == true)
             {

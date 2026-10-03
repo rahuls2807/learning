@@ -17,15 +17,8 @@
         <span class="hero-badge">Ratings and reviews</span>
     </div>
     <div class="quick-action-row">
-        @if (User.Identity?.IsAuthenticated != true)
-        {
-            <a class="btn btn-primary" href="@Url.Action("Register", "Account")">Create a free account</a>
-        }
-        <a class="btn btn-primary" href="@Url.Action("BookWorker", "Client")">Find Workers</a>
-        @if (User.Identity?.IsAuthenticated == true)
-        {
-            <a class="btn btn-secondary" href="@Url.Action("Index", "Wallet")">Open Wallet</a>
-        }
+        <a class="btn btn-primary" asp-controller="Client" asp-action="Register">Find a worker</a>
+        <a class="btn btn-secondary" asp-controller="Worker" asp-action="Create">Join as a worker</a>
         <a class="btn btn-secondary" href="@Url.Action("Index", "Community")">Join the Community</a>
         <a class="btn btn-secondary" href="@Url.Action("Install", "Mobile")">Install Phone App</a>
     </div>
@@ -59,7 +52,7 @@
                 <div class="section-kicker">For clients</div>
                 <h5 class="card-title">Find the right worker faster</h5>
                 <p class="card-text text-muted">Compare rates, completed jobs, ratings, profile details, and skill matches before booking.</p>
-                <a href="@Url.Action("BookWorker", "Client")" class="btn btn-primary w-100">Book a Worker</a>
+                <a asp-controller="Client" asp-action="Register" class="btn btn-primary w-100">Create a client account</a>
             </div>
         </div>
     </div>
@@ -69,7 +62,7 @@
                 <div class="section-kicker">For workers</div>
                 <h5 class="card-title">Keep jobs and earnings clear</h5>
                 <p class="card-text text-muted">Manage your profile, availability, active jobs, reviews, and payment records in one place.</p>
-                <a href="@Url.Action("Index", "Worker")" class="btn btn-primary w-100">View Workers</a>
+                <a asp-controller="Worker" asp-action="Create" class="btn btn-primary w-100">Register as a worker</a>
             </div>
         </div>
     </div>
@@ -79,7 +72,7 @@
                 <div class="section-kicker">For admins</div>
                 <h5 class="card-title">Control operations simply</h5>
                 <p class="card-text text-muted">Track bookings, rates, payments, outstanding balances, top skills, and platform growth.</p>
-                <a href="@Url.Action("Dashboard", "Admin")" class="btn btn-primary w-100">Open Dashboard</a>
+                <a asp-controller="Account" asp-action="Login" asp-route-returnUrl="/Admin/Dashboard" class="btn btn-primary w-100">Admin sign in</a>
             </div>
         </div>
     </div>

@@ -34,21 +34,28 @@ namespace WorkerBookingSystem.Controllers
         // GET: Worker
         public async Task<IActionResult> Index(string? search, string? skill, int page = 1, int pageSize = 25)
         {
-            if (User.IsInRole("Client"))
+            if (!User.IsInRole("Admin"))
             {
-                return RedirectToAction("BookWorker", "Client", new { search, skill, page, pageSize });
+                if (User.IsInRole("Worker"))
+                {
+                    var workerId = await _context.Workers.AsNoTracking()
+                        .Where(worker => worker.UserId == _userManager.GetUserId(User))
+                        .Select(worker => (int?)worker.WorkerId)
+                        .FirstOrDefaultAsync();
+                    return workerId.HasValue
+                        ? RedirectToAction(nameof(Details), new { id = workerId.Value })
+                        : View("ProfileUnavailable");
+                }
+
+                if (User.IsInRole("Client"))
+                    return RedirectToAction("BookWorker", "Client", new { search, skill, page, pageSize });
+
+                return Forbid();
             }
 
             page = Math.Max(1, page);
             pageSize = Math.Clamp(pageSize, 10, 100);
-            var userId = _userManager.GetUserId(User);
-
             var query = _context.Workers.AsNoTracking();
-            query = User.IsInRole("Admin")
-                ? query
-                : User.IsInRole("Worker")
-                    ? query.Where(w => w.UserId == userId)
-                    : query.Where(w => w.IsActive);
 
             if (!string.IsNullOrWhiteSpace(skill))
             {

@@ -155,11 +155,13 @@
         <a asp-controller="Community" asp-action="Index">Community</a>
         @if (User.IsInRole("Client"))
         {
+            <a asp-controller="Client" asp-action="BookWorker">Find</a>
             <a asp-controller="Client" asp-action="MyBookings">Bookings</a>
         }
         else if (User.IsInRole("Worker"))
         {
             <a asp-controller="Worker" asp-action="MyBookings">Jobs</a>
+            <a asp-controller="Worker" asp-action="Index">Profile</a>
         }
         else if (User.IsInRole("Admin"))
         {
@@ -167,7 +169,7 @@
         }
         else
         {
-            <a asp-controller="Client" asp-action="BookWorker">Find</a>
+            <a asp-controller="Client" asp-action="Register">Find</a>
             <a asp-controller="Account" asp-action="Login">Login</a>
         }
         @if (User.Identity?.IsAuthenticated == true)

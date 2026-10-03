@@ -7,6 +7,7 @@
     var workerProfileActive = currentController == "Worker" && currentAction is "Index" or "Details" or "Edit";
     var workerJobsActive = currentController == "Worker" && currentAction == "MyBookings";
     var accountProfileActive = currentController == "Account" && currentAction is "Profile" or "ConfirmProfileEmail";
+    var adminCreateBookingActive = currentController == "Admin" && currentAction == "CreateBooking";
     var messageActive = currentController is "Chat" or "CommunityChat";
     var displayName = User.FindFirst("display_name")?.Value ?? User.Identity?.Name?.Split('@')[0] ?? "Account";
 }
@@ -83,7 +84,7 @@
                                 <a class="nav-link" asp-controller="Admin" asp-action="Dashboard">@(hindiUi ? "डैशबोर्ड" : "Dashboard")</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link nav-booking-cta" asp-controller="Admin" asp-action="CreateBooking">@(hindiUi ? "बुकिंग बनाएँ" : "Create Booking")</a>
+                                <a class="nav-link nav-booking-cta @(adminCreateBookingActive ? "active" : "")" aria-current="@(adminCreateBookingActive ? "page" : null)" asp-controller="Admin" asp-action="CreateBooking">@(hindiUi ? "बुकिंग बनाएँ" : "Create Booking")</a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link" asp-controller="Admin" asp-action="MyBookings">@(hindiUi ? "बुकिंग" : "Bookings")</a>

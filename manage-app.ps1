@@ -9,6 +9,7 @@ $ErrorActionPreference = "Stop"
 $ProjectRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
 $ProjectFile = Join-Path $ProjectRoot "WorkerBookingSystem.csproj"
 $AssemblyPath = Join-Path $ProjectRoot "bin\Release\net8.0\WorkerBookingSystem.dll"
+$RestartOutputRoot = Join-Path $ProjectRoot "bin\Restart"
 $AppHostPaths = @(
     (Join-Path $ProjectRoot "bin\Release\net8.0\WorkerBookingSystem.exe"),
     (Join-Path $ProjectRoot "bin\Debug\net8.0\WorkerBookingSystem.exe")
@@ -21,17 +22,42 @@ $BaseUri = [Uri]$Url
 $HealthUrl = "$($Url.TrimEnd('/'))/health/ready"
 
 function Get-WorkerBookingProcess {
-    $processes = Get-CimInstance Win32_Process
-    foreach ($candidate in $processes) {
-        $commandLine = [string]$candidate.CommandLine
-        $isAppHost = $candidate.Name -eq "WorkerBookingSystem.exe" -and
-            $AppHostPaths -contains $candidate.ExecutablePath
-        $isDotnetHost = $candidate.Name -eq "dotnet.exe" -and $commandLine -and (
-                $commandLine.IndexOf($AssemblyPath, [StringComparison]::OrdinalIgnoreCase) -ge 0 -or
-                ($commandLine.IndexOf($ProjectFile, [StringComparison]::OrdinalIgnoreCase) -ge 0 -and
-                 $commandLine.IndexOf("run", [StringComparison]::OrdinalIgnoreCase) -ge 0))
-        if ($isAppHost -or $isDotnetHost) {
-            return $candidate
+    try {
+        $processes = Get-CimInstance Win32_Process -ErrorAction Stop
+        foreach ($candidate in $processes) {
+            $commandLine = [string]$candidate.CommandLine
+            $isAppHost = $candidate.Name -eq "WorkerBookingSystem.exe" -and
+                $AppHostPaths -contains $candidate.ExecutablePath
+            $isDotnetHost = $candidate.Name -eq "dotnet.exe" -and $commandLine -and (
+                    $commandLine.IndexOf($AssemblyPath, [StringComparison]::OrdinalIgnoreCase) -ge 0 -or
+                    $commandLine.IndexOf($RestartOutputRoot, [StringComparison]::OrdinalIgnoreCase) -ge 0 -or
+                    ($commandLine.IndexOf($ProjectFile, [StringComparison]::OrdinalIgnoreCase) -ge 0 -and
+                     $commandLine.IndexOf("run", [StringComparison]::OrdinalIgnoreCase) -ge 0))
+            if ($isAppHost -or $isDotnetHost) {
+                return $candidate
+            }
+        }
+    }
+    catch {
+        # Fall back to loaded modules when WMI process inspection is restricted.
+    }
+
+    foreach ($candidate in Get-Process -Name dotnet, WorkerBookingSystem -ErrorAction SilentlyContinue) {
+        if ($candidate.ProcessName -eq "WorkerBookingSystem" -and $AppHostPaths -contains $candidate.Path) {
+            return [pscustomobject]@{ ProcessId = $candidate.Id }
+        }
+
+        try {
+            $isAppAssemblyLoaded = $candidate.Modules | Where-Object {
+                $_.FileName.Equals($AssemblyPath, [StringComparison]::OrdinalIgnoreCase) -or
+                $_.FileName.StartsWith("$RestartOutputRoot\", [StringComparison]::OrdinalIgnoreCase)
+            } | Select-Object -First 1
+            if ($isAppAssemblyLoaded) {
+                return [pscustomobject]@{ ProcessId = $candidate.Id }
+            }
+        }
+        catch {
+            continue
         }
     }
 
@@ -102,10 +128,17 @@ function Stop-WorkerBookingApp {
 }
 
 function Build-WorkerBookingApp {
+    param([string]$OutputPath)
+
     Write-Host "Building Worker Booking System (Release)..." -ForegroundColor Cyan
     Push-Location $ProjectRoot
     try {
-        & dotnet build $ProjectFile -c Release --nologo | Out-Host
+        $buildArguments = @("build", $ProjectFile, "-c", "Release", "--nologo")
+        if ($OutputPath) {
+            New-Item -ItemType Directory -Path $OutputPath -Force | Out-Null
+            $buildArguments += "-p:OutDir=$((Resolve-Path $OutputPath).Path)\"
+        }
+        & dotnet @buildArguments | Out-Host
         if ($LASTEXITCODE -ne 0) {
             Write-Error "Release build failed with exit code $LASTEXITCODE. A running app has not been stopped."
             return 1
@@ -119,7 +152,9 @@ function Build-WorkerBookingApp {
 }
 
 function Start-WorkerBookingApp {
-    param([switch]$SkipBuild)
+    param([switch]$SkipBuild, [string]$AssemblyToRun)
+
+    if (-not $AssemblyToRun) { $AssemblyToRun = $AssemblyPath }
 
     $existing = Get-WorkerBookingProcess
     if ($existing) {
@@ -141,8 +176,8 @@ function Start-WorkerBookingApp {
         if ((Build-WorkerBookingApp) -ne 0) { return 1 }
     }
 
-    if (-not (Test-Path $AssemblyPath)) {
-        Write-Error "Application assembly not found: $AssemblyPath. Build the project first."
+    if (-not (Test-Path $AssemblyToRun)) {
+        Write-Error "Application assembly not found: $AssemblyToRun. Build the project first."
         return 1
     }
 
@@ -152,7 +187,7 @@ function Start-WorkerBookingApp {
 
     Write-Host "Starting application at $Url..." -ForegroundColor Cyan
     $process = Start-Process -FilePath "dotnet" `
-        -ArgumentList @($AssemblyPath) `
+        -ArgumentList @($AssemblyToRun) `
         -WorkingDirectory $ProjectRoot `
         -WindowStyle Hidden `
         -RedirectStandardOutput $OutLog `
@@ -189,9 +224,11 @@ switch ($Action) {
     "Stop" { exit (Stop-WorkerBookingApp) }
     "Start" { exit (Start-WorkerBookingApp) }
     "Restart" {
-        if ((Build-WorkerBookingApp) -ne 0) { exit 1 }
+        $restartOutputPath = Join-Path $RestartOutputRoot ("restart-" + [Guid]::NewGuid().ToString("N"))
+        if ((Build-WorkerBookingApp -OutputPath $restartOutputPath) -ne 0) { exit 1 }
         $stopResult = Stop-WorkerBookingApp
         if ($stopResult -ne 0) { exit $stopResult }
-        exit (Start-WorkerBookingApp -SkipBuild)
+        $restartAssembly = Join-Path $restartOutputPath "WorkerBookingSystem.dll"
+        exit (Start-WorkerBookingApp -SkipBuild -AssemblyToRun $restartAssembly)
     }
 }

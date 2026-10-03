@@ -1,7 +1,6 @@
 using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using WorkerBookingSystem.Models;
-using WorkerBookingSystem.Services;
 
 namespace WorkerBookingSystem.Controllers;
 
@@ -16,13 +15,6 @@ public class HomeController : Controller
 
     public IActionResult Index()
     {
-        if (User.Identity?.IsAuthenticated == true
-            && RoleLandingPolicy.GetDestination(
-                User.IsInRole("Admin"), User.IsInRole("Worker"), User.IsInRole("Client")) is { } destination)
-        {
-            return RedirectToAction(destination.Action, destination.Controller);
-        }
-
         return View();
     }
 

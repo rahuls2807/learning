@@ -3,11 +3,25 @@
 }
 
 <section class="hero-section">
-    <div class="eyebrow mb-2">Trusted local services, booked fast</div>
-    <h1>Book skilled workers with clear prices, ratings, and payment tracking.</h1>
+    <div class="eyebrow mb-2">@(User.IsInRole("Worker") ? "Your work, all in one place" : User.IsInRole("Client") ? "Your bookings, all in one place" : User.IsInRole("Admin") ? "Marketplace operations" : "Trusted local services, booked fast")</div>
+    <h1>@(User.IsInRole("Worker") ? "Find your jobs, profile, and conversations." : User.IsInRole("Client") ? "Find skilled workers and manage your bookings." : User.IsInRole("Admin") ? "Keep the marketplace running smoothly." : "Book skilled workers with clear prices, ratings, and payment tracking.")</h1>
     <p class="mt-3 mb-4">
-        A simpler marketplace for clients, workers, and admins: search by skill, compare profiles,
-        manage jobs, and keep every booking visible from phone or desktop.
+        @if (User.IsInRole("Worker"))
+        {
+            <text>Review incoming work, keep your professional profile current, and stay in touch about confirmed bookings.</text>
+        }
+        else if (User.IsInRole("Client"))
+        {
+            <text>Compare trusted local professionals, follow booking status, and keep conversations and payments together.</text>
+        }
+        else if (User.IsInRole("Admin"))
+        {
+            <text>Monitor bookings, payments, rates, and marketplace activity from your operations workspace.</text>
+        }
+        else
+        {
+            <text>A simpler marketplace for clients, workers, and admins: search by skill, compare profiles, manage jobs, and keep every booking visible from phone or desktop.</text>
+        }
     </p>
     <div class="hero-badge-row mb-4">
         <span class="hero-badge">Verified profiles</span>
@@ -17,10 +31,30 @@
         <span class="hero-badge">Ratings and reviews</span>
     </div>
     <div class="quick-action-row">
-        <a class="btn btn-primary" asp-controller="Client" asp-action="Register">Find a worker</a>
-        <a class="btn btn-secondary" asp-controller="Worker" asp-action="Create">Join as a worker</a>
-        <a class="btn btn-secondary" href="@Url.Action("Index", "Community")">Join the Community</a>
-        <a class="btn btn-secondary" href="@Url.Action("Install", "Mobile")">Install Phone App</a>
+        @if (User.IsInRole("Worker"))
+        {
+            <a class="btn btn-primary" asp-controller="Worker" asp-action="MyBookings">View my jobs</a>
+            <a class="btn btn-secondary" asp-controller="Worker" asp-action="Index">View my profile</a>
+            <a class="btn btn-secondary" asp-controller="CommunityChat" asp-action="Index">Messages</a>
+        }
+        else if (User.IsInRole("Client"))
+        {
+            <a class="btn btn-primary" asp-controller="Client" asp-action="BookWorker">Find a worker</a>
+            <a class="btn btn-secondary" asp-controller="Client" asp-action="MyBookings">My bookings</a>
+            <a class="btn btn-secondary" asp-controller="CommunityChat" asp-action="Index">Messages</a>
+        }
+        else if (User.IsInRole("Admin"))
+        {
+            <a class="btn btn-primary" asp-controller="Admin" asp-action="Dashboard">Admin dashboard</a>
+            <a class="btn btn-secondary" asp-controller="Admin" asp-action="MyBookings">Manage bookings</a>
+        }
+        else
+        {
+            <a class="btn btn-primary" asp-controller="Client" asp-action="Register">Find a worker</a>
+            <a class="btn btn-secondary" asp-controller="Worker" asp-action="Create">Join as a worker</a>
+            <a class="btn btn-secondary" href="@Url.Action("Index", "Community")">Join the Community</a>
+            <a class="btn btn-secondary" href="@Url.Action("Install", "Mobile")">Install Phone App</a>
+        }
     </div>
 </section>
 
@@ -45,6 +79,8 @@
     </div>
 </section>
 
+@if (User.Identity?.IsAuthenticated != true)
+{
 <div class="row g-3 mt-1">
     <div class="col-md-4">
         <div class="card feature-card">
@@ -77,6 +113,7 @@
         </div>
     </div>
 </div>
+}
 
 <section class="market-panel mt-4">
     <div class="row g-3">

@@ -20,15 +20,18 @@ namespace WorkerBookingSystem.Controllers
         private readonly WorkerBookingContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IHubContext<BookingChatHub> _chatHub;
+        private readonly ILogger<MessageController> _logger;
 
         public MessageController(
             WorkerBookingContext context,
             UserManager<ApplicationUser> userManager,
-            IHubContext<BookingChatHub> chatHub)
+            IHubContext<BookingChatHub> chatHub,
+            ILogger<MessageController> logger)
         {
             _context = context;
             _userManager = userManager;
             _chatHub = chatHub;
+            _logger = logger;
         }
 
         /// <summary>
@@ -146,17 +149,21 @@ namespace WorkerBookingSystem.Controllers
             });
             await _context.SaveChangesAsync();
 
-            await _chatHub.Clients.Group($"booking:{request.BookingId}").SendAsync("ReceiveMessage", new
-            {
-                id = message.Id,
-                bookingId = message.BookingId,
-                senderId,
-                senderName = User.Identity?.Name,
-                content = message.Content,
-                sentAt = now
-            });
+            await BestEffortDelivery.RunAsync(
+                () => _chatHub.Clients.Group($"booking:{request.BookingId}").SendAsync("ReceiveMessage", new
+                {
+                    id = message.Id,
+                    bookingId = message.BookingId,
+                    senderId,
+                    senderName = User.FindFirst("display_name")?.Value ?? User.Identity?.Name,
+                    content = message.Content,
+                    sentAt = now
+                }),
+                exception => _logger.LogWarning(exception,
+                    "Booking message {MessageId} was saved, but realtime delivery failed for booking {BookingId}.",
+                    message.Id, request.BookingId));
 
-            return Ok(new { messageId = message.Id, sentAt = message.SentAt });
+            return Ok(new { messageId = message.Id, sentAt = message.SentAt, saved = true });
         }
 
         /// <summary>

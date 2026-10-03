@@ -43,8 +43,12 @@
                 unavailable: 'संदेश अभी उपलब्ध नहीं हैं। फिर से प्रयास होगा।',
                 session: 'आपका सत्र समाप्त हो गया है। कृपया फिर से लॉग इन करें।',
                 denied: 'यह बातचीत केवल बुकिंग के ग्राहक और कामगार के लिए है।',
+                invalid: 'संदेश खाली है या 2,000 अक्षरों से बड़ा है।',
+                missing: 'यह बुकिंग नहीं मिली। कृपया अपनी बुकिंग सूची से बातचीत खोलें।',
+                recipient: 'दूसरे प्रतिभागी का सक्रिय खाता नहीं मिला। सहायता से संपर्क करें।',
                 limited: 'बहुत जल्दी संदेश भेजे गए। थोड़ी देर बाद फिर प्रयास करें।',
-                failed: 'संदेश नहीं भेजा जा सका। अपना कनेक्शन जाँचकर फिर प्रयास करें।'
+                server: 'संदेश सर्वर पर सहेजा नहीं जा सका। थोड़ी देर बाद फिर प्रयास करें।',
+                failed: 'सर्वर से संपर्क नहीं हो सका। अपना इंटरनेट कनेक्शन जाँचकर फिर प्रयास करें।'
             } : {
                 loaded: 'Conversation loaded · messages are saved when sent',
                 sent: 'Message sent and saved',
@@ -52,8 +56,12 @@
                 unavailable: 'Messages are temporarily unavailable. Retrying automatically…',
                 session: 'Your session expired. Please sign in again.',
                 denied: 'This conversation is only available to its booking client and worker.',
+                invalid: 'The message is empty or longer than 2,000 characters.',
+                missing: 'This booking was not found. Open the conversation from your bookings.',
+                recipient: 'The other participant does not have an active account. Contact support.',
                 limited: 'Messages are being sent too quickly. Please wait and try again.',
-                failed: 'Message could not be sent. Check your connection and try again.'
+                server: 'The message could not be saved. Please try again shortly.',
+                failed: 'Could not reach the server. Check your internet connection and try again.'
             };
             const messages = document.getElementById('chatMessages');
             const status = document.getElementById('chatStatus');
@@ -150,7 +158,11 @@
                     if (!response.ok) {
                         status.textContent = response.status === 401 ? text.session
                             : response.status === 403 ? text.denied
+                            : response.status === 400 ? text.invalid
+                            : response.status === 404 ? text.missing
+                            : response.status === 409 ? text.recipient
                             : response.status === 429 ? text.limited : text.failed;
+                        if (response.status >= 500) status.textContent = text.server;
                         return;
                     }
                     if (response.redirected || !response.headers.get('content-type')?.includes('application/json')) {

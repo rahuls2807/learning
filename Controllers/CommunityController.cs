@@ -108,7 +108,10 @@ namespace WorkerBookingSystem.Controllers
                 .ToList();
             var profiles = await GetProfileNamesAsync(userIds);
             ViewBag.CurrentUserDisplayName = currentUserId == null ? null : profiles.GetValueOrDefault(currentUserId);
-            var currentRole = User.IsInRole("Client") ? "Client" : User.IsInRole("Worker") ? "Worker" : null;
+            var currentRole = User.IsInRole("Admin") ? "Admin"
+                : User.IsInRole("Client") ? "Client"
+                : User.IsInRole("Worker") ? "Worker"
+                : null;
             var canMessageIds = new HashSet<string>();
             if (currentUserId != null && currentRole != null)
             {
@@ -117,7 +120,7 @@ namespace WorkerBookingSystem.Controllers
                     .Join(_context.Roles, membership => membership.RoleId, role => role.Id,
                         (membership, role) => new { membership.UserId, role.Name })
                     .Where(membership => authorIds.Contains(membership.UserId)
-                        && (membership.Name == "Client" || membership.Name == "Worker"))
+                        && (membership.Name == "Admin" || membership.Name == "Client" || membership.Name == "Worker"))
                     .ToListAsync();
                 var hasBookingIds = (await _context.Bookings.AsNoTracking()
                     .Where(booking => booking.Status != BookingStatus.Cancelled

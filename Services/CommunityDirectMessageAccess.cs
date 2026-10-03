@@ -20,11 +20,11 @@ public static class CommunityDirectMessageAccess
 
         var senderRoles = await userManager.GetRolesAsync(sender);
         var recipientRoles = await userManager.GetRolesAsync(recipient);
-        var senderRole = senderRoles.FirstOrDefault(role => role is "Client" or "Worker");
-        var recipientRole = recipientRoles.FirstOrDefault(role => role is "Client" or "Worker");
+        var senderRole = GetMessagingRole(senderRoles);
+        var recipientRole = GetMessagingRole(recipientRoles);
         var hasBooking = false;
 
-        if (senderRole != recipientRole)
+        if (senderRole != recipientRole && senderRole != "Admin" && recipientRole != "Admin")
         {
             hasBooking = await context.Bookings.AnyAsync(booking =>
                 booking.Status != BookingStatus.Cancelled
@@ -33,5 +33,12 @@ public static class CommunityDirectMessageAccess
         }
 
         return CommunityDirectMessagePolicy.CanStart(senderRole, recipientRole, hasBooking);
+    }
+
+    private static string? GetMessagingRole(IList<string> roles)
+    {
+        if (roles.Contains("Admin", StringComparer.Ordinal))
+            return "Admin";
+        return roles.FirstOrDefault(role => role is "Client" or "Worker");
     }
 }

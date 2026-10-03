@@ -30,7 +30,12 @@ public class CommunityConversationPolicyTests
     [InlineData("Worker", "Worker", false, true)]
     [InlineData("Client", "Worker", false, false)]
     [InlineData("Worker", "Client", true, true)]
-    [InlineData("Admin", "Client", true, false)]
+    [InlineData("Admin", "Client", false, true)]
+    [InlineData("Client", "Admin", false, true)]
+    [InlineData("Admin", "Worker", false, true)]
+    [InlineData("Worker", "Admin", false, true)]
+    [InlineData("Admin", "Admin", false, true)]
+    [InlineData("Guest", "Client", true, false)]
     public void Direct_messages_require_same_role_or_cross_role_booking(
         string senderRole, string recipientRole, bool hasBooking, bool expected)
     {

@@ -126,7 +126,7 @@
                                     <button type="submit" class="btn btn-sm btn-outline-secondary" aria-label="Remove post">Remove</button>
                                 </form>
                             }
-                            else if (post.CanMessageAuthor)
+                            @if (User.Identity?.IsAuthenticated == true && post.CanMessageAuthor)
                             {
                                 <form asp-controller="CommunityChat" asp-action="Start" method="post" class="community-admin-action">
                                     @Html.AntiForgeryToken()<input type="hidden" name="memberUserId" value="@post.AuthorUserId" />

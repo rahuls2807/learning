@@ -77,26 +77,26 @@
                         @if (User.IsInRole("Admin"))
                         {
                             <li class="nav-item">
-                                <a class="nav-link @(accountProfileActive ? "active" : "")" aria-current="@(accountProfileActive ? "page" : null)" asp-controller="Account" asp-action="Profile">Profile</a>
+                                <a class="nav-link @(accountProfileActive ? "active" : "")" aria-current="@(accountProfileActive ? "page" : null)" asp-controller="Account" asp-action="Profile">@(hindiUi ? "प्रोफ़ाइल" : "Profile")</a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link" asp-controller="Admin" asp-action="Dashboard">@(hindiUi ? "डैशबोर्ड" : "Dashboard")</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link nav-booking-cta" asp-controller="Admin" asp-action="CreateBooking">Create Booking</a>
+                                <a class="nav-link nav-booking-cta" asp-controller="Admin" asp-action="CreateBooking">@(hindiUi ? "बुकिंग बनाएँ" : "Create Booking")</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" asp-controller="Admin" asp-action="MyBookings">Bookings</a>
+                                <a class="nav-link" asp-controller="Admin" asp-action="MyBookings">@(hindiUi ? "बुकिंग" : "Bookings")</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" asp-controller="Admin" asp-action="ManageRates">Rates</a>
+                                <a class="nav-link" asp-controller="Admin" asp-action="ManageRates">@(hindiUi ? "दरें" : "Rates")</a>
                             </li>
                         }
                         <li class="nav-item">
-                            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+                            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Privacy">@(hindiUi ? "गोपनीयता" : "Privacy")</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" asp-controller="Mobile" asp-action="Install">Install App</a>
+                            <a class="nav-link" asp-controller="Mobile" asp-action="Install">@(hindiUi ? "ऐप इंस्टॉल करें" : "Install App")</a>
                         </li>
                     </ul>
                     <ul class="navbar-nav">
@@ -118,14 +118,14 @@
                             <li class="nav-item dropdown">
                                 <button class="nav-link dropdown-toggle nav-user text-truncate" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="@displayName">@displayName</button>
                                 <ul class="dropdown-menu dropdown-menu-end">
-                                    <li><a class="dropdown-item" asp-controller="Account" asp-action="Profile">My profile and contact details</a></li>
-                                    <li><a class="dropdown-item" asp-controller="Support" asp-action="Index">Support</a></li>
-                                    <li><a class="dropdown-item" asp-controller="Wallet" asp-action="Index">Wallet</a></li>
-                                    <li><a class="dropdown-item" asp-controller="Account" asp-action="ChangePassword">Change password</a></li>
+                                    <li><a class="dropdown-item" asp-controller="Account" asp-action="Profile">@(hindiUi ? "मेरी प्रोफ़ाइल" : "My profile")</a></li>
+                                    <li><a class="dropdown-item" asp-controller="Support" asp-action="Index">@(hindiUi ? "सहायता" : "Support")</a></li>
+                                    <li><a class="dropdown-item" asp-controller="Wallet" asp-action="Index">@(hindiUi ? "वॉलेट" : "Wallet")</a></li>
+                                    <li><a class="dropdown-item" asp-controller="Account" asp-action="ChangePassword">@(hindiUi ? "पासवर्ड बदलें" : "Change password")</a></li>
                                     <li><hr class="dropdown-divider" /></li>
                                     <li>
                                         <form asp-controller="Account" asp-action="Logout" method="post" class="px-3 py-1">
-                                            <button type="submit" class="nav-logout w-100">Logout</button>
+                                            <button type="submit" class="nav-logout w-100">@(hindiUi ? "लॉग आउट" : "Logout")</button>
                                         </form>
                                     </li>
                                 </ul>
@@ -134,10 +134,10 @@
                         else
                         {
                             <li class="nav-item">
-                                <a class="nav-link" asp-controller="Account" asp-action="Register">Create account</a>
+                                <a class="nav-link" asp-controller="Account" asp-action="Register">@(hindiUi ? "खाता बनाएँ" : "Create account")</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" asp-controller="Account" asp-action="Login">Login</a>
+                                <a class="nav-link" asp-controller="Account" asp-action="Login">@(hindiUi ? "लॉग इन" : "Login")</a>
                             </li>
                         }
                     </ul>
@@ -154,60 +154,60 @@
     <footer class="app-footer">
         <div class="container">
             <div class="text-center py-2">
-                <p style="margin: 0;">© 2026 - Indian Worker Mandi | 
-                <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy Policy</a> | 
-                Built for fast, trusted worker bookings</p>
+                <p style="margin: 0;">@(hindiUi ? "© 2026 - इंडियन वर्कर मंडी | " : "© 2026 - Indian Worker Mandi | ")
+                <a asp-area="" asp-controller="Home" asp-action="Privacy">@(hindiUi ? "गोपनीयता नीति" : "Privacy Policy")</a> |
+                @(hindiUi ? "तेज़ और भरोसेमंद कामगार बुकिंग के लिए" : "Built for fast, trusted worker bookings")</p>
             </div>
         </div>
     </footer>
 
     <nav class="mobile-bottom-nav" aria-label="Mobile quick navigation">
-        <a asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-        <a asp-controller="Community" asp-action="Index">Community</a>
+        <a asp-area="" asp-controller="Home" asp-action="Index">@(hindiUi ? "घर" : "Home")</a>
+        <a asp-controller="Community" asp-action="Index">@(hindiUi ? "समुदाय" : "Community")</a>
         @if (User.IsInRole("Client"))
         {
-            <a asp-controller="Client" asp-action="BookWorker">Find</a>
-            <a asp-controller="Client" asp-action="MyBookings">Bookings</a>
+            <a asp-controller="Client" asp-action="BookWorker">@(hindiUi ? "खोजें" : "Find")</a>
+            <a asp-controller="Client" asp-action="MyBookings">@(hindiUi ? "बुकिंग" : "Bookings")</a>
         }
         else if (User.IsInRole("Worker"))
         {
-            <a class="@(workerJobsActive ? "active" : "")" aria-current="@(workerJobsActive ? "page" : null)" asp-controller="Worker" asp-action="MyBookings">Jobs</a>
-            <a class="@(workerProfileActive ? "active" : "")" aria-current="@(workerProfileActive ? "page" : null)" asp-controller="Worker" asp-action="Index">Profile</a>
+            <a class="@(workerJobsActive ? "active" : "")" aria-current="@(workerJobsActive ? "page" : null)" asp-controller="Worker" asp-action="MyBookings">@(hindiUi ? "काम" : "Jobs")</a>
+            <a class="@(workerProfileActive ? "active" : "")" aria-current="@(workerProfileActive ? "page" : null)" asp-controller="Worker" asp-action="Index">@(hindiUi ? "प्रोफ़ाइल" : "Profile")</a>
         }
         else if (User.IsInRole("Admin"))
         {
-            <a asp-controller="Admin" asp-action="Dashboard">Admin</a>
+            <a asp-controller="Admin" asp-action="Dashboard">@(hindiUi ? "एडमिन" : "Admin")</a>
         }
         else
         {
-            <a asp-controller="Client" asp-action="Register">Find</a>
-            <a asp-controller="Account" asp-action="Login">Login</a>
+            <a asp-controller="Client" asp-action="Register">@(hindiUi ? "खोजें" : "Find")</a>
+            <a asp-controller="Account" asp-action="Login">@(hindiUi ? "लॉग इन" : "Login")</a>
         }
         @if (User.Identity?.IsAuthenticated == true)
         {
-            <a class="@(messageActive ? "active" : "")" aria-current="@(messageActive ? "page" : null)" asp-controller="CommunityChat" asp-action="Index">Messages</a>
+            <a class="@(messageActive ? "active" : "")" aria-current="@(messageActive ? "page" : null)" asp-controller="CommunityChat" asp-action="Index">@(hindiUi ? "संदेश" : "Messages")</a>
         }
     </nav>
 
     <div class="app-assistant" id="appAssistant">
         @Html.AntiForgeryToken()
-        <button class="assistant-toggle" id="assistantToggle" type="button" aria-label="Open app assistant">Help</button>
-        <section class="assistant-panel" id="assistantPanel" aria-live="polite" aria-label="Worker Booking assistant">
+        <button class="assistant-toggle" id="assistantToggle" type="button" aria-label="@(hindiUi ? "ऐप सहायक खोलें" : "Open app assistant")">@(hindiUi ? "सहायता" : "Help")</button>
+        <section class="assistant-panel" id="assistantPanel" aria-live="polite" aria-label="@(hindiUi ? "कामगार मंडी सहायक" : "Worker Booking assistant")">
             <div class="assistant-header">
                 <div>
-                    <strong>Booking Assistant</strong>
-                    <span>Ask about bookings, payments, jobs, or admin tasks.</span>
+                    <strong>@(hindiUi ? "बुकिंग सहायक" : "Booking Assistant")</strong>
+                    <span>@(hindiUi ? "बुकिंग, भुगतान और काम के बारे में पूछें।" : "Ask about bookings, payments, jobs, or admin tasks.")</span>
                 </div>
                 <button type="button" id="assistantClose" aria-label="Close assistant">×</button>
             </div>
             <div class="assistant-messages" id="assistantMessages">
                 <div class="assistant-message assistant-message-bot">
-                    Hi, I can guide you through this app. Try asking "How do I book a worker?" or "How do I record cash paid?"
+                    @(hindiUi ? "मैं इस ऐप का उपयोग करने में आपकी मदद कर सकता हूँ। बुकिंग या भुगतान के बारे में पूछें।" : "Hi, I can guide you through this app. Try asking \"How do I book a worker?\" or \"How do I record cash paid?\"")
                 </div>
             </div>
             <form class="assistant-form" id="assistantForm">
-                <input id="assistantInput" maxlength="1000" autocomplete="off" placeholder="Ask for help..." />
-                <button type="submit">Send</button>
+                <input id="assistantInput" maxlength="1000" autocomplete="off" placeholder="@(hindiUi ? "सहायता पूछें..." : "Ask for help...")" />
+                <button type="submit">@(hindiUi ? "भेजें" : "Send")</button>
             </form>
         </section>
     </div>

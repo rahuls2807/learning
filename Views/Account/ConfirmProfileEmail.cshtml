@@ -1,19 +1,20 @@
 @model WorkerBookingSystem.Models.ViewModels.ConfirmProfileEmailViewModel
 @{
     ViewData["Title"] = "Confirm email change";
+    var hindiUi = WorkerBookingSystem.Services.UiLanguageCatalog.GetCurrent(System.Globalization.CultureInfo.CurrentUICulture).Culture.StartsWith("hi", StringComparison.OrdinalIgnoreCase);
 }
 
 <div class="container py-5" style="max-width: 640px">
-    <div class="section-kicker">ACCOUNT SECURITY</div>
-    <h1 class="h2">Confirm your new email</h1>
-    <p class="text-muted">Confirm that <strong>@Model.Email</strong> belongs to you before it becomes your account email.</p>
+    <div class="section-kicker">@(hindiUi ? "खाता सुरक्षा" : "ACCOUNT SECURITY")</div>
+    <h1 class="h2">@(hindiUi ? "नए ईमेल की पुष्टि करें" : "Confirm your new email")</h1>
+    <p class="text-muted">@(hindiUi ? "खाते का ईमेल बदलने से पहले पुष्टि करें कि " : "Confirm that ")<strong>@Model.Email</strong>@(hindiUi ? " आपका है।" : " belongs to you before it becomes your account email.")</p>
     <form asp-action="ConfirmProfileEmail" method="post" class="d-flex flex-wrap gap-2">
         @Html.AntiForgeryToken()
         <input asp-for="UserId" type="hidden" />
         <input asp-for="Email" type="hidden" />
         <input asp-for="Token" type="hidden" />
         <div asp-validation-summary="ModelOnly" class="text-danger w-100"></div>
-        <button type="submit" class="btn btn-primary">Confirm email</button>
-        <a asp-action="Profile" class="btn btn-outline-secondary">Back to profile</a>
+        <button type="submit" class="btn btn-primary">@(hindiUi ? "ईमेल की पुष्टि करें" : "Confirm email")</button>
+        <a asp-action="Profile" class="btn btn-outline-secondary">@(hindiUi ? "प्रोफ़ाइल पर वापस जाएँ" : "Back to profile")</a>
     </form>
 </div>

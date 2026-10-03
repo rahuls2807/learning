@@ -1,29 +1,30 @@
 @model WorkerBookingSystem.Models.ViewModels.BookingChatViewModel
 @{
-    ViewData["Title"] = "Booking conversation";
+    var hindiUi = WorkerBookingSystem.Services.UiLanguageCatalog.GetCurrent(System.Globalization.CultureInfo.CurrentUICulture).Culture.StartsWith("hi", StringComparison.OrdinalIgnoreCase);
+    ViewData["Title"] = hindiUi ? "बुकिंग बातचीत" : "Booking conversation";
 }
 
 <div class="container py-4">
     <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-3">
         <div>
-            <div class="section-kicker">Booking #@Model.BookingId · @Model.StartTime.ToString("dd MMM yyyy, h:mm tt")</div>
+            <div class="section-kicker">@(hindiUi ? "बुकिंग" : "Booking") #@Model.BookingId · @Model.StartTime.ToString("dd MMM yyyy, h:mm tt")</div>
             <h1 class="h2">@Model.OtherParticipantName</h1>
             <p class="text-muted mb-0">@Model.TaskDescription</p>
         </div>
         <div class="d-flex gap-2">
-            <a class="btn btn-outline-danger" asp-controller="Support" asp-action="Create" asp-route-bookingId="@Model.BookingId">Report an issue</a>
-            <a class="btn btn-outline-secondary" asp-action="Index">All conversations</a>
+            <a class="btn btn-outline-danger" asp-controller="Support" asp-action="Create" asp-route-bookingId="@Model.BookingId">@(hindiUi ? "समस्या बताएँ" : "Report an issue")</a>
+            <a class="btn btn-outline-secondary" asp-action="Index">@(hindiUi ? "सभी बातचीत" : "All conversations")</a>
         </div>
     </div>
 
-    <section class="card shadow-sm" aria-label="Booking conversation">
-        <div id="chatStatus" class="card-header text-muted" role="status">Connecting securely…</div>
+    <section class="card shadow-sm" aria-label="@(hindiUi ? "बुकिंग बातचीत" : "Booking conversation")">
+        <div id="chatStatus" class="card-header text-muted" role="status">@(hindiUi ? "सुरक्षित बातचीत लोड हो रही है…" : "Loading secure conversation…")</div>
         <div id="chatMessages" class="card-body" style="height:min(58vh,560px); overflow-y:auto" aria-live="polite"></div>
         <form id="chatForm" class="card-footer d-flex gap-2">
             @Html.AntiForgeryToken()
-            <label class="visually-hidden" for="chatInput">Message</label>
-            <input id="chatInput" class="form-control" maxlength="2000" autocomplete="off" placeholder="Write a message…" required />
-            <button id="sendButton" class="btn btn-primary" type="submit" disabled>Send</button>
+            <label class="visually-hidden" for="chatInput">@(hindiUi ? "संदेश" : "Message")</label>
+            <textarea id="chatInput" class="form-control" maxlength="2000" autocomplete="off" rows="1" placeholder="@(hindiUi ? "संदेश लिखें…" : "Write a message…")" required></textarea>
+            <button id="sendButton" class="btn btn-primary align-self-end" type="submit" disabled>@(hindiUi ? "भेजें" : "Send")</button>
         </form>
     </section>
 </div>
@@ -34,8 +35,29 @@
             const bookingId = @Model.BookingId;
             const currentUserId = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.CurrentUserId));
             const otherParticipantName = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.OtherParticipantName));
+            const hindiUi = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(hindiUi));
+            const text = hindiUi ? {
+                loaded: 'बातचीत लोड हुई · संदेश भेजने पर सहेजे जाएँगे',
+                sent: 'संदेश भेज दिया गया और सहेज लिया गया',
+                retrying: 'संदेश अपडेट नहीं हुए। फिर से कोशिश हो रही है…',
+                unavailable: 'संदेश अभी उपलब्ध नहीं हैं। फिर से प्रयास होगा।',
+                session: 'आपका सत्र समाप्त हो गया है। कृपया फिर से लॉग इन करें।',
+                denied: 'यह बातचीत केवल बुकिंग के ग्राहक और कामगार के लिए है।',
+                limited: 'बहुत जल्दी संदेश भेजे गए। थोड़ी देर बाद फिर प्रयास करें।',
+                failed: 'संदेश नहीं भेजा जा सका। अपना कनेक्शन जाँचकर फिर प्रयास करें।'
+            } : {
+                loaded: 'Conversation loaded · messages are saved when sent',
+                sent: 'Message sent and saved',
+                retrying: 'Could not refresh messages. Retrying automatically…',
+                unavailable: 'Messages are temporarily unavailable. Retrying automatically…',
+                session: 'Your session expired. Please sign in again.',
+                denied: 'This conversation is only available to its booking client and worker.',
+                limited: 'Messages are being sent too quickly. Please wait and try again.',
+                failed: 'Message could not be sent. Check your connection and try again.'
+            };
             const messages = document.getElementById('chatMessages');
             const status = document.getElementById('chatStatus');
+            const form = document.getElementById('chatForm');
             const sendButton = document.getElementById('sendButton');
             const input = document.getElementById('chatInput');
             const renderedIds = new Set();
@@ -48,22 +70,23 @@
                 const id = String(message.id);
                 if (renderedIds.has(id)) return;
                 renderedIds.add(id);
+                const mine = message.senderId === currentUserId;
                 const row = document.createElement('div');
-                row.className = `d-flex mb-3 ${message.senderId === currentUserId ? 'justify-content-end' : 'justify-content-start'}`;
+                row.className = `d-flex mb-3 ${mine ? 'justify-content-end' : 'justify-content-start'}`;
                 const bubble = document.createElement('div');
                 bubble.className = 'p-3 rounded-3';
                 bubble.style.maxWidth = 'min(82%, 620px)';
-                bubble.style.background = message.senderId === currentUserId ? '#e8f1ff' : '#f1f5f9';
+                bubble.style.background = mine ? '#e8f1ff' : '#f1f5f9';
                 const author = document.createElement('strong');
                 author.className = 'd-block small mb-1';
-                author.textContent = message.senderId === currentUserId ? 'You' : (message.senderName || otherParticipantName);
+                author.textContent = mine ? (hindiUi ? 'आप' : 'You') : (message.senderName || otherParticipantName);
                 const content = document.createElement('div');
                 content.style.whiteSpace = 'pre-wrap';
                 content.textContent = message.content;
                 const time = document.createElement('time');
                 time.className = 'd-block small text-muted mt-2';
                 time.dateTime = message.sentAt;
-                time.textContent = new Date(message.sentAt).toLocaleString();
+                time.textContent = new Date(message.sentAt).toLocaleString(hindiUi ? 'hi-IN' : 'en-IN');
                 bubble.append(author, content, time);
                 row.appendChild(bubble);
                 messages.appendChild(row);
@@ -78,31 +101,41 @@
                 loading = true;
                 try {
                     const response = await fetch(`/api/message/booking/${bookingId}?page=1`, {
-                        credentials: 'same-origin',
-                        cache: 'no-store',
-                        headers: { 'Accept': 'application/json' }
+                        credentials: 'same-origin', cache: 'no-store', headers: { 'Accept': 'application/json' }
                     });
-                    if (!response.ok) throw new Error(`Message history returned ${response.status}`);
+                    if (!response.ok) {
+                        status.textContent = response.status === 401 ? text.session
+                            : response.status === 403 ? text.denied : text.unavailable;
+                        return;
+                    }
+                    if (response.redirected || !response.headers.get('content-type')?.includes('application/json')) {
+                        status.textContent = text.session;
+                        return;
+                    }
                     const result = await response.json();
                     const wasNearBottom = messages.scrollHeight - messages.scrollTop - messages.clientHeight < 80;
-                    result.messages.forEach(renderMessage);
+                    (result.messages || []).forEach(renderMessage);
                     if (!hasLoaded || wasNearBottom || shouldScroll) messages.scrollTop = messages.scrollHeight;
                     hasLoaded = true;
                     shouldScroll = false;
-                    status.textContent = 'Connected · messages are saved to your booking';
+                    status.textContent = text.loaded;
                 } catch {
-                    status.textContent = hasLoaded
-                        ? 'Could not refresh messages. Retrying automatically…'
-                        : 'Messages are temporarily unavailable. You can still try sending; we will keep retrying.';
+                    status.textContent = hasLoaded ? text.retrying : text.unavailable;
                 } finally {
                     loading = false;
                 }
             }
 
             input.addEventListener('input', updateSendButton);
+            input.addEventListener('keydown', event => {
+                if (event.key === 'Enter' && !event.shiftKey) {
+                    event.preventDefault();
+                    form.requestSubmit();
+                }
+            });
             updateSendButton();
 
-            document.getElementById('chatForm').addEventListener('submit', async event => {
+            form.addEventListener('submit', async event => {
                 event.preventDefault();
                 const content = input.value.trim();
                 if (!content || sending) return;
@@ -110,30 +143,32 @@
                 updateSendButton();
                 try {
                     const response = await fetch('/api/message/send', {
-                        method: 'POST',
-                        credentials: 'same-origin',
+                        method: 'POST', credentials: 'same-origin',
                         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
                         body: JSON.stringify({ bookingId, content })
                     });
-                    if (!response.ok) throw new Error(`Message send returned ${response.status}`);
+                    if (!response.ok) {
+                        status.textContent = response.status === 401 ? text.session
+                            : response.status === 403 ? text.denied
+                            : response.status === 429 ? text.limited : text.failed;
+                        return;
+                    }
+                    if (response.redirected || !response.headers.get('content-type')?.includes('application/json')) {
+                        status.textContent = text.session;
+                        return;
+                    }
                     const result = await response.json();
                     input.value = '';
                     input.focus();
                     shouldScroll = true;
                     await loadMessages();
                     if (!renderedIds.has(String(result.messageId))) {
-                        renderMessage({
-                            id: result.messageId,
-                            senderId: currentUserId,
-                            senderName: 'You',
-                            content,
-                            sentAt: result.sentAt
-                        });
+                        renderMessage({ id: result.messageId, senderId: currentUserId, senderName: 'You', content, sentAt: result.sentAt });
                         messages.scrollTop = messages.scrollHeight;
                     }
-                    status.textContent = 'Message sent · conversation is saved to your booking';
+                    status.textContent = text.sent;
                 } catch {
-                    status.textContent = 'Message was not sent. Check your connection and try again.';
+                    status.textContent = text.failed;
                 } finally {
                     sending = false;
                     updateSendButton();

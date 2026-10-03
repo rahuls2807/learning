@@ -1,42 +1,45 @@
 @model WorkerBookingSystem.Models.ViewModels.AccountProfileViewModel
 @{
-    ViewData["Title"] = "My profile";
+    var hindiUi = WorkerBookingSystem.Services.UiLanguageCatalog.GetCurrent(System.Globalization.CultureInfo.CurrentUICulture).Culture.StartsWith("hi", StringComparison.OrdinalIgnoreCase);
+    ViewData["Title"] = hindiUi ? "मेरी प्रोफ़ाइल" : "My profile";
+    var profileStatus = TempData["ProfileStatus"] as string;
+    var profileWarning = TempData["ProfileWarning"] as string;
 }
 
 <div class="container py-4 account-profile-page">
     <div class="mb-4">
-        <div class="section-kicker">ACCOUNT</div>
-        <h1 class="h2 mb-1">My profile</h1>
-        <p class="text-muted mb-0">Keep your contact details current for bookings and account updates.</p>
+        <div class="section-kicker">@(hindiUi ? "खाता" : "ACCOUNT")</div>
+        <h1 class="h2 mb-1">@(hindiUi ? "मेरी प्रोफ़ाइल" : "My profile")</h1>
+        <p class="text-muted mb-0">@(hindiUi ? "बुकिंग और खाते के अपडेट के लिए अपनी संपर्क जानकारी सही रखें।" : "Keep your contact details current for bookings and account updates.")</p>
     </div>
 
-    @if (TempData["ProfileStatus"] is string status)
+    @if (profileStatus is not null)
     {
-        <div class="alert alert-success" role="status">@status</div>
+        <div class="alert alert-success" role="status">@(hindiUi ? profileStatus switch { "Your profile was saved." => "आपकी प्रोफ़ाइल सहेज दी गई।", "Profile saved. Check the new email address to confirm your email change." => "प्रोफ़ाइल सहेज दी गई। ईमेल बदलने की पुष्टि के लिए नए पते पर संदेश देखें।", "Your email address was confirmed and updated." => "आपके ईमेल पते की पुष्टि करके उसे अपडेट कर दिया गया है।", _ => profileStatus } : profileStatus)</div>
     }
-    @if (TempData["ProfileWarning"] is string warning)
+    @if (profileWarning is not null)
     {
-        <div class="alert alert-warning" role="alert">@warning</div>
+        <div class="alert alert-warning" role="alert">@(hindiUi ? "प्रोफ़ाइल सहेज दी गई, लेकिन ईमेल पुष्टि नहीं भेजी जा सकी। बाद में फिर कोशिश करें।" : profileWarning)</div>
     }
 
     <form asp-action="Profile" method="post" class="account-profile-form">
         @Html.AntiForgeryToken()
         <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
         <section class="profile-form-section">
-            <h2 class="h5">Personal details</h2>
+            <h2 class="h5">@(hindiUi ? "व्यक्तिगत जानकारी" : "Personal details")</h2>
             <div class="row g-3">
                 <div class="col-md-6">
-                    <label asp-for="FirstName" class="form-label"></label>
+                    <label asp-for="FirstName" class="form-label">@(hindiUi ? "पहला नाम" : "First name")</label>
                     <input asp-for="FirstName" class="form-control" autocomplete="given-name" />
                     <span asp-validation-for="FirstName" class="text-danger"></span>
                 </div>
                 <div class="col-md-6">
-                    <label asp-for="LastName" class="form-label"></label>
+                    <label asp-for="LastName" class="form-label">@(hindiUi ? "उपनाम" : "Last name")</label>
                     <input asp-for="LastName" class="form-control" autocomplete="family-name" />
                     <span asp-validation-for="LastName" class="text-danger"></span>
                 </div>
                 <div class="col-md-6">
-                    <label asp-for="PhoneNumber" class="form-label"></label>
+                    <label asp-for="PhoneNumber" class="form-label">@(hindiUi ? "मोबाइल नंबर" : "Mobile number")</label>
                     <div class="input-group">
                         <span class="input-group-text">+91</span>
                         <input asp-for="PhoneNumber" class="form-control" type="tel" inputmode="numeric" maxlength="10" autocomplete="tel-national" />
@@ -44,34 +47,34 @@
                     <span asp-validation-for="PhoneNumber" class="text-danger"></span>
                 </div>
                 <div class="col-md-6">
-                    <label asp-for="Email" class="form-label"></label>
+                    <label asp-for="Email" class="form-label">@(hindiUi ? "ईमेल पता" : "Email address")</label>
                     <input asp-for="Email" class="form-control" type="email" autocomplete="email" />
                     <span asp-validation-for="Email" class="text-danger"></span>
-                    <div class="form-text">Email changes take effect after confirmation at the new address.</div>
+                    <div class="form-text">@(hindiUi ? "ईमेल बदलने के लिए नए पते पर पुष्टि आवश्यक है।" : "Email changes take effect after confirmation at the new address.")</div>
                 </div>
             </div>
         </section>
 
         <section class="profile-form-section">
-            <h2 class="h5">Location</h2>
+            <h2 class="h5">@(hindiUi ? "पता" : "Location")</h2>
             <div class="row g-3">
                 <div class="col-12">
-                    <label asp-for="Address" class="form-label"></label>
+                    <label asp-for="Address" class="form-label">@(hindiUi ? "सड़क का पता" : "Street address")</label>
                     <input asp-for="Address" class="form-control" autocomplete="street-address" />
                     <span asp-validation-for="Address" class="text-danger"></span>
                 </div>
                 <div class="col-md-4">
-                    <label asp-for="City" class="form-label"></label>
+                    <label asp-for="City" class="form-label">@(hindiUi ? "शहर" : "City")</label>
                     <input asp-for="City" class="form-control" autocomplete="address-level2" />
                     <span asp-validation-for="City" class="text-danger"></span>
                 </div>
                 <div class="col-md-4">
-                    <label asp-for="State" class="form-label"></label>
+                    <label asp-for="State" class="form-label">@(hindiUi ? "राज्य" : "State")</label>
                     <input asp-for="State" class="form-control" autocomplete="address-level1" />
                     <span asp-validation-for="State" class="text-danger"></span>
                 </div>
                 <div class="col-md-4">
-                    <label asp-for="PinCode" class="form-label"></label>
+                    <label asp-for="PinCode" class="form-label">@(hindiUi ? "पिन कोड" : "PIN code")</label>
                     <input asp-for="PinCode" class="form-control" inputmode="numeric" maxlength="6" autocomplete="postal-code" />
                     <span asp-validation-for="PinCode" class="text-danger"></span>
                 </div>
@@ -79,12 +82,12 @@
         </section>
 
         <div class="d-flex flex-wrap gap-2 pt-3">
-            <button type="submit" class="btn btn-primary">Save profile</button>
+            <button type="submit" class="btn btn-primary">@(hindiUi ? "प्रोफ़ाइल सहेजें" : "Save profile")</button>
             @if (User.IsInRole("Worker"))
             {
-                <a asp-controller="Worker" asp-action="Index" class="btn btn-outline-secondary">Professional profile</a>
+                <a asp-controller="Worker" asp-action="Index" class="btn btn-outline-secondary">@(hindiUi ? "पेशेवर प्रोफ़ाइल" : "Professional profile")</a>
             }
-            <a asp-controller="Account" asp-action="ChangePassword" class="btn btn-outline-secondary">Change password</a>
+            <a asp-controller="Account" asp-action="ChangePassword" class="btn btn-outline-secondary">@(hindiUi ? "पासवर्ड बदलें" : "Change password")</a>
         </div>
     </form>
 </div>
